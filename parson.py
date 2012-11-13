@@ -20,14 +20,10 @@ def recur(fn):
 
 def delay(thunk, face=None):    # XXX fill in or delete
     def run(s, far, st):
-        p.run = left_recursion
         p.run = Peg(thunk()).run
         return p.run(s, far, st)
     p = _Peg(run)
     return p
-
-def left_recursion(s, far, st):
-    assert False, "Left recursion detected"
 
 def step(far, i):
     far[0] = max(far[0], i)
