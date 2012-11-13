@@ -4,8 +4,9 @@ Parse a string representation of a grammar.
 
 import sys; sys.setrecursionlimit(3000) # XXX
 from re import escape
-from parson import Peg, delay
-from parson import alt, catch, chop, chunk, empty, fail, nest, seq
+from parson import Peg, delay, \
+    alt, catch, chop, chunk, empty, fail, nest, seq, \
+    invert, maybe, plus, star
 
 def fold_seq(*factors): return foldr(seq, empty, factors)
 def fold_alt(*terms):   return foldr(alt, fail, terms)
@@ -23,11 +24,6 @@ def Grammar(string, **actions):
     mk_match     = lambda *cs: Peg(''.join(cs))
     mk_chop      = lambda name: chop(actions[name])
     mk_rule_ref  = lambda name: delay(lambda: rules[name])
-
-    mk_invert    = lambda p: ~p
-    mk_star      = lambda p: p.star()
-    mk_plus      = lambda p: p.plus()
-    mk_maybe     = lambda p: p.maybe()
 
     _              = Peg(r'\s*')  # TODO add comments
     name           = Peg(r'([A-Za-z_]\w*)') +_
@@ -47,10 +43,10 @@ def Grammar(string, **actions):
                    | name                                    >> mk_rule_ref)
 
     factor         = delay(lambda:
-                     '!' +_+ factor                          >> mk_invert
-                   | primary + r'\*' +_                      >> mk_star
-                   | primary + r'\+' +_                      >> mk_plus
-                   | primary + r'\?' +_                      >> mk_maybe
+                     '!' +_+ factor                          >> invert
+                   | primary + r'\*' +_                      >> star
+                   | primary + r'\+' +_                      >> plus
+                   | primary + r'\?' +_                      >> maybe
                    | primary)
 
     term           = factor.plus()                           >> fold_seq

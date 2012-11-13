@@ -14,29 +14,6 @@ def Peg(x):
     if callable(x):                   return chop(x)
     raise ValueError("Not a Peg", x)
 
-class _Peg(object):
-    def __init__(self, run):
-        self.run = run
-    def __call__(self, sequence):
-        far = [0]
-        for i, vals in self.run(sequence, far, (0, ())):
-            return vals
-        raise Unparsable(self, (sequence[:far[0]], sequence[far[0]:]))
-    def match(self, sequence):
-        try: return self(sequence)
-        except Unparsable: return None
-    def __add__(self, other):  return seq(self, Peg(other))
-    def __radd__(self, other): return seq(Peg(other), self)
-    def __or__(self, other):   return alt(self, Peg(other))
-    def __ror__(self, other):  return alt(Peg(other), self)
-    def __invert__(self):      return invert(self)
-    def __rshift__(self, fn):  return nest(seq(self, Peg(fn)))
-    def maybe(self): return alt(self, empty)
-    def plus(self): return seq(self, self.star())
-    def star(self): return recur(lambda starred: alt(seq(self, starred), empty))
-
-class Unparsable(Exception): pass
-
 def recur(fn):
     p = delay(lambda: fn(p))
     return p
@@ -55,11 +32,6 @@ def left_recursion(s, far, st):
 def step(far, i):
     far[0] = max(far[0], i)
     return i
-
-fail  = _Peg(lambda s, far, st: [])
-empty = _Peg(lambda s, far, st: [st])
-
-position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
 def match(regex):
     return _Peg(lambda s, far, (i, vals):
@@ -90,6 +62,38 @@ def nest(p):
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))])
+
+def maybe(p): return alt(p, empty)
+def plus(p):  return seq(p, star(p))
+def star(p):  return recur(lambda starred: alt(seq(p, starred), empty))
+
+class _Peg(object):
+    def __init__(self, run):
+        self.run = run
+    def __call__(self, sequence):
+        far = [0]
+        for i, vals in self.run(sequence, far, (0, ())):
+            return vals
+        raise Unparsable(self, (sequence[:far[0]], sequence[far[0]:]))
+    def match(self, sequence):
+        try: return self(sequence)
+        except Unparsable: return None
+    def __add__(self, other):  return seq(self, Peg(other))
+    def __radd__(self, other): return seq(Peg(other), self)
+    def __or__(self, other):   return alt(self, Peg(other))
+    def __ror__(self, other):  return alt(Peg(other), self)
+    def __rshift__(self, fn):  return nest(seq(self, Peg(fn)))
+    __invert__ = invert
+    maybe = maybe
+    plus = plus
+    star = star
+
+class Unparsable(Exception): pass
+
+fail  = _Peg(lambda s, far, st: [])
+empty = _Peg(lambda s, far, st: [st])
+
+position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
 chunk = lambda *vals: vals
 cat = lambda *strs: ''.join(strs)
