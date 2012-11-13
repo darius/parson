@@ -18,7 +18,7 @@ def recur(fn):
     p = delay(lambda: fn(p))
     return p
 
-def delay(thunk, face=None):    # fill in or delete
+def delay(thunk, face=None):    # XXX fill in or delete
     def run(s, far, st):
         p.run = left_recursion
         p.run = Peg(thunk()).run
