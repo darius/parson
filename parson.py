@@ -132,7 +132,9 @@ class _Peg(object):
     plus = plus
     star = star
 
-class Unparsable(Exception): pass
+class Unparsable(Exception):
+    """A parsing failure.
+    XXX document how to get the position out of this"""
 
 # TODO: need doc comments or something
 fail  = _Peg(lambda s, far, st: [])
