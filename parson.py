@@ -1,12 +1,26 @@
 import re
 
+"""
+Parsing with PEGs.
+"""
+
 # Glossary:
-#   p, q	peg
-#   s		subject sequence
-#   i           position in subject sequence
-#   far         box holding the rightmost position reached so far
-#   vals        values tuple
-#   fn          function (not a peg)
+#   p, q    peg
+#   s	    subject sequence. Usually a string, but only match() assumes that.
+#   i       position in subject sequence
+#   far     box holding the rightmost i reached so far
+#           (except during negative matching with invert())
+#   vals    values tuple
+#   st      the state: an (i, vals) pair
+#   fn      function (not a peg)
+
+# A peg's run() function does the work. It takes (s, far, st) and
+# returns a list of states, of length 0 or 1: i.e. either [] or
+# [st]. (A more general kind of parser could return a list of any
+# number of states, enumerated lazily; but that'd change our model
+# both semantically (in (P|Q), Q can assume P didn't match) and in
+# performance. We use a list anyway because it's convenient to code
+# with list comprehensions.)
 
 def Peg(x):
     """Make a peg from a Python value as appropriate for its type, as
@@ -50,8 +64,8 @@ def chop(fn):
     return _Peg(lambda s, far, (i, vals): [(i, (fn(*vals),))])
 
 def catch(p):
-    """Return a peg that acts like p, but adds to the values tuple
-    the text that p matched."""
+    """Return a peg that acts like p, except it adds to the values
+    tuple the text that p matched."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals2 + (s[i:i2],))
                      for i2, vals2 in p.run(s, far, (i, vals))])
