@@ -9,16 +9,23 @@ import re
 #   fn          function (not a peg)
 
 def Peg(x):
+    """Make a peg from a Python value as appropriate for its type, as
+    a convenience. For a string, that's a regex matcher; for a function
+    it's a chop action (transform the current values tuple)."""
     if isinstance(x, _Peg):           return x
     if isinstance(x, (str, unicode)): return match(x)
     if callable(x):                   return chop(x)
     raise ValueError("Not a Peg", x)
 
 def recur(fn):
+    "Return a peg p such that p = fn(p). It's like the Y combinator."
     p = delay(lambda: fn(p))
     return p
 
-def delay(thunk, face=None):    # XXX fill in or delete
+def delay(thunk, face=None):    # XXX fill in face, or delete it
+    """Pre: thunk() returns a peg p. We return essentially that p, but
+    we call thunk() only once, and not until the first use of p. This
+    is so you can write recursive grammars."""
     def run(s, far, st):
         p.run = Peg(thunk()).run
         return p.run(s, far, st)
@@ -26,52 +33,79 @@ def delay(thunk, face=None):    # XXX fill in or delete
     return p
 
 def step(far, i):
+    "Update far with the new position, i."
     far[0] = max(far[0], i)
     return i
 
 def match(regex):
+    """Return a peg that succeeds when regex matches, adding any
+    captures to the values tuple."""
     return _Peg(lambda s, far, (i, vals):
                     [(step(far, i + m.end()), vals + m.groups())
                      for m in [re.match(regex, s[i:])] if m])
 
 def chop(fn):
+    """Return a peg that always succeeds, changing the values tuple
+    from xs to (f(*xs),)."""
     return _Peg(lambda s, far, (i, vals): [(i, (fn(*vals),))])
 
 def catch(p):
+    """Return a peg that acts like p, but adds to the values tuple
+    the text that p matched."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals2 + (s[i:i2],))
                      for i2, vals2 in p.run(s, far, (i, vals))])
 
 def invert(p):
+    "Return a peg that succeeds just when p fails."
     return _Peg(lambda s, far, st: [] if p.run(s, [0], st) else [st])
 
 def alt(p, q):
+    """Return a peg that succeeds just when one of p or q does, trying
+    them left to right."""
     return _Peg(lambda s, far, st: p.run(s, far, st) or q.run(s, far, st))
 
 def seq(p, q):
+    """Return a peg that succeeds when p does, and q does too,
+    starting from where p left off."""
     return _Peg(lambda s, far, st:
                     [st3 
                      for st2 in p.run(s, far, st)
                      for st3 in q.run(s, far, st2)])
 
 def nest(p):
+    """Return a peg like p, but where p doesn't get to see or alter
+    the incoming values tuple."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))])
 
-def maybe(p): return alt(p, empty)
-def plus(p):  return seq(p, star(p))
-def star(p):  return recur(lambda starred: alt(seq(p, starred), empty))
+def maybe(p):
+    "Return matching 0 or 1 of what p matches."
+    return alt(p, empty)
+
+def plus(p):
+    "Return matching 1 or more of what p matches."
+    return seq(p, star(p))
+
+def star(p):
+    "Return matching 0 or more of what p matches."
+    return recur(lambda starred: alt(seq(p, starred), empty))
 
 class _Peg(object):
+    """A parsing expression. It can match a prefix of a sequence,
+    updating a values tuple in the process, or fail."""
     def __init__(self, run):
         self.run = run
     def __call__(self, sequence):
+        """Parse a prefix of sequence and return a tuple of values, or
+        raise Unparsable."""
         far = [0]
         for i, vals in self.run(sequence, far, (0, ())):
             return vals
         raise Unparsable(self, (sequence[:far[0]], sequence[far[0]:]))
     def match(self, sequence):
+        "Parse a prefix of sequence and return a tuple of values or None."
         try: return self(sequence)
         except Unparsable: return None
     def __add__(self, other):  return seq(self, Peg(other))
@@ -86,6 +120,7 @@ class _Peg(object):
 
 class Unparsable(Exception): pass
 
+# TODO: need doc comments or something
 fail  = _Peg(lambda s, far, st: [])
 empty = _Peg(lambda s, far, st: [st])
 
@@ -97,6 +132,9 @@ cat = lambda *strs: ''.join(strs)
 # Alternative: non-regex basic matchers
 
 def check(ok):
+    """Return a peg that eats the first element x of the input, if it
+    exists and if ok(x) It leaves the values tuple unchanged. Note
+    this can work for a non-string sequence."""
     return _Peg(lambda s, far, (i, vals):
         [(step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
 
