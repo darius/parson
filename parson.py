@@ -133,8 +133,8 @@ cat = lambda *strs: ''.join(strs)
 
 def check(ok):
     """Return a peg that eats the first element x of the input, if it
-    exists and if ok(x) It leaves the values tuple unchanged. Note
-    this can work for a non-string sequence."""
+    exists and if ok(x). It leaves the values tuple unchanged.
+    (N.B. sequence can be a non-string.)"""
     return _Peg(lambda s, far, (i, vals):
         [(step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
 
