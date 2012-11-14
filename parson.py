@@ -52,8 +52,8 @@ def step(far, i):
     return i
 
 def match(regex):
-    """Return a peg that succeeds when regex matches, adding any
-    captures to the values tuple."""
+    """Return a peg that matches what regex does, adding any captures
+    to the values tuple."""
     return _Peg(lambda s, far, (i, vals):
                     [(step(far, i + m.end()), vals + m.groups())
                      for m in [re.match(regex, s[i:])] if m])
@@ -76,12 +76,12 @@ def invert(p):
 
 def alt(p, q):
     """Return a peg that succeeds just when one of p or q does, trying
-    them left to right."""
+    them in that order."""
     return _Peg(lambda s, far, st: p.run(s, far, st) or q.run(s, far, st))
 
 def seq(p, q):
-    """Return a peg that succeeds when p does, and q does too,
-    starting from where p left off."""
+    """Return a peg that succeeds when p and q both do, with q
+    starting where p left off."""
     return _Peg(lambda s, far, st:
                     [st3 
                      for st2 in p.run(s, far, st)
@@ -104,7 +104,7 @@ def plus(p):
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
-    return recur(lambda starred: alt(seq(p, starred), empty))
+    return recur(lambda p_star: alt(seq(p, p_star), empty))
 
 class _Peg(object):
     """A parsing expression. It can match a prefix of a sequence,
@@ -140,20 +140,22 @@ empty = _Peg(lambda s, far, st: [st])
 
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
-chunk = lambda *vals: vals
-cat = lambda *strs: ''.join(strs)
+chunk = chop(lambda *vals: vals)
+cat = chop(lambda *strs: ''.join(strs))
 
 # Alternative: non-regex basic matchers
 
-def check(ok):
+def check(ok):                  # XXX rename
     """Return a peg that eats the first element x of the input, if it
     exists and if ok(x). It leaves the values tuple unchanged.
-    (N.B. sequence can be a non-string.)"""
+    (N.B. the input can be a non-string.)"""
     return _Peg(lambda s, far, (i, vals):
         [(step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
 
 any = check(lambda x: True)
-def lit(element): return check(lambda x: element == x)
+
+def lit(element):
+    return check(lambda x: element == x)
 
 
 # Smoke test
