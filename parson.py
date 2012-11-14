@@ -81,15 +81,15 @@ def nest(p):
                      for i2, vals2 in p.run(s, far, (i, ()))])
 
 def maybe(p):
-    "Return matching 0 or 1 of what p matches."
+    "Return a peg matching 0 or 1 of what p matches."
     return alt(p, empty)
 
 def plus(p):
-    "Return matching 1 or more of what p matches."
+    "Return a peg matching 1 or more of what p matches."
     return seq(p, star(p))
 
 def star(p):
-    "Return matching 0 or more of what p matches."
+    "Return a peg matching 0 or more of what p matches."
     return recur(lambda starred: alt(seq(p, starred), empty))
 
 class _Peg(object):
