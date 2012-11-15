@@ -4,7 +4,7 @@ Parse a string representation of a grammar.
 
 from re import escape
 from parson import Peg, delay, \
-    alt, catch, chop, chunk, empty, fail, nest, seq, \
+    alt, catch, chop, chunk, empty, nest, seq, \
     invert, maybe, plus, star
 
 class Grammar(object):
