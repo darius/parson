@@ -143,8 +143,13 @@ empty = _Peg(lambda s, far, st: [st])
 
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
-chunk = lambda *vals: vals
-cat = lambda *strs: ''.join(strs)
+def chunk(*vals):
+    "Make one tuple out of any number of arguments."
+    return vals
+
+def cat(*strs):
+    "Make one string out of any number of string arguments."
+    return ''.join(strs)
 
 # Alternative: non-regex basic matchers
 
@@ -158,6 +163,7 @@ def check(ok):                  # XXX rename
 any = check(lambda x: True)
 
 def lit(element):
+    "Return a peg that eats one element equal to the argument."
     return check(lambda x: element == x)
 
 
