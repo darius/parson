@@ -3,7 +3,7 @@ Parse a string representation of a grammar.
 """
 
 from re import escape
-from parson import Peg, delay, \
+from parson import Unparsable, Peg, delay, \
     alt, catch, chop, chunk, empty, nest, seq, \
     invert, maybe, plus, star
 
