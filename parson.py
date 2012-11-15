@@ -38,14 +38,14 @@ def recur(fn):
     return p
 
 def delay(thunk, face=None):    # XXX fill in face, or delete it
-    """Pre: thunk() returns a peg p. We return essentially that p, but
-    we call thunk() only once, and not until the first use of p. This
-    is for writing recursive grammars with."""
+    """Pre: thunk() will return a peg p. We immediately return a peg q
+    equivalent to that p, but we'll call thunk() only once, and not
+    until the first use of q. Use this for recursive grammars."""
     def run(s, far, st):
-        p.run = Peg(thunk()).run
-        return p.run(s, far, st)
-    p = _Peg(run)
-    return p
+        q.run = Peg(thunk()).run
+        return q.run(s, far, st)
+    q = _Peg(run)
+    return q
 
 def _step(far, i):
     "Update far with the new position, i."
