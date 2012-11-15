@@ -31,12 +31,9 @@ def parse_grammar(string, **actions):
                    | term
                    | empty                                   >> mk_empty)
 
-    primary        = (r'\(' +_+ peg + r'\)' +_
-                   | '{' +_+ peg + '}' +_                    >> catch
-                   | "'" + quoted_char.star() + "'" +_       >> mk_literal
-                   | '/' + regex_char.star() + '/' +_        >> mk_match
-                   | ':' +_+ name                            >> mk_chop
-                   | name                                    >> mk_rule_ref)
+    term           = delay(lambda:
+                     factor + term                           >> seq
+                   | factor)
 
     factor         = delay(lambda:
                      '!' +_+ factor                          >> invert
@@ -45,9 +42,12 @@ def parse_grammar(string, **actions):
                    | primary + r'\?' +_                      >> maybe
                    | primary)
 
-    term           = delay(lambda:
-                     factor + term                           >> seq
-                   | factor)
+    primary        = (r'\(' +_+ peg + r'\)' +_
+                   | '{' +_+ peg + '}' +_                    >> catch
+                   | "'" + quoted_char.star() + "'" +_       >> mk_literal
+                   | '/' + regex_char.star() + '/' +_        >> mk_match
+                   | ':' +_+ name                            >> mk_chop
+                   | name                                    >> mk_rule_ref)
 
     rule           = name + '=' +_+ (peg>>nest) + r'\.' +_   >> chunk
     grammar        = _+ rule.plus() + '$'
