@@ -4,7 +4,7 @@ Parse a string representation of a grammar.
 
 from re import escape
 from parson import Unparsable, Peg, delay, \
-    alt, catch, chop, chunk, empty, nest, seq, \
+    alt, catch, chop, hug, empty, nest, seq, \
     invert, maybe, plus, star
 
 class Grammar(object):
@@ -31,29 +31,29 @@ def parse_grammar(string, **actions):
     quoted_char    = Peg(r'\\(.)') | r"([^'])"
 
     peg            = delay(lambda: 
-                     term + r'\|' +_+ peg                    >> alt
+                     term + r'\|' +_+ peg                  >> alt
                    | term
-                   | empty                                   >> mk_empty)
+                   | empty                                 >> mk_empty)
 
     term           = delay(lambda:
-                     factor + term                           >> seq
+                     factor + term                         >> seq
                    | factor)
 
     factor         = delay(lambda:
-                     '!' +_+ factor                          >> invert
-                   | primary + r'\*' +_                      >> star
-                   | primary + r'\+' +_                      >> plus
-                   | primary + r'\?' +_                      >> maybe
+                     '!' +_+ factor                        >> invert
+                   | primary + r'\*' +_                    >> star
+                   | primary + r'\+' +_                    >> plus
+                   | primary + r'\?' +_                    >> maybe
                    | primary)
 
     primary        = (r'\(' +_+ peg + r'\)' +_
-                   | '{' +_+ peg + '}' +_                    >> catch
-                   | "'" + quoted_char.star() + "'" +_       >> mk_literal
-                   | '/' + regex_char.star() + '/' +_        >> mk_match
-                   | ':' +_+ name                            >> mk_chop
-                   | name                                    >> mk_rule_ref)
+                   | '{' +_+ peg + '}' +_                  >> catch
+                   | "'" + quoted_char.star() + "'" +_     >> mk_literal
+                   | '/' + regex_char.star() + '/' +_      >> mk_match
+                   | ':' +_+ name                          >> mk_chop
+                   | name                                  >> mk_rule_ref)
 
-    rule           = name + '=' +_+ (peg>>nest) + r'\.' +_   >> chunk
+    rule           = name + '=' +_+ (peg>>nest) + r'\.' +_ >> hug
     grammar        = _+ rule.plus() + '$'
 
     rules = dict(grammar(string))

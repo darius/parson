@@ -110,8 +110,11 @@ def star(p):
 class _Peg(object):
     """A parsing expression. It can match a prefix of a sequence,
     updating a values tuple in the process, or fail."""
-    def __init__(self, run):
+    def __init__(self, run, face=None):
         self.run = run
+        self.face = face
+    def __repr__(self):
+        return self.face() if self.face is not None else object.__repr__(self)
     def __call__(self, sequence):
         """Parse a prefix of sequence and return a tuple of values, or
         raise Unparsable."""
@@ -141,16 +144,18 @@ class Unparsable(Exception):
         return len(self.args[1])
 
 # TODO: need doc comments or something
-fail  = _Peg(lambda s, far, st: [])
-empty = _Peg(lambda s, far, st: [st])
+fail  = _Peg(lambda s, far, st: [],
+             lambda: 'fail')
+empty = _Peg(lambda s, far, st: [st],
+             lambda: 'empty')
 
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
-def chunk(*vals):
+def hug(*vals):
     "Make one tuple out of any number of arguments."
     return vals
 
-def cat(*strs):
+def join(*strs):
     "Make one string out of any number of string arguments."
     return ''.join(strs)
 
@@ -160,8 +165,12 @@ def check(ok):                  # XXX rename
     """Return a peg that eats the first element x of the input, if it
     exists and if ok(x). It leaves the values tuple unchanged.
     (N.B. the input can be a non-string.)"""
-    return _Peg(lambda s, far, (i, vals):
-        [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
+    return _Peg((lambda s, far, (i, vals):
+        [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else []),
+                lambda: 'check(%s)' % _fn_name(ok))
+
+def _fn_name(f):
+    return f.__name__ if hasattr(f, 'name') else repr(f)
 
 any = check(lambda x: True)
 
@@ -172,6 +181,8 @@ def lit(element):
 
 # Smoke test
 
+## empty
+#. empty
 ## fail.match('hello')
 ## empty('hello')
 #. ()
@@ -194,7 +205,7 @@ def lit(element):
 ## seq(empty, empty)('')
 #. ()
 
-## (match(r'(.)') >> chunk)('hello')
+## (match(r'(.)') >> hug)('hello')
 #. (('h',),)
 
 ## match(r'(.)').star()('')
@@ -203,7 +214,7 @@ def lit(element):
 ## (match(r'(.)').star())('hello')
 #. ('h', 'e', 'l', 'l', 'o')
 
-## (match(r'(.)').star() >> cat)('hello')
+## (match(r'(.)').star() >> join)('hello')
 #. ('hello',)
 
 
@@ -239,7 +250,7 @@ def test2(string):
     V     = identifier
     F     = delay(lambda: 
             V                                  >> make_var
-          | r'\\' +_+ V.plus() + chunk + '[.]' +_+ E   >> fold_lam
+          | r'\\' +_+ V.plus() + hug + '[.]' +_+ E   >> fold_lam
           | '[(]' +_+ E + '[)]' +_)
     E     = F + F.star()                       >> fold_app
     start = _+ E
@@ -300,4 +311,3 @@ def foldr(f, z, xs):
 
 ## test2('\\a b c . a b')
 #. '(lambda (a) (lambda (b) (lambda (c) (a b))))'
-
