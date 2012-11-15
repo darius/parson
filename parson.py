@@ -1,10 +1,11 @@
-import re
-
 """
 Parsing with PEGs.
 """
 
+import re
+
 # Glossary:
+#   peg     object representing a parsing expression
 #   p, q    peg
 #   s	    subject sequence. Usually a string, but only match() assumes that.
 #   i       position in subject sequence
@@ -32,21 +33,21 @@ def Peg(x):
     raise ValueError("Not a Peg", x)
 
 def recur(fn):
-    "Return a peg p such that p = fn(p). It's like the Y combinator."
+    "Return a peg p such that p = fn(p). This is like the Y combinator."
     p = delay(lambda: fn(p))
     return p
 
 def delay(thunk, face=None):    # XXX fill in face, or delete it
     """Pre: thunk() returns a peg p. We return essentially that p, but
     we call thunk() only once, and not until the first use of p. This
-    is so you can write recursive grammars."""
+    is for writing recursive grammars with."""
     def run(s, far, st):
         p.run = Peg(thunk()).run
         return p.run(s, far, st)
     p = _Peg(run)
     return p
 
-def step(far, i):
+def _step(far, i):
     "Update far with the new position, i."
     far[0] = max(far[0], i)
     return i
@@ -55,7 +56,7 @@ def match(regex):
     """Return a peg that matches what regex does, adding any captures
     to the values tuple."""
     return _Peg(lambda s, far, (i, vals):
-                    [(step(far, i + m.end()), vals + m.groups())
+                    [(_step(far, i + m.end()), vals + m.groups())
                      for m in [re.match(regex, s[i:])] if m])
 
 def chop(fn):
@@ -142,8 +143,8 @@ empty = _Peg(lambda s, far, st: [st])
 
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))])
 
-chunk = chop(lambda *vals: vals)
-cat = chop(lambda *strs: ''.join(strs))
+chunk = lambda *vals: vals
+cat = lambda *strs: ''.join(strs)
 
 # Alternative: non-regex basic matchers
 
@@ -152,7 +153,7 @@ def check(ok):                  # XXX rename
     exists and if ok(x). It leaves the values tuple unchanged.
     (N.B. the input can be a non-string.)"""
     return _Peg(lambda s, far, (i, vals):
-        [(step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
+        [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else [])
 
 any = check(lambda x: True)
 
