@@ -7,17 +7,11 @@ from parson import Peg, delay, \
     alt, catch, chop, chunk, empty, fail, nest, seq, \
     invert, maybe, plus, star
 
-def fold_seq(*factors): return foldr(seq, empty, factors)
-def fold_alt(*terms):   return foldr(alt, fail, terms)
+class Grammar(object):
+    def __init__(self, string, **actions):
+        self.__dict__.update(parse_grammar(string, **actions))
 
-def foldr(f, z, xs):
-    for x in reversed(xs):
-        z = f(x, z)
-    return z
-
-def Grammar(string, **actions):
-
-    rules = {}
+def parse_grammar(string, **actions):
 
     mk_chop      = lambda name: chop(actions[name])
     mk_rule_ref  = lambda name: delay(lambda: rules[name])
@@ -33,7 +27,8 @@ def Grammar(string, **actions):
     quoted_char    = Peg(r'\\(.)') | r"([^'])"
 
     peg            = delay(lambda: 
-                     term + (r'\|' +_+ term).star()          >> fold_alt
+                     term + r'\|' +_+ peg                    >> alt
+                   | term
                    | empty                                   >> mk_empty)
 
     primary        = (r'\(' +_+ peg + r'\)' +_
@@ -50,27 +45,36 @@ def Grammar(string, **actions):
                    | primary + r'\?' +_                      >> maybe
                    | primary)
 
-    term           = factor.plus()                           >> fold_seq
+    term           = delay(lambda:
+                     factor + term                           >> seq
+                   | factor)
 
     rule           = name + '=' +_+ (peg>>nest) + r'\.' +_   >> chunk
     grammar        = _+ rule.plus() + '$'
 
     rules = dict(grammar(string))
-    return rules['main']  # XXX use first rule instead
+    return rules
+
+
+# Smoke test
 
 nums = Grammar(r"""
 main = nums /$/.
 
 nums = num ',' nums
-     | num.
+     | num
+     | .
 
 num  = /([0-9]+)/ :int.
 """,
                int=int)
-sum_nums = lambda s: sum(nums(s))
-
-# XXX in nums:
-#      | .
+sum_nums = lambda s: sum(nums.main(s))
 
 ## sum_nums('10,30,43')
 #. 83
+## nums.nums('10,30,43')
+#. (10, 30, 43)
+## nums.nums('')
+#. ()
+## nums.num('10,30,43')
+#. (10,)
