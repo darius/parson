@@ -118,7 +118,7 @@ class _Peg(object):
         far = [0]
         for i, vals in self.run(sequence, far, (0, ())):
             return vals
-        raise Unparsable(self, (sequence[:far[0]], sequence[far[0]:]))
+        raise Unparsable(self, sequence[:far[0]], sequence[far[0]:])
     def match(self, sequence):
         "Parse a prefix of sequence and return a tuple of values or None."
         try: return self(sequence)
@@ -134,8 +134,11 @@ class _Peg(object):
     star = star
 
 class Unparsable(Exception):
-    """A parsing failure.
-    XXX document how to get the position out of this"""
+    """A parsing failure."""
+    @property
+    def position(self):
+        "The rightmost position positively reached in the parse attempt."
+        return len(self.args[1])
 
 # TODO: need doc comments or something
 fail  = _Peg(lambda s, far, st: [])
