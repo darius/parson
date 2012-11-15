@@ -13,9 +13,13 @@ class Grammar(object):
 
 def parse_grammar(string, **actions):
 
-    mk_chop      = lambda name: chop(actions[name])
-    mk_rule_ref  = lambda name: delay(lambda: rules[name])
+    refs = set()
 
+    def mk_rule_ref(name):
+        refs.add(name)
+        return delay(lambda: rules[name])
+
+    mk_chop      = lambda name: chop(actions[name])
     mk_empty     = lambda: empty
     mk_literal   = lambda *cs: Peg(escape(''.join(cs)))
     mk_match     = lambda *cs: Peg(''.join(cs))
@@ -53,6 +57,8 @@ def parse_grammar(string, **actions):
     grammar        = _+ rule.plus() + '$'
 
     rules = dict(grammar(string))
+    undefined = sorted(refs - set(rules))
+    if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
     return rules
 
 
