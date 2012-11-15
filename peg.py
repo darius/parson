@@ -2,7 +2,6 @@
 Parse a string representation of a grammar.
 """
 
-import sys; sys.setrecursionlimit(3000) # XXX
 from re import escape
 from parson import Peg, delay, \
     alt, catch, chop, chunk, empty, fail, nest, seq, \
