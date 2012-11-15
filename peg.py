@@ -20,10 +20,12 @@ def Grammar(string, **actions):
 
     rules = {}
 
-    mk_literal   = lambda *cs: Peg(escape(''.join(cs)))
-    mk_match     = lambda *cs: Peg(''.join(cs))
     mk_chop      = lambda name: chop(actions[name])
     mk_rule_ref  = lambda name: delay(lambda: rules[name])
+
+    mk_empty     = lambda: empty
+    mk_literal   = lambda *cs: Peg(escape(''.join(cs)))
+    mk_match     = lambda *cs: Peg(''.join(cs))
 
     _              = Peg(r'\s*')  # TODO add comments
     name           = Peg(r'([A-Za-z_]\w*)') +_
@@ -33,7 +35,7 @@ def Grammar(string, **actions):
 
     peg            = delay(lambda: 
                      term + (r'\|' +_+ term).star()          >> fold_alt
-                   | empty                                   >> (lambda: empty))
+                   | empty                                   >> mk_empty)
 
     primary        = (r'\(' +_+ peg + r'\)' +_
                    | '{' +_+ peg + '}' +_                    >> catch
@@ -56,34 +58,6 @@ def Grammar(string, **actions):
 
     rules = dict(grammar(string))
     return rules['main']  # XXX use first rule instead
-
-meta_grammar = r"""
-main            = _ rule+ /$/                    :id.
-rule            = name '='_ peg '.'_             :id.
-
-peg             = term ('|'_ term)*              :id
-                |                                :id.
-term            = factor+                        :id.
-factor          = '!'_ factor                    :id
-                | primary '*'_                   :id
-                | primary '+'_                   :id
-                | primary '?'_                   :id
-                | primary.
-primary         = '('_ peg ')'_
-                | '{'_ peg '}'_                  :id
-                | /'/ quoted_char* /'/_          :id
-                | '/' regex_char*  '/'_          :id
-                | ':'_ name                      :id
-                | name                           :id.
-
-quoted_char     = /\\(.)/ | /([^'])/.
-regex_char      = /(\\.)/ | /([^\/])/.
-
-name            = /([A-Za-z_]\w*)/ _.
-_               = /(?:\s|#[^\n]*\n?)*/.
-"""
-
-g = Grammar(meta_grammar, id=lambda *xs: xs)
 
 nums = Grammar(r"""
 main = nums /$/.
