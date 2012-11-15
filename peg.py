@@ -78,3 +78,7 @@ sum_nums = lambda s: sum(nums.main(s))
 #. ()
 ## nums.num('10,30,43')
 #. (10,)
+
+## nums.main('10,30,43')
+#. (10, 30, 43)
+## nums.main.match('10,30,43 xxx')
