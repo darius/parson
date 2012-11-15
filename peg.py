@@ -28,7 +28,7 @@ def Grammar(string, **actions):
     _              = Peg(r'\s*')  # TODO add comments
     name           = Peg(r'([A-Za-z_]\w*)') +_
 
-    regex_char     = Peg(r'\\(.)') | r"([^/])"
+    regex_char     = Peg(r'(\\.)') | r"([^/])"
     quoted_char    = Peg(r'\\(.)') | r"([^'])"
 
     peg            = delay(lambda: 
