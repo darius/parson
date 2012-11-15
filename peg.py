@@ -20,7 +20,7 @@ def parse_grammar(string, **actions):
     mk_literal   = lambda *cs: Peg(escape(''.join(cs)))
     mk_match     = lambda *cs: Peg(''.join(cs))
 
-    _              = Peg(r'\s*')  # TODO add comments
+    _              = Peg(r'(?:\s|#[^\n]*\n?)*')
     name           = Peg(r'([A-Za-z_]\w*)') +_
 
     regex_char     = Peg(r'(\\.)') | r"([^/])"
@@ -59,7 +59,8 @@ def parse_grammar(string, **actions):
 # Smoke test
 
 nums = Grammar(r"""
-main = nums /$/.
+# This is a comment.
+main = nums /$/.  # So's this.
 
 nums = num ',' nums
      | num
