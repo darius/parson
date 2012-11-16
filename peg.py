@@ -11,9 +11,9 @@ class Struct(object):
 
 def Grammar(string):
     rules, items = parse_grammar(string)
-    def bind(**actions):
+    def bind(**subs):           # subs = substitutions
         for rule, f in items:
-            rules[rule] = f(actions)
+            rules[rule] = f(subs)
         return Struct(**rules)
     return bind
 
@@ -22,20 +22,18 @@ def parse_grammar(string):
     rules = {}
     refs = set()
 
-    # In "lambda a: ..." a is short for actions.
-
     def mk_rule_ref(name):
         refs.add(name)
         ref = delay(lambda: rules[name])
-        return lambda a: ref
+        return lambda subs: ref
 
     def lift(peg_op):
-        return lambda *lifted: lambda a: peg_op(*[f(a) for f in lifted])
+        return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
 
-    mk_chop      = lambda name: lambda a: chop(a[name])
+    unquote    = lambda name: lambda subs: Peg(subs[name])
 
-    mk_literal   = lambda *cs: lambda a: Peg(escape(''.join(cs)))
-    mk_match     = lambda *cs: lambda a: Peg(''.join(cs))
+    mk_literal = lambda *cs: lambda subs: Peg(escape(''.join(cs)))
+    mk_match   = lambda *cs: lambda subs: Peg(''.join(cs))
 
     _              = Peg(r'(?:\s|#[^\n]*\n?)*')
     name           = Peg(r'([A-Za-z_]\w*)') +_
@@ -63,7 +61,7 @@ def parse_grammar(string):
                    | '{' +_+ peg + '}' +_               >> lift(catch)
                    | "'" + quoted_char.star() + "'" +_  >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
-                   | ':' +_+ name                       >> mk_chop
+                   | ':' +_+ name                       >> unquote
                    | name                               >> mk_rule_ref)
 
     rule           = name + '=' +_+ (peg>>lift(nest)) + r'\.' +_ >> hug
@@ -84,7 +82,7 @@ def parse_grammar(string):
 #. Traceback (most recent call last):
 #.   File "peg.py", line 13, in Grammar
 #.     rules, items = parse_grammar(string)
-#.   File "peg.py", line 77, in parse_grammar
+#.   File "peg.py", line 75, in parse_grammar
 #.     if dups: raise Exception("Multiply-defined rules: %s" % ', '.join(dups))
 #. Exception: Multiply-defined rules: a
 
@@ -92,7 +90,7 @@ def parse_grammar(string):
 #. Traceback (most recent call last):
 #.   File "peg.py", line 13, in Grammar
 #.     rules, items = parse_grammar(string)
-#.   File "peg.py", line 75, in parse_grammar
+#.   File "peg.py", line 73, in parse_grammar
 #.     if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
 #. Exception: Undefined rules: b, d
 
@@ -123,11 +121,11 @@ sum_nums = lambda s: sum(nums.main(s))
 
 
 gsub_grammar = Grammar(r"""
-gsub = p gsub | /(.)/ gsub | .
-p = /WHEE/ :replace.
+gsub = sub gsub | /(.)/ gsub | .
+sub = :p :replace.
 """)
-def gsub(text, replacement):
-    g = gsub_grammar(replace=lambda: replacement)
+def gsub(text, p, replacement):
+    g = gsub_grammar(p=p, replace=lambda: replacement)
     return ''.join(g.gsub(text))
-## gsub('hi there WHEEWHEE to you WHEEEE', 'GLARG')
+## gsub('hi there WHEEWHEE to you WHEEEE', Peg('WHEE'), 'GLARG')
 #. 'hi there GLARGGLARG to you GLARGEE'
