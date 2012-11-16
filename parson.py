@@ -406,21 +406,15 @@ def foldr(f, z, xs):
 
 # Smoke test: grammars
 
-## bad1 = Grammar(r"a = . b = a. a = .")()
-#. Traceback (most recent call last):
-#.   File "parson.py", line 203, in Grammar
-#.     rules, items = _parse_grammar(string)
-#.   File "parson.py", line 269, in _parse_grammar
-#.     if dups: raise Exception("Multiply-defined rules: %s" % ', '.join(dups))
-#. Exception: Multiply-defined rules: a
+def exceptionally(thunk):
+    try: return thunk()
+    except Exception, e: return e
 
-## bad2 = Grammar(r"a = b|c|d. c = .")()
-#. Traceback (most recent call last):
-#.   File "parson.py", line 203, in Grammar
-#.     rules, items = _parse_grammar(string)
-#.   File "parson.py", line 267, in _parse_grammar
-#.     if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
-#. Exception: Undefined rules: b, d
+## exceptionally(lambda: Grammar(r"a = . b = a. a = .")())
+#. Exception('Multiply-defined rules: a',)
+
+## exceptionally(lambda: Grammar(r"a = b|c|d. c = .")())
+#. Exception('Undefined rules: b, d',)
 
 nums = Grammar(r"""
 # This is a comment.
