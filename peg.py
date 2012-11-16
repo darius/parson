@@ -121,8 +121,7 @@ sum_nums = lambda s: sum(nums.main(s))
 
 
 gsub_grammar = Grammar(r"""
-gsub = sub gsub | /(.)/ gsub | .
-sub = :p :replace.
+gsub = (:p :replace | /(.)/) gsub | .
 """)
 def gsub(text, p, replacement):
     g = gsub_grammar(p=p, replace=lambda: replacement)
