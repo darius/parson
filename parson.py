@@ -212,7 +212,7 @@ class _Struct(object):
         self.__dict__.update(kwargs)
 
 _default_subs = dict((k, v) for k, v in __builtins__.items() if callable(v))
-_default_subs.update(dict(hug=hug, join=join, position=position))
+_default_subs.update(dict(hug=feed(hug), join=feed(join), position=position))
 
 def _parse_grammar(string):
 
