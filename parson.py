@@ -25,8 +25,8 @@ import re
 
 def Peg(x):
     """Make a peg from a Python value as appropriate for its type, as
-    a convenience. For a string, that's a regex matcher; for a function
-    it's a feed action (transform the current values tuple)."""
+    a convenience. For a string, that's a literal matcher; for a
+    function it's a feed action (transform the current values tuple)."""
     if isinstance(x, _Peg):           return x
     if isinstance(x, (str, unicode)): return literal(x)
     if callable(x):                   return feed(x)
