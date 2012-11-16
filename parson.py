@@ -211,6 +211,9 @@ class _Struct(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+_default_subs = dict((k, v) for k, v in __builtins__.items() if callable(v))
+_default_subs.update(dict(hug=hug, join=join, position=position))
+
 def _parse_grammar(string):
 
     rules = {}
@@ -223,7 +226,8 @@ def _parse_grammar(string):
     def lift(peg_op):
         return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
 
-    unquote    = lambda name: lambda subs: Peg(subs[name])
+    unquote    = lambda name: lambda subs: Peg(subs.get(name)
+                                               or _default_subs[name])
 
     mk_literal = lambda *cs: lambda subs: literal(''.join(cs))
     mk_match   = lambda *cs: lambda subs: match(''.join(cs))
@@ -424,7 +428,7 @@ nums = num ',' nums
      | .
 
 num  = /([0-9]+)/ :int.
-""")(int=int)
+""")()
 sum_nums = lambda s: sum(nums.main(s))
 
 ## sum_nums('10,30,43')

@@ -2,7 +2,7 @@
 Parser adapted from github.com/darius/pother as an example and for testing.
 """
 
-from parson import Grammar, hug
+from parson import Grammar
 
 def make_var(v):        return v
 def make_const(c):      return c
@@ -102,7 +102,7 @@ Const    = '.'_ V               :make_lit_sym
          | '['_ ']'_            :brackets.
 
 _        = /\s*/.
-""")(repr=repr, **globals())
+""")(**globals())
 
 ## toy_grammar.main('.+')
 #. ('(quote +)',)
