@@ -4,11 +4,6 @@ Parser adapted from github.com/darius/pother as an example and for testing.
 
 from parson import Grammar, hug
 
-def cons(x, xs): return [x] + xs
-nil = lambda: []
-def singleton(x): return [x]
-
-
 def make_var(v):        return v
 def make_const(c):      return c
 def make_lam(v, e):     return '(lambda (%s) %s)' % (v, e)
