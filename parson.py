@@ -26,10 +26,10 @@ import re
 def Peg(x):
     """Make a peg from a Python value as appropriate for its type, as
     a convenience. For a string, that's a regex matcher; for a function
-    it's a chop action (transform the current values tuple)."""
+    it's a feed action (transform the current values tuple)."""
     if isinstance(x, _Peg):           return x
     if isinstance(x, (str, unicode)): return match(x)
-    if callable(x):                   return chop(x)
+    if callable(x):                   return feed(x)
     raise ValueError("Not a Peg", x)
 
 def recur(fn, face=None):
@@ -61,32 +61,32 @@ def match(regex):
                      for m in [re.match(regex, s[i:])] if m],
                 lambda: 'match(%r)' % regex)
 
-def chop(fn):
+def feed(fn):
     """Return a peg that always succeeds, changing the values tuple
-    from xs to (f(*xs),)."""
+    from xs to (fn(*xs),). (We're feeding fn with the values.)"""
     return _Peg(lambda s, far, (i, vals): [(i, (fn(*vals),))],
-                lambda: 'chop(%s)' % _fn_name(fn))
+                lambda: 'feed(%s)' % _fn_name(fn))
 
-def catch(p):
+def capture(p):
     """Return a peg that acts like p, except it adds to the values
     tuple the text that p matched."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals2 + (s[i:i2],))
                      for i2, vals2 in p.run(s, far, (i, vals))],
-                lambda: 'catch(%r)' % (p,))
+                lambda: 'capture(%r)' % (p,))
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
     return _Peg(lambda s, far, st: [] if p.run(s, [0], st) else [st],
                 lambda: 'invert(%r)' % (p,))
 
-def alt(p, q, face=None):
+def either(p, q, face=None):
     """Return a peg that succeeds just when one of p or q does, trying
     them in that order."""
     return _Peg(lambda s, far, st: p.run(s, far, st) or q.run(s, far, st),
                 face or (lambda: '(%r|%r)' % (p, q)))
 
-def seq(p, q, face=None):
+def chain(p, q, face=None):
     """Return a peg that succeeds when p and q both do, with q
     starting where p left off."""
     return _Peg(lambda s, far, st:
@@ -105,15 +105,15 @@ def nest(p, face=None):
 
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
-    return alt(p, empty, lambda: '(%r).maybe()' % (p,))
+    return either(p, empty, lambda: '(%r).maybe()' % (p,))
 
 def plus(p):
     "Return a peg matching 1 or more of what p matches."
-    return seq(p, star(p), lambda: '(%r).plus()' % (p,))
+    return chain(p, star(p), lambda: '(%r).plus()' % (p,))
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
-    return recur(lambda p_star: alt(seq(p, p_star), empty),
+    return recur(lambda p_star: either(chain(p, p_star), empty),
                  lambda: '(%r).star()' % (p,))
 
 class _Peg(object):
@@ -131,15 +131,15 @@ class _Peg(object):
         for i, vals in self.run(sequence, far, (0, ())):
             return vals
         raise Unparsable(self, sequence[:far[0]], sequence[far[0]:])
-    def match(self, sequence):
+    def attempt(self, sequence):
         "Parse a prefix of sequence and return a tuple of values or None."
         try: return self(sequence)
         except Unparsable: return None
-    def __add__(self, other):  return seq(self, Peg(other))
-    def __radd__(self, other): return seq(Peg(other), self)
-    def __or__(self, other):   return alt(self, Peg(other))
-    def __ror__(self, other):  return alt(Peg(other), self)
-    def __rshift__(self, fn):  return nest(seq(self, Peg(fn)),
+    def __add__(self, other):  return chain(self, Peg(other))
+    def __radd__(self, other): return chain(Peg(other), self)
+    def __or__(self, other):   return either(self, Peg(other))
+    def __ror__(self, other):  return either(Peg(other), self)
+    def __rshift__(self, fn):  return nest(chain(self, Peg(fn)),
                                            lambda: '(%r>>%s)' % (self,
                                                                  _fn_name(fn)))
     __invert__ = invert
@@ -176,30 +176,30 @@ def join(*strs):
 
 # Alternative: non-regex basic matchers
 
-def check(ok, face=None):                  # XXX rename
+def one_that(ok, face=None):
     """Return a peg that eats the first element x of the input, if it
     exists and if ok(x). It leaves the values tuple unchanged.
     (N.B. the input can be a non-string.)"""
     return _Peg((lambda s, far, (i, vals):
         [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else []),
-                face or (lambda: 'check(%s)' % _fn_name(ok)))
+                face or (lambda: 'one_that(%s)' % _fn_name(ok)))
 
-any = check(lambda x: True, lambda: 'any')
+someone = one_that(lambda x: True, lambda: 'someone')
 
-def lit(element):
+def one_of(item):
     "Return a peg that eats one element equal to the argument."
-    return check(lambda x: element == x,
-                 lambda: 'lit(%r)' % (element,))
+    return one_that(lambda x: item == x,
+                    lambda: 'one_of(%r)' % (item,))
 
 
 # Smoke test
 
 ## empty
 #. empty
-## fail.match('hello')
+## fail.attempt('hello')
 ## empty('hello')
 #. ()
-## Peg(r'(x)').match('hello')
+## Peg(r'(x)').attempt('hello')
 ## Peg(r'(h)')('hello')
 #. ('h',)
 
@@ -215,7 +215,7 @@ def lit(element):
 
 ## empty.run('', [0], (0, ()))
 #. [(0, ())]
-## seq(empty, empty)('')
+## chain(empty, empty)('')
 #. ()
 
 ## (match(r'(.)') >> hug)('hello')
@@ -268,7 +268,7 @@ def test2(string):
     E     = F + F.star()                       >> fold_app
     start = _+ E
 
-    vals = start.match(string)
+    vals = start.attempt(string)
     return vals[0] if vals else None
 
 def fold_app(f, *fs): return reduce(make_app, fs, f)

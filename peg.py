@@ -42,12 +42,12 @@ def parse_grammar(string):
     quoted_char    = Peg(r'\\(.)') | r"([^'])"
 
     peg            = delay(lambda: 
-                     term + r'\|' +_+ peg               >> lift(alt)
+                     term + r'\|' +_+ peg               >> lift(either)
                    | term
                    | empty                              >> lift(lambda: empty))
 
     term           = delay(lambda:
-                     factor + term                      >> lift(seq)
+                     factor + term                      >> lift(chain)
                    | factor)
 
     factor         = delay(lambda:
@@ -58,7 +58,7 @@ def parse_grammar(string):
                    | primary)
 
     primary        = (r'\(' +_+ peg + r'\)' +_
-                   | '{' +_+ peg + '}' +_               >> lift(catch)
+                   | '{' +_+ peg + '}' +_               >> lift(capture)
                    | "'" + quoted_char.star() + "'" +_  >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
                    | ':' +_+ name                       >> unquote
@@ -117,7 +117,7 @@ sum_nums = lambda s: sum(nums.main(s))
 
 ## nums.main('10,30,43')
 #. (10, 30, 43)
-## nums.main.match('10,30,43 xxx')
+## nums.main.attempt('10,30,43 xxx')
 
 
 gsub_grammar = Grammar(r"""
