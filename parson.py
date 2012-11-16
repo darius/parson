@@ -346,7 +346,7 @@ def test2(string):
     start = _+ E
 
     vals = start.attempt(string)
-    return vals[0] if vals else None
+    return vals and vals[0]
 
 def fold_app(f, *fs): return reduce(make_app, fs, f)
 def fold_lam(vp, e): return foldr(make_lam, e, vp)
