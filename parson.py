@@ -65,12 +65,6 @@ def match(regex):
                      for m in [re.match(regex, s[i:])] if m],
                 lambda: 'match(%r)' % regex)
 
-def feed(fn):
-    """Return a peg that always succeeds, changing the values tuple
-    from xs to (fn(*xs),). (We're feeding fn with the values.)"""
-    return _Peg(lambda s, far, (i, vals): [(i, (fn(*vals),))],
-                lambda: 'feed(%s)' % _fn_name(fn))
-
 def capture(p):
     """Return a peg that acts like p, except it adds to the values
     tuple the text that p matched."""
@@ -78,6 +72,12 @@ def capture(p):
                     [(i2, vals2 + (s[i:i2],))
                      for i2, vals2 in p.run(s, far, (i, vals))],
                 lambda: 'capture(%r)' % (p,))
+
+def feed(fn):
+    """Return a peg that always succeeds, changing the values tuple
+    from xs to (fn(*xs),). (We're feeding fn with the values.)"""
+    return _Peg(lambda s, far, (i, vals): [(i, (fn(*vals),))],
+                lambda: 'feed(%s)' % _fn_name(fn))
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
@@ -152,7 +152,7 @@ class _Peg(object):
     star = star
 
 class Unparsable(Exception):
-    """A parsing failure."""
+    "A parsing failure."
     @property
     def position(self):
         "The rightmost position positively reached in the parse attempt."
@@ -178,7 +178,7 @@ def join(*strs):
     "Make one string out of any number of string arguments."
     return ''.join(strs)
 
-# Alternative: non-regex basic matchers
+# Alternative: non-regex basic matchers, good for non-string inputs.
 
 def one_that(ok, face=None):
     """Return a peg that eats the first element x of the input, if it
@@ -188,12 +188,12 @@ def one_that(ok, face=None):
         [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else []),
                 face or (lambda: 'one_that(%s)' % _fn_name(ok)))
 
-someone = one_that(lambda x: True, lambda: 'someone')
-
 def one_of(item):
     "Return a peg that eats one element equal to the argument."
     return one_that(lambda x: item == x,
                     lambda: 'one_of(%r)' % (item,))
+
+someone = one_that(lambda x: True, lambda: 'someone')
 
 
 # Smoke test
