@@ -183,10 +183,13 @@ def join(*strs):
 def one_that(ok, face=None):
     """Return a peg that eats the first element x of the input, if it
     exists and if ok(x). It leaves the values tuple unchanged.
-    (N.B. the input can be a non-string.)"""
-    return _Peg((lambda s, far, (i, vals):
-        [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else []),
-                face or (lambda: 'one_that(%s)' % _fn_name(ok)))
+    (N.B. the input can be a non-string: anything accessible by
+    index.)"""
+    def run(s, far, (i, vals)):
+        try: item = s[i]
+        except IndexError: return []
+        return [(_step(far, i+1), vals)] if ok(item) else []
+    return _Peg(run, face or (lambda: 'one_that(%s)' % _fn_name(ok)))
 
 def one_of(item):
     "Return a peg that eats one element equal to the argument."
