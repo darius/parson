@@ -163,6 +163,9 @@ empty = _Peg(lambda s, far, st: [st],
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))],
                 lambda: 'position')
 
+def _fn_name(f):
+    return f.func_name if hasattr(f, 'func_name') else repr(f)
+
 def hug(*vals):
     "Make one tuple out of any number of arguments."
     return vals
@@ -181,10 +184,7 @@ def check(ok, face=None):                  # XXX rename
         [(_step(far, i+1), vals)] if i < len(s) and ok(s[i]) else []),
                 face or (lambda: 'check(%s)' % _fn_name(ok)))
 
-def _fn_name(f):
-    return f.func_name if hasattr(f, 'func_name') else repr(f)
-
-any = check(lambda x: True)
+any = check(lambda x: True, lambda: 'any')
 
 def lit(element):
     "Return a peg that eats one element equal to the argument."
