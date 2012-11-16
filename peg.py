@@ -122,7 +122,6 @@ sum_nums = lambda s: sum(nums.main(s))
 ## nums.main.match('10,30,43 xxx')
 
 
-# gsub = lambda text, replacement: ''.join(Parser(r"""
 gsub_grammar = Grammar(r"""
 gsub = p gsub | /(.)/ gsub | .
 p = /WHEE/ :replace.
