@@ -157,6 +157,9 @@ class Unparsable(Exception):
     def position(self):
         "The rightmost position positively reached in the parse attempt."
         return len(self.args[1])
+    @property
+    def failure(self):  # XXX rename?
+        return self.args[1], self.args[2]
 
 # TODO: need doc comments or something
 fail  = _Peg(lambda s, far, st: [],
@@ -267,13 +270,20 @@ def _parse_grammar(string):
     rule           = name + '=' +_+ (peg>>lift(nest)) + '.' +_ >> hug
     grammar        = _+ rule.plus() + match('$')
 
-    items = grammar(string)
+    try:
+        items = grammar(string)
+    except Unparsable, e:
+        raise GrammarError("Bad grammar", e.failure)
     lhses = [L for L, R in items]
     undefined = sorted(refs - set(lhses))
-    if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
+    if undefined:
+        raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
     dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
-    if dups: raise Exception("Multiply-defined rules: %s" % ', '.join(dups))
+    if dups:
+        raise GrammarError("Multiply-defined rules: %s" % ', '.join(dups))
     return rules, items
+
+class GrammarError(Exception): pass
 
 
 # Smoke test: combinators
@@ -417,10 +427,13 @@ def exceptionally(thunk):
     except Exception, e: return e
 
 ## exceptionally(lambda: Grammar(r"a = . b = a. a = .")())
-#. Exception('Multiply-defined rules: a',)
+#. GrammarError('Multiply-defined rules: a',)
 
 ## exceptionally(lambda: Grammar(r"a = b|c|d. c = .")())
-#. Exception('Undefined rules: b, d',)
+#. GrammarError('Undefined rules: b, d',)
+
+## exceptionally(lambda: Grammar(r"a = ")())
+#. GrammarError('Bad grammar', ('a = ', ''))
 
 nums = Grammar(r"""
 # This is a comment.
