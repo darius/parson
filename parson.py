@@ -95,13 +95,13 @@ def seq(p, q, face=None):
                      for st3 in q.run(s, far, st2)],
                 face or (lambda: '(%r+%r)' % (p, q)))
 
-def nest(p):
+def nest(p, face=None):
     """Return a peg like p, but where p doesn't get to see or alter
     the incoming values tuple."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))],
-                lambda: 'nest(%r)' % (p,))
+                face or (lambda: 'nest(%r)' % (p,)))
 
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
@@ -139,7 +139,9 @@ class _Peg(object):
     def __radd__(self, other): return seq(Peg(other), self)
     def __or__(self, other):   return alt(self, Peg(other))
     def __ror__(self, other):  return alt(Peg(other), self)
-    def __rshift__(self, fn):  return nest(seq(self, Peg(fn)))
+    def __rshift__(self, fn):  return nest(seq(self, Peg(fn)),
+                                           lambda: '(%r>>%s)' % (self,
+                                                                 _fn_name(fn)))
     __invert__ = invert
     maybe = maybe
     plus = plus
