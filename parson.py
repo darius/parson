@@ -196,7 +196,81 @@ def one_of(item):
 someone = one_that(lambda x: True, lambda: 'someone')
 
 
-# Smoke test
+# Parse a string representation of a grammar.
+
+def Grammar(string):
+    "XXX doc comment"
+    rules, items = _parse_grammar(string)
+    def bind(**subs):           # subs = substitutions
+        for rule, f in items:
+            rules[rule] = f(subs)
+        return _Struct(**rules)
+    return bind
+
+class _Struct(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+def _parse_grammar(string):
+
+    rules = {}
+    refs = set()
+
+    def mk_rule_ref(name):
+        refs.add(name)
+        ref = delay(lambda: rules[name])
+        return lambda subs: ref
+
+    def lift(peg_op):
+        return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
+
+    unquote    = lambda name: lambda subs: Peg(subs[name])
+
+    mk_literal = lambda *cs: lambda subs: literal(''.join(cs))
+    mk_match   = lambda *cs: lambda subs: match(''.join(cs))
+
+    _              = match(r'(?:\s|#[^\n]*\n?)*')
+    name           = match(r'([A-Za-z_]\w*)') +_
+
+    regex_char     = match(r'(\\.)') | match(r"([^/])")
+    quoted_char    = match(r'\\(.)') | match(r"([^'])")
+
+    peg            = delay(lambda: 
+                     term + '|' +_+ peg                 >> lift(either)
+                   | term
+                   | empty                              >> lift(lambda: empty))
+
+    term           = delay(lambda:
+                     factor + term                      >> lift(chain)
+                   | factor)
+
+    factor         = delay(lambda:
+                     '!' +_+ factor                     >> lift(invert)
+                   | primary + '*' +_                   >> lift(star)
+                   | primary + '+' +_                   >> lift(plus)
+                   | primary + '?' +_                   >> lift(maybe)
+                   | primary)
+
+    primary        = ('(' +_+ peg + ')' +_
+                   | '{' +_+ peg + '}' +_               >> lift(capture)
+                   | "'" + quoted_char.star() + "'" +_  >> mk_literal
+                   | '/' + regex_char.star() + '/' +_   >> mk_match
+                   | ':' +_+ name                       >> unquote
+                   | name                               >> mk_rule_ref)
+
+    rule           = name + '=' +_+ (peg>>lift(nest)) + '.' +_ >> hug
+    grammar        = _+ rule.plus() + match('$')
+
+    items = grammar(string)
+    lhses = [L for L, R in items]
+    undefined = sorted(refs - set(lhses))
+    if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
+    dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
+    if dups: raise Exception("Multiply-defined rules: %s" % ', '.join(dups))
+    return rules, items
+
+
+# Smoke test: combinators
 
 ## empty
 #. empty
@@ -328,3 +402,57 @@ def foldr(f, z, xs):
 
 ## test2('\\a b c . a b')
 #. '(lambda (a) (lambda (b) (lambda (c) (a b))))'
+
+
+# Smoke test: grammars
+
+## bad1 = Grammar(r"a = . b = a. a = .")()
+#. Traceback (most recent call last):
+#.   File "parson.py", line 203, in Grammar
+#.     rules, items = _parse_grammar(string)
+#.   File "parson.py", line 269, in _parse_grammar
+#.     if dups: raise Exception("Multiply-defined rules: %s" % ', '.join(dups))
+#. Exception: Multiply-defined rules: a
+
+## bad2 = Grammar(r"a = b|c|d. c = .")()
+#. Traceback (most recent call last):
+#.   File "parson.py", line 203, in Grammar
+#.     rules, items = _parse_grammar(string)
+#.   File "parson.py", line 267, in _parse_grammar
+#.     if undefined: raise Exception("Undefined rules: %s" % ', '.join(undefined))
+#. Exception: Undefined rules: b, d
+
+nums = Grammar(r"""
+# This is a comment.
+main = nums /$/.  # So's this.
+
+nums = num ',' nums
+     | num
+     | .
+
+num  = /([0-9]+)/ :int.
+""")(int=int)
+sum_nums = lambda s: sum(nums.main(s))
+
+## sum_nums('10,30,43')
+#. 83
+## nums.nums('10,30,43')
+#. (10, 30, 43)
+## nums.nums('')
+#. ()
+## nums.num('10,30,43')
+#. (10,)
+
+## nums.main('10,30,43')
+#. (10, 30, 43)
+## nums.main.attempt('10,30,43 xxx')
+
+
+gsub_grammar = Grammar(r"""
+gsub = (:p :replace | /(.)/) gsub | .
+""")
+def gsub(text, p, replacement):
+    g = gsub_grammar(p=p, replace=lambda: replacement)
+    return ''.join(g.gsub(text))
+## gsub('hi there WHEEWHEE to you WHEEEE', 'WHEE', 'GLARG')
+#. 'hi there GLARGGLARG to you GLARGEE'
