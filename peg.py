@@ -32,17 +32,17 @@ def parse_grammar(string):
 
     unquote    = lambda name: lambda subs: Peg(subs[name])
 
-    mk_literal = lambda *cs: lambda subs: Peg(escape(''.join(cs)))
-    mk_match   = lambda *cs: lambda subs: Peg(''.join(cs))
+    mk_literal = lambda *cs: lambda subs: literal(''.join(cs))
+    mk_match   = lambda *cs: lambda subs: match(''.join(cs))
 
-    _              = Peg(r'(?:\s|#[^\n]*\n?)*')
-    name           = Peg(r'([A-Za-z_]\w*)') +_
+    _              = match(r'(?:\s|#[^\n]*\n?)*')
+    name           = match(r'([A-Za-z_]\w*)') +_
 
-    regex_char     = Peg(r'(\\.)') | r"([^/])"
-    quoted_char    = Peg(r'\\(.)') | r"([^'])"
+    regex_char     = match(r'(\\.)') | match(r"([^/])")
+    quoted_char    = match(r'\\(.)') | match(r"([^'])")
 
     peg            = delay(lambda: 
-                     term + r'\|' +_+ peg               >> lift(either)
+                     term + '|' +_+ peg                 >> lift(either)
                    | term
                    | empty                              >> lift(lambda: empty))
 
@@ -52,20 +52,20 @@ def parse_grammar(string):
 
     factor         = delay(lambda:
                      '!' +_+ factor                     >> lift(invert)
-                   | primary + r'\*' +_                 >> lift(star)
-                   | primary + r'\+' +_                 >> lift(plus)
-                   | primary + r'\?' +_                 >> lift(maybe)
+                   | primary + '*' +_                   >> lift(star)
+                   | primary + '+' +_                   >> lift(plus)
+                   | primary + '?' +_                   >> lift(maybe)
                    | primary)
 
-    primary        = (r'\(' +_+ peg + r'\)' +_
+    primary        = ('(' +_+ peg + ')' +_
                    | '{' +_+ peg + '}' +_               >> lift(capture)
                    | "'" + quoted_char.star() + "'" +_  >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
                    | ':' +_+ name                       >> unquote
                    | name                               >> mk_rule_ref)
 
-    rule           = name + '=' +_+ (peg>>lift(nest)) + r'\.' +_ >> hug
-    grammar        = _+ rule.plus() + '$'
+    rule           = name + '=' +_+ (peg>>lift(nest)) + '.' +_ >> hug
+    grammar        = _+ rule.plus() + match('$')
 
     items = grammar(string)
     lhses = [L for L, R in items]
@@ -126,5 +126,5 @@ gsub = (:p :replace | /(.)/) gsub | .
 def gsub(text, p, replacement):
     g = gsub_grammar(p=p, replace=lambda: replacement)
     return ''.join(g.gsub(text))
-## gsub('hi there WHEEWHEE to you WHEEEE', Peg('WHEE'), 'GLARG')
+## gsub('hi there WHEEWHEE to you WHEEEE', 'WHEE', 'GLARG')
 #. 'hi there GLARGGLARG to you GLARGEE'

@@ -28,7 +28,7 @@ def Peg(x):
     a convenience. For a string, that's a regex matcher; for a function
     it's a feed action (transform the current values tuple)."""
     if isinstance(x, _Peg):           return x
-    if isinstance(x, (str, unicode)): return match(x)
+    if isinstance(x, (str, unicode)): return literal(x)
     if callable(x):                   return feed(x)
     raise ValueError("Not a Peg", x)
 
@@ -52,6 +52,10 @@ def _step(far, i):
     "Update far with the new position, i."
     far[0] = max(far[0], i)
     return i
+
+def literal(string):
+    "Return a peg that matches string exactly."
+    return match(re.escape(string))
 
 def match(regex):
     """Return a peg that matches what regex does, adding any captures
@@ -199,18 +203,18 @@ def one_of(item):
 ## fail.attempt('hello')
 ## empty('hello')
 #. ()
-## Peg(r'(x)').attempt('hello')
-## Peg(r'(h)')('hello')
+## match(r'(x)').attempt('hello')
+## match(r'(h)')('hello')
 #. ('h',)
 
-## (Peg(r'(H)') | '(.)')('hello')
+## (match(r'(H)') | match('(.)'))('hello')
 #. ('h',)
-## (Peg(r'(h)') + '(.)')('hello')
+## (match(r'(h)') + match('(.)'))('hello')
 #. ('h', 'e')
 
-## (Peg(r'h(e)') + r'(.)')('hello')
+## (match(r'h(e)') + match(r'(.)'))('hello')
 #. ('e', 'l')
-## (~Peg(r'h(e)') + r'(.)')('xhello')
+## (~match(r'h(e)') + match(r'(.)'))('xhello')
 #. ('x',)
 
 ## empty.run('', [0], (0, ()))
@@ -238,16 +242,16 @@ def make_lam(v, e):      return '(lambda (%s) %s)' % (v, e)
 def make_app(e1, e2):    return '(%s %s)' % (e1, e2)
 def make_let(v, e1, e2): return '(let ((%s %s)) %s)' % (v, e1, e2)
 
-eof        = Peg(r'$')
-_          = Peg(r'\s*')
-identifier = Peg(r'([A-Za-z_]\w*)\s*')
+eof        = match(r'$')
+_          = match(r'\s*')
+identifier = match(r'([A-Za-z_]\w*)\s*')
 
 def test1():
     V     = identifier
     E     = delay(lambda: 
-            V                            >> make_var
-          | r'\\' +_+ V + '[.]' +_+ E    >> make_lam
-          | '[(]' +_+ E + E + '[)]' +_   >> make_app)
+            V                        >> make_var
+          | '\\' +_+ V + '.' +_+ E   >> make_lam
+          | '(' +_+ E + E + ')' +_   >> make_app)
     start = _+ E #+ eof
     return lambda s: start(s)[0]
 
@@ -262,10 +266,10 @@ def test1():
 def test2(string):
     V     = identifier
     F     = delay(lambda: 
-            V                                  >> make_var
-          | r'\\' +_+ V.plus() + hug + '[.]' +_+ E   >> fold_lam
-          | '[(]' +_+ E + '[)]' +_)
-    E     = F + F.star()                       >> fold_app
+            V                                     >> make_var
+          | '\\' +_+ V.plus() + hug + '.' +_+ E   >> fold_lam
+          | '(' +_+ E + ')' +_)
+    E     = F + F.star()                          >> fold_app
     start = _+ E
 
     vals = start.attempt(string)
