@@ -218,8 +218,7 @@ def _parse_grammar(string):
 
     def mk_rule_ref(name):
         refs.add(name)
-        ref = delay(lambda: rules[name])
-        return lambda subs: ref
+        return lambda subs: delay(lambda: rules[name])
 
     def lift(peg_op):
         return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
