@@ -109,16 +109,16 @@ def nest(p, face=None):
 
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
-    return either(p, empty, lambda: '(%r).maybe()' % (p,))
+    return either(p, empty, lambda: '%r.maybe()' % (p,))
 
 def plus(p):
     "Return a peg matching 1 or more of what p matches."
-    return chain(p, star(p), lambda: '(%r).plus()' % (p,))
+    return chain(p, star(p), lambda: '%r.plus()' % (p,))
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
     return recur(lambda p_star: either(chain(p, p_star), empty),
-                 lambda: '(%r).star()' % (p,))
+                 lambda: '%r.star()' % (p,))
 
 def label(p, name):
     "Return an equivalent peg with name as its repr."
@@ -214,7 +214,7 @@ def Grammar(string):
     rules, items = _parse_grammar(string)
     def bind(**subs):           # subs = substitutions
         for rule, f in items:
-            rules[rule] = label(f(subs), '<%s>' % rule)
+            rules[rule] = label(f(subs), rule)
         return _Struct(**rules)
     return bind
 

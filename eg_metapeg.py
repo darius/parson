@@ -44,13 +44,13 @@ _               = /(?:\s|#[^\n]*\n?)*/.
 
 g = Grammar(meta_grammar)(**globals())
 ## for k, v in g.main(meta_grammar): print k, v
-#. main nest(('<_>'+(('<rule>').plus()+match('$'))))
+#. main nest(('<_>'+('<rule>'.plus()+match('$'))))
 #. rule nest(('<name>'+(match('\\=')+('<_>'+('<nestpeg>'+(match('\\.')+('<_>'+feed(fn))))))))
 #. nestpeg nest(('<peg>'+feed(fn)))
 #. peg nest((('<term>'+(match('\\|')+('<_>'+('<peg>'+feed(fn)))))|('<term>'|feed(fn))))
 #. term nest((('<factor>'+('<term>'+feed(fn)))|'<factor>'))
 #. factor nest(((match('\\~')+('<_>'+('<factor>'+feed(fn))))|(('<primary>'+(match('\\*')+('<_>'+feed(fn))))|(('<primary>'+(match('\\+')+('<_>'+feed(fn))))|(('<primary>'+(match('\\?')+('<_>'+feed(fn))))|'<primary>')))))
-#. primary nest(((match('\\(')+('<_>'+('<peg>'+(match('\\)')+'<_>'))))|((match('\\{')+('<_>'+('<peg>'+(match('\\}')+('<_>'+feed(fn))))))|((match("'")+(('<quoted_char>').star()+(match("'")+('<_>'+feed(fn)))))|((match('\\/')+(('<regex_char>').star()+(match('\\/')+('<_>'+feed(fn)))))|((match('\\:')+('<_>'+('<name>'+feed(fn))))|('<name>'+feed(fn))))))))
+#. primary nest(((match('\\(')+('<_>'+('<peg>'+(match('\\)')+'<_>'))))|((match('\\{')+('<_>'+('<peg>'+(match('\\}')+('<_>'+feed(fn))))))|((match("'")+('<quoted_char>'.star()+(match("'")+('<_>'+feed(fn)))))|((match('\\/')+('<regex_char>'.star()+(match('\\/')+('<_>'+feed(fn)))))|((match('\\:')+('<_>'+('<name>'+feed(fn))))|('<name>'+feed(fn))))))))
 #. quoted_char nest((match('\\\\(.)')|match("([^'])")))
 #. regex_char nest((match('(\\\\.)')|match('([^\\/])')))
 #. name nest((match('([A-Za-z_]\\w*)')+'<_>'))
