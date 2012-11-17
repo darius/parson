@@ -267,10 +267,9 @@ def _parse_grammar(string):
 
     factor         = delay(lambda:
                      '~' +_+ factor                     >> lift(invert)
-                   | primary + '*' +_                   >> lift(star)
-                   | primary + '+' +_                   >> lift(plus)
-                   | primary + '?' +_                   >> lift(maybe)
-                   | primary)
+                   | nest(primary + (  '*' +_+             lift(star)
+                                     | '+' +_+             lift(plus)
+                                     | '?' +_+             lift(maybe) ).maybe()))
 
     primary        = ('(' +_+ peg + ')' +_
                    | '{' +_+ peg + '}' +_               >> lift(capture)
