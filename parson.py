@@ -34,11 +34,10 @@ def Peg(x):
 
 def recur(fn):
     "Return a peg p such that p = fn(p). This is like the Y combinator."
-    p = delay(lambda: fn(p))
-    p.face = ('recur(%s)', _fn_name(fn))
+    p = delay(lambda: fn(p), 'recur(%s)', _fn_name(fn))
     return p
 
-def delay(thunk):               # XXX add face argument
+def delay(thunk, *face):        # XXX document face
     """Precondition: thunk() will return a peg p. We immediately
     return a peg q equivalent to that future p, but we'll call thunk()
     only once, and not until the first use of q. Use this for
@@ -46,7 +45,8 @@ def delay(thunk):               # XXX add face argument
     def run(s, far, st):
         q.run = Peg(thunk()).run
         return q.run(s, far, st)
-    q = _Peg(('delay(%s)', _fn_name(thunk)), run)
+    q = _Peg(face or ('delay(%s)', _fn_name(thunk)),
+             run)
     return q
 
 def _step(far, i):
@@ -239,7 +239,7 @@ def _parse_grammar(string):
 
     def mk_rule_ref(name):
         refs.add(name)
-        return lambda subs: delay(lambda: rules[name])
+        return lambda subs: delay(lambda: rules[name], name)
 
     def lift(peg_op):
         return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
