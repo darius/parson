@@ -163,6 +163,7 @@ class Unparsable(Exception):
         return len(self.args[1])
     @property
     def failure(self):  # XXX rename?
+        "Return slices of the input before and after the parse failure."
         return self.args[1], self.args[2]
 
 # TODO: need doc comments or something
