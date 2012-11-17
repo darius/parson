@@ -120,6 +120,9 @@ def star(p):
     return recur(lambda p_star: either(chain(p, p_star), empty),
                  lambda: '(%r).star()' % (p,))
 
+def label(p, name):
+    return _Peg(p.run, lambda: name)
+
 class _Peg(object):
     """A parsing expression. It can match a prefix of a sequence,
     updating a values tuple in the process, or fail."""
@@ -209,7 +212,7 @@ def Grammar(string):
     rules, items = _parse_grammar(string)
     def bind(**subs):           # subs = substitutions
         for rule, f in items:
-            rules[rule] = f(subs)
+            rules[rule] = label(f(subs), '<%s>' % rule)
         return _Struct(**rules)
     return bind
 
