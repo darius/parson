@@ -217,7 +217,12 @@ someone = label(one_that(lambda x: True), 'someone')
 # Parse a string representation of a grammar.
 
 def Grammar(string):
-    "XXX doc comment"
+    """XXX doc comment
+    Contrived example:
+    >>> g = Grammar(r"a = 'x'|b.   b = ~:p /regex/.  # comment")(p=fail)
+    >>> g.a('x')
+    ()
+    """
     rules, items = _parse_grammar(string)
     def bind(**subs):           # subs = substitutions
         for rule, f in items:
