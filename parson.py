@@ -121,6 +121,7 @@ def star(p):
                  lambda: '(%r).star()' % (p,))
 
 def label(p, name):
+    "Return an equivalent peg with name as its repr."
     return _Peg(p.run, lambda: name)
 
 class _Peg(object):
