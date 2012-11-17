@@ -253,7 +253,7 @@ def _parse_grammar(string):
     _              = match(r'(?:\s|#[^\n]*\n?)*')
     name           = match(r'([A-Za-z_]\w*)') +_
 
-    regex_char     = match(r'(\\.)') | match(r"([^/])")
+    regex_char     = match(r'(\\.|[^/])')
     quoted_char    = match(r'\\(.)') | match(r"([^'])")
 
     peg            = delay(lambda: 
