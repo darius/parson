@@ -23,7 +23,7 @@ peg             = term '|'_ peg                  :either
                 |                                :mk_empty.
 term            = factor term                    :chain
                 | factor.
-factor          = '!'_ factor                    :invert
+factor          = '~'_ factor                    :invert
                 | primary '*'_                   :star
                 | primary '+'_                   :plus
                 | primary '?'_                   :maybe
@@ -49,7 +49,7 @@ g = Grammar(meta_grammar)(**globals())
 #. nestpeg nest(('<peg>'+feed(fn)))
 #. peg nest((('<term>'+(match('\\|')+('<_>'+('<peg>'+feed(fn)))))|('<term>'|feed(fn))))
 #. term nest((('<factor>'+('<term>'+feed(fn)))|'<factor>'))
-#. factor nest(((match('\\!')+('<_>'+('<factor>'+feed(fn))))|(('<primary>'+(match('\\*')+('<_>'+feed(fn))))|(('<primary>'+(match('\\+')+('<_>'+feed(fn))))|(('<primary>'+(match('\\?')+('<_>'+feed(fn))))|'<primary>')))))
+#. factor nest(((match('\\~')+('<_>'+('<factor>'+feed(fn))))|(('<primary>'+(match('\\*')+('<_>'+feed(fn))))|(('<primary>'+(match('\\+')+('<_>'+feed(fn))))|(('<primary>'+(match('\\?')+('<_>'+feed(fn))))|'<primary>')))))
 #. primary nest(((match('\\(')+('<_>'+('<peg>'+(match('\\)')+'<_>'))))|((match('\\{')+('<_>'+('<peg>'+(match('\\}')+('<_>'+feed(fn))))))|((match("'")+(('<quoted_char>').star()+(match("'")+('<_>'+feed(fn)))))|((match('\\/')+(('<regex_char>').star()+(match('\\/')+('<_>'+feed(fn)))))|((match('\\:')+('<_>'+('<name>'+feed(fn))))|('<name>'+feed(fn))))))))
 #. quoted_char nest((match('\\\\(.)')|match("([^'])")))
 #. regex_char nest((match('(\\\\.)')|match('([^\\/])')))

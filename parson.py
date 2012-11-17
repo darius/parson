@@ -170,8 +170,8 @@ empty = _Peg(lambda s, far, st: [st],
 position = _Peg(lambda s, far, (i, vals): [(i, vals + (i,))],
                 lambda: 'position')
 
-def _fn_name(f):
-    return f.func_name if hasattr(f, 'func_name') else repr(f)
+def _fn_name(fn):
+    return fn.func_name if hasattr(fn, 'func_name') else repr(fn)
 
 def hug(*vals):
     "Make one tuple out of any number of arguments."
@@ -254,7 +254,7 @@ def _parse_grammar(string):
                    | factor)
 
     factor         = delay(lambda:
-                     '!' +_+ factor                     >> lift(invert)
+                     '~' +_+ factor                     >> lift(invert)
                    | primary + '*' +_                   >> lift(star)
                    | primary + '+' +_                   >> lift(plus)
                    | primary + '?' +_                   >> lift(maybe)
