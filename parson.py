@@ -50,7 +50,7 @@ def delay(thunk, *face):        # XXX document face
     return q
 
 def _step(far, i):
-    "Update far with the new position, i."
+    "Update far with a new position."
     far[0] = max(far[0], i)
     return i
 
