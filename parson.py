@@ -32,12 +32,13 @@ def Peg(x):
     if callable(x):                   return feed(x)
     raise ValueError("Not a Peg", x)
 
-def recur(fn, face=None):
+def recur(fn):
     "Return a peg p such that p = fn(p). This is like the Y combinator."
-    p = delay(lambda: fn(p), face or (lambda: 'recur(%s)' % _fn_name(fn)))
+    p = delay(lambda: fn(p))
+    p.face = lambda: 'recur(%s)' % _fn_name(fn)
     return p
 
-def delay(thunk, face=None):
+def delay(thunk):
     """Precondition: thunk() will return a peg p. We immediately
     return a peg q equivalent to that future p, but we'll call thunk()
     only once, and not until the first use of q. Use this for
@@ -45,7 +46,7 @@ def delay(thunk, face=None):
     def run(s, far, st):
         q.run = Peg(thunk()).run
         return q.run(s, far, st)
-    q = _Peg(run, face or (lambda: 'delay(%s)' % _fn_name(thunk)))
+    q = _Peg(run, lambda: 'delay(%s)' % _fn_name(thunk))
     return q
 
 def _step(far, i):
@@ -55,7 +56,8 @@ def _step(far, i):
 
 def literal(string):
     "Return a peg that matches string exactly."
-    return match(re.escape(string))
+    return label(match(re.escape(string)),
+                 lambda: 'literal(%r)' % string)
 
 def match(regex):
     """Return a peg that matches what regex does, adding any captures
@@ -87,42 +89,45 @@ def invert(p):
 def either(p, q, face=None):
     """Return a peg that succeeds just when one of p or q does, trying
     them in that order."""
-    return _Peg(lambda s, far, st: p.run(s, far, st) or q.run(s, far, st),
-                face or (lambda: '(%r|%r)' % (p, q)))
+    return _Peg(lambda s, far, st:
+                    p.run(s, far, st) or q.run(s, far, st),
+                lambda: '(%r|%r)' % (p, q))
 
-def chain(p, q, face=None):
+def chain(p, q):
     """Return a peg that succeeds when p and q both do, with q
     starting where p left off."""
     return _Peg(lambda s, far, st:
                     [st3 
                      for st2 in p.run(s, far, st)
                      for st3 in q.run(s, far, st2)],
-                face or (lambda: '(%r+%r)' % (p, q)))
+                lambda: '(%r+%r)' % (p, q))
 
-def nest(p, face=None):
+def nest(p):
     """Return a peg like p, but where p doesn't get to see or alter
     the incoming values tuple."""
     return _Peg(lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))],
-                face or (lambda: 'nest(%r)' % (p,)))
+                lambda: 'nest(%r)' % (p,))
 
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
-    return either(p, empty, lambda: '%r.maybe()' % (p,))
+    return label(either(p, empty),
+                 lambda: '%r.maybe()' % (p,))
 
 def plus(p):
     "Return a peg matching 1 or more of what p matches."
-    return chain(p, star(p), lambda: '%r.plus()' % (p,))
+    return label(chain(p, star(p)),
+                 lambda: '%r.plus()' % (p,))
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
-    return recur(lambda p_star: either(chain(p, p_star), empty),
+    return label(recur(lambda p_star: either(chain(p, p_star), empty)),
                  lambda: '%r.star()' % (p,))
 
 def label(p, name):
     "Return an equivalent peg with name as its repr."
-    return _Peg(p.run, lambda: name)
+    return _Peg(p.run, name)
 
 class _Peg(object):
     """A parsing expression. It can match a prefix of a sequence,
@@ -131,7 +136,9 @@ class _Peg(object):
         self.run = run
         self.face = face
     def __repr__(self):
-        return self.face() if self.face else object.__repr__(self)
+        if isinstance(self.face, (str, unicode)): return self.face
+        if callable(self.face): return self.face()
+        return object.__repr__(self)
     def __call__(self, sequence):
         """Parse a prefix of sequence and return a tuple of values, or
         raise Unparsable."""
@@ -147,9 +154,9 @@ class _Peg(object):
     def __radd__(self, other): return chain(Peg(other), self)
     def __or__(self, other):   return either(self, Peg(other))
     def __ror__(self, other):  return either(Peg(other), self)
-    def __rshift__(self, fn):  return nest(chain(self, Peg(fn)),
-                                           lambda: '(%r>>%s)' % (self,
-                                                                 _fn_name(fn)))
+    def __rshift__(self, fn):  return label(nest(chain(self, Peg(fn))),
+                                            lambda: '(%r>>%s)' % (self,
+                                                                  _fn_name(fn)))
     __invert__ = invert
     maybe = maybe
     plus = plus
@@ -188,7 +195,7 @@ def join(*strs):
 
 # Alternative: non-regex basic matchers, good for non-string inputs.
 
-def one_that(ok, face=None):
+def one_that(ok):
     """Return a peg that eats the first element x of the input, if it
     exists and if ok(x). It leaves the values tuple unchanged.
     (N.B. the input can be a non-string: anything accessible by
@@ -197,14 +204,14 @@ def one_that(ok, face=None):
         try: item = s[i]
         except IndexError: return []
         return [(_step(far, i+1), vals)] if ok(item) else []
-    return _Peg(run, face or (lambda: 'one_that(%s)' % _fn_name(ok)))
+    return _Peg(run, lambda: 'one_that(%s)' % _fn_name(ok))
 
 def one_of(item):
     "Return a peg that eats one element equal to the argument."
-    return one_that(lambda x: item == x,
-                    lambda: 'one_of(%r)' % (item,))
+    return label(one_that(lambda x: item == x),
+                 lambda: 'one_of(%r)' % (item,))
 
-someone = one_that(lambda x: True, lambda: 'someone')
+someone = label(one_that(lambda x: True), lambda: 'someone')
 
 
 # Parse a string representation of a grammar.

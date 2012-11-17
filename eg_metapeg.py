@@ -6,7 +6,7 @@ from parson import *
 
 def meta_mk_feed(name):
     def fn(*args): return '%s(%s)' % (name, ' '.join(map(repr, args)))
-    return feed(fn)
+    return label(feed(fn), lambda: 'feed(%s)' % name)
 def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 
 def mk_empty(): return empty
@@ -45,12 +45,12 @@ _               = /(?:\s|#[^\n]*\n?)*/.
 g = Grammar(meta_grammar)(**globals())
 ## for k, v in g.main(meta_grammar): print k, v
 #. main nest(('<_>'+('<rule>'.plus()+match('$'))))
-#. rule nest(('<name>'+(match('\\=')+('<_>'+('<nestpeg>'+(match('\\.')+('<_>'+feed(fn))))))))
-#. nestpeg nest(('<peg>'+feed(fn)))
-#. peg nest((('<term>'+(match('\\|')+('<_>'+('<peg>'+feed(fn)))))|('<term>'|feed(fn))))
-#. term nest((('<factor>'+('<term>'+feed(fn)))|'<factor>'))
-#. factor nest(((match('\\~')+('<_>'+('<factor>'+feed(fn))))|(('<primary>'+(match('\\*')+('<_>'+feed(fn))))|(('<primary>'+(match('\\+')+('<_>'+feed(fn))))|(('<primary>'+(match('\\?')+('<_>'+feed(fn))))|'<primary>')))))
-#. primary nest(((match('\\(')+('<_>'+('<peg>'+(match('\\)')+'<_>'))))|((match('\\{')+('<_>'+('<peg>'+(match('\\}')+('<_>'+feed(fn))))))|((match("'")+('<quoted_char>'.star()+(match("'")+('<_>'+feed(fn)))))|((match('\\/')+('<regex_char>'.star()+(match('\\/')+('<_>'+feed(fn)))))|((match('\\:')+('<_>'+('<name>'+feed(fn))))|('<name>'+feed(fn))))))))
+#. rule nest(('<name>'+(literal('=')+('<_>'+('<nestpeg>'+(literal('.')+('<_>'+feed(hug))))))))
+#. nestpeg nest(('<peg>'+feed(nest)))
+#. peg nest((('<term>'+(literal('|')+('<_>'+('<peg>'+feed(either)))))|('<term>'|feed(mk_empty))))
+#. term nest((('<factor>'+('<term>'+feed(chain)))|'<factor>'))
+#. factor nest(((literal('~')+('<_>'+('<factor>'+feed(invert))))|(('<primary>'+(literal('*')+('<_>'+feed(star))))|(('<primary>'+(literal('+')+('<_>'+feed(plus))))|(('<primary>'+(literal('?')+('<_>'+feed(maybe))))|'<primary>')))))
+#. primary nest(((literal('(')+('<_>'+('<peg>'+(literal(')')+'<_>'))))|((literal('{')+('<_>'+('<peg>'+(literal('}')+('<_>'+feed(capture))))))|((match("'")+('<quoted_char>'.star()+(match("'")+('<_>'+feed(mk_literal)))))|((literal('/')+('<regex_char>'.star()+(literal('/')+('<_>'+feed(mk_match)))))|((literal(':')+('<_>'+('<name>'+feed(meta_mk_feed))))|('<name>'+feed(meta_mk_rule_ref))))))))
 #. quoted_char nest((match('\\\\(.)')|match("([^'])")))
 #. regex_char nest((match('(\\\\.)')|match('([^\\/])')))
 #. name nest((match('([A-Za-z_]\\w*)')+'<_>'))
