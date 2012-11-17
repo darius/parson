@@ -252,6 +252,7 @@ def _parse_grammar(string):
 
     _              = match(r'(?:\s|#[^\n]*\n?)*')
     name           = match(r'([A-Za-z_]\w*)') +_
+    word           = match(r'(\w+)') +_
 
     regex_char     = match(r'(\\.|[^/])')
     quoted_char    = match(r'\\(.)') | match(r"([^'])")
@@ -275,7 +276,7 @@ def _parse_grammar(string):
                    | '{' +_+ peg + '}' +_               >> lift(capture)
                    | "'" + quoted_char.star() + "'" +_  >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
-                   | ':' +_+ name                       >> unquote
+                   | ':' +_+ word                       >> unquote
                    | name                               >> mk_rule_ref)
 
     rule           = name + '=' +_+ (peg>>lift(nest)) + '.' +_ >> hug
