@@ -6,7 +6,7 @@ from parson import *
 
 def meta_mk_feed(name):
     def fn(*args): return '%s(%s)' % (name, ' '.join(map(repr, args)))
-    return label(feed(fn), lambda: 'feed(%s)' % name)
+    return label(feed(fn), 'feed(%s)', name)
 def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 
 def mk_empty(): return empty
