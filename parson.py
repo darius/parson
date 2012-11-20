@@ -32,84 +32,6 @@ def Peg(x):
     if callable(x):                   return feed(x)
     raise ValueError("Not a Peg", x)
 
-def recur(fn):
-    "Return a peg p such that p = fn(p). This is like the Y combinator."
-    p = delay(lambda: fn(p), 'recur(%s)', _fn_name(fn))
-    return p
-
-def delay(thunk, *face):        # XXX document face
-    """Precondition: thunk() will return a peg p. We immediately
-    return a peg q equivalent to that future p, but we'll call thunk()
-    only once, and not until the first use of q. Use this for
-    recursive grammars."""
-    def run(s, far, st):
-        q.run = Peg(thunk()).run
-        return q.run(s, far, st)
-    q = _Peg(face or ('delay(%s)', _fn_name(thunk)),
-             run)
-    return q
-
-def _step(far, i):
-    "Update far with a new position."
-    far[0] = max(far[0], i)
-    return i
-
-def literal(string):
-    "Return a peg that matches string exactly."
-    return label(match(re.escape(string)),
-                 'literal(%r)', string)
-
-def match(regex):
-    """Return a peg that matches what regex does, adding any captures
-    to the values tuple."""
-    return _Peg(('match(%r)', regex),
-                lambda s, far, (i, vals):
-                    [(_step(far, i + m.end()), vals + m.groups())
-                     for m in [re.match(regex, s[i:])] if m])
-
-def capture(p):
-    """Return a peg that acts like p, except it adds to the values
-    tuple the text that p matched."""
-    return _Peg(('capture(%r)', p),
-                lambda s, far, (i, vals):
-                    [(i2, vals2 + (s[i:i2],))
-                     for i2, vals2 in p.run(s, far, (i, vals))])
-
-def feed(fn):
-    """Return a peg that always succeeds, changing the values tuple
-    from xs to (fn(*xs),). (We're feeding fn with the values.)"""
-    return _Peg(('feed(%s)', _fn_name(fn)),
-                lambda s, far, (i, vals): [(i, (fn(*vals),))])
-
-def invert(p):
-    "Return a peg that succeeds just when p fails."
-    return _Peg(('invert(%r)', p),
-                lambda s, far, st: [] if p.run(s, [0], st) else [st])
-
-def either(p, q):
-    """Return a peg that succeeds just when one of p or q does, trying
-    them in that order."""
-    return _Peg(('(%r|%r)', p, q),
-                lambda s, far, st:
-                    p.run(s, far, st) or q.run(s, far, st))
-
-def chain(p, q):
-    """Return a peg that succeeds when p and q both do, with q
-    starting where p left off."""
-    return _Peg(('(%r+%r)', p, q),
-                lambda s, far, st:
-                    [st3 
-                     for st2 in p.run(s, far, st)
-                     for st3 in q.run(s, far, st2)])
-
-def nest(p):
-    """Return a peg like p, but where p doesn't get to see or alter
-    the incoming values tuple."""
-    return _Peg(('nest(%r)', p),
-                lambda s, far, (i, vals):
-                    [(i2, vals + vals2)
-                     for i2, vals2 in p.run(s, far, (i, ()))])
-
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
     return label(either(p, empty),
@@ -125,11 +47,10 @@ def star(p):
     return label(recur(lambda p_star: either(chain(p, p_star), empty)),
                  '%r.star()', p)
 
-def label(p, string, *args):
-    """Return an equivalent peg whose repr is (string % args), or just
-    string if no args."""
-    return _Peg(((string,) + args if args else string),
-                p.run)
+def invert(p):
+    "Return a peg that succeeds just when p fails."
+    return _Peg(('invert(%r)', p),
+                lambda s, far, st: [] if p.run(s, [0], st) else [st])
 
 class _Peg(object):
     """A parsing expression. It can match a prefix of a sequence,
@@ -163,6 +84,9 @@ class _Peg(object):
     plus = plus
     star = star
 
+def _fn_name(fn):
+    return fn.func_name if hasattr(fn, 'func_name') else repr(fn)
+
 class Unparsable(Exception):
     "A parsing failure."
     @property
@@ -174,15 +98,93 @@ class Unparsable(Exception):
         "Return slices of the input before and after the parse failure."
         return self.args[1], self.args[2]
 
+def label(p, string, *args):
+    """Return an equivalent peg whose repr is (string % args), or just
+    string if no args."""
+    return _Peg(((string,) + args if args else string),
+                p.run)
+
+def recur(fn):
+    "Return a peg p such that p = fn(p). This is like the Y combinator."
+    p = delay(lambda: fn(p), 'recur(%s)', _fn_name(fn))
+    return p
+
+def delay(thunk, *face):        # XXX document face
+    """Precondition: thunk() will return a peg p. We immediately
+    return a peg q equivalent to that future p, but we'll call thunk()
+    only once, and not until the first use of q. Use this for
+    recursive grammars."""
+    def run(s, far, st):
+        q.run = Peg(thunk()).run
+        return q.run(s, far, st)
+    q = _Peg(face or ('delay(%s)', _fn_name(thunk)),
+             run)
+    return q
+
 # TODO: need doc comments or something
 fail  = _Peg('fail', lambda s, far, st: [])
 empty = _Peg('empty', lambda s, far, st: [st])
              
 position = _Peg('position', lambda s, far, (i, vals): [(i, vals + (i,))])
                 
+def literal(string):
+    "Return a peg that matches string exactly."
+    return label(match(re.escape(string)),
+                 'literal(%r)', string)
 
-def _fn_name(fn):
-    return fn.func_name if hasattr(fn, 'func_name') else repr(fn)
+def match(regex):
+    """Return a peg that matches what regex does, adding any captures
+    to the values tuple."""
+    return _Peg(('match(%r)', regex),
+                lambda s, far, (i, vals):
+                    [(_step(far, i + m.end()), vals + m.groups())
+                     for m in [re.match(regex, s[i:])] if m])
+
+def _step(far, i):
+    "Update far with a new position."
+    far[0] = max(far[0], i)
+    return i
+
+def capture(p):
+    """Return a peg that acts like p, except it adds to the values
+    tuple the text that p matched."""
+    return _Peg(('capture(%r)', p),
+                lambda s, far, (i, vals):
+                    [(i2, vals2 + (s[i:i2],))
+                     for i2, vals2 in p.run(s, far, (i, vals))])
+
+def nest(p):
+    """Return a peg like p, but where p doesn't get to see or alter
+    the incoming values tuple."""
+    return _Peg(('nest(%r)', p),
+                lambda s, far, (i, vals):
+                    [(i2, vals + vals2)
+                     for i2, vals2 in p.run(s, far, (i, ()))])
+
+def either(p, q):
+    """Return a peg that succeeds just when one of p or q does, trying
+    them in that order."""
+    return _Peg(('(%r|%r)', p, q),
+                lambda s, far, st:
+                    p.run(s, far, st) or q.run(s, far, st))
+
+def chain(p, q):
+    """Return a peg that succeeds when p and q both do, with q
+    starting where p left off."""
+    return _Peg(('(%r+%r)', p, q),
+                lambda s, far, st:
+                    [st3 
+                     for st2 in p.run(s, far, st)
+                     for st3 in q.run(s, far, st2)])
+
+def feed(fn):
+    """Return a peg that always succeeds, changing the values tuple
+    from xs to (fn(*xs),). (We're feeding fn with the values.)"""
+    return _Peg(('feed(%s)', _fn_name(fn)),
+                lambda s, far, (i, vals): [(i, (fn(*vals),))])
+
+
+# Some often-useful actions for feed().
 
 def hug(*vals):
     "Make one tuple out of any number of arguments."
@@ -191,6 +193,7 @@ def hug(*vals):
 def join(*strs):
     "Make one string out of any number of string arguments."
     return ''.join(strs)
+
 
 # Alternative: non-regex basic matchers, good for non-string inputs.
 
