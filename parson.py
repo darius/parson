@@ -49,7 +49,7 @@ def star(p):
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
-    return _Peg(('invert(%r)', p),
+    return _Peg(('~(%r)', p),
                 lambda s, far, st: [] if p.run(s, [0], st) else [st])
 
 class _Peg(object):
