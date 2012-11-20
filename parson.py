@@ -177,11 +177,17 @@ def chain(p, q):
                      for st2 in p.run(s, far, st)
                      for st3 in q.run(s, far, st2)])
 
+def alter(fn):                  # XXX better name
+    """Return a peg that always succeeds, changing the values tuple
+    from xs to fn(*xs)."""
+    return _Peg(('alter(%s)', _fn_name(fn)),
+                lambda s, far, (i, vals): [(i, fn(*vals))])  # XXX check that result is tuple?
+
 def feed(fn):
     """Return a peg that always succeeds, changing the values tuple
     from xs to (fn(*xs),). (We're feeding fn with the values.)"""
-    return _Peg(('feed(%s)', _fn_name(fn)),
-                lambda s, far, (i, vals): [(i, (fn(*vals),))])
+    return label(alter(lambda *vals: (fn(*vals),)),
+                 'feed(%s)', _fn_name(fn))
 
 
 # Some often-useful actions for feed().
