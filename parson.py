@@ -44,7 +44,7 @@ def plus(p):
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
-    return label(recur(lambda p_star: either(chain(p, p_star), empty)),
+    return label(recur(lambda p_star: maybe(chain(p, p_star))),
                  '%r.star()', p)
 
 def invert(p):
