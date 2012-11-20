@@ -259,7 +259,7 @@ def _parse_grammar(string):
     mk_literal = lambda *cs: lambda subs: literal(''.join(cs))
     mk_match   = lambda *cs: lambda subs: match(''.join(cs))
 
-    _              = match(r'(?:\s|#[^\n]*\n?)*')
+    _              = match(r'(?:\s|#[^\n]*\n?)*')   # Whitespace and comments
     name           = match(r'([A-Za-z_]\w*)') +_
     word           = match(r'(\w+)') +_
 
