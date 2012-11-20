@@ -217,7 +217,7 @@ def one_of(item):
 someone = label(one_that(lambda x: True), 'someone')
 
 
-# Parse a string representation of a grammar.
+# Build pegs from a string representation of a grammar.
 
 def Grammar(string):
     """XXX doc comment
