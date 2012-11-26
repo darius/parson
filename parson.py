@@ -223,6 +223,29 @@ def one_of(item):
 someone = label(one_that(lambda x: True), 'someone')
 
 
+# Non-strings can include nested sequences:
+
+def nest(p):
+    "Return a peg that eats one item, a sequence that p eats a prefix of."
+    def run(s, far, (i, vals)):
+        try: item = s[i]
+        except IndexError: return []
+        if not _is_indexable(item): return []
+        return [(_step(far, i+1), vals1)
+                for _, vals1 in p.run(item, [0], (0, vals))]
+    return _Peg(('nest(%r)', p), run)
+
+def _is_indexable(x):
+    try: x[0]
+    except TypeError: return False
+    except KeyError: return False
+    return True
+
+## (nest(one_of(1)) + one_of(5)).attempt([1, 5])
+## (nest(one_of(1)) + one_of(5)).attempt([[1], 5])
+#. ()
+
+
 # Build pegs from a string representation of a grammar.
 
 def Grammar(string):
