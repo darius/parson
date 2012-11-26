@@ -77,7 +77,7 @@ class _Peg(object):
     def __radd__(self, other): return chain(Peg(other), self)
     def __or__(self, other):   return either(self, Peg(other))
     def __ror__(self, other):  return either(Peg(other), self)
-    def __rshift__(self, fn):  return label(nest(chain(self, Peg(fn))),
+    def __rshift__(self, fn):  return label(seclude(chain(self, Peg(fn))),
                                             '(%r>>%s)', self, _fn_name(fn))
     __invert__ = invert
     maybe = maybe
@@ -153,10 +153,10 @@ def capture(p):
                     [(i2, vals2 + (s[i:i2],))
                      for i2, vals2 in p.run(s, far, (i, vals))])
 
-def nest(p):
+def seclude(p):
     """Return a peg like p, but where p doesn't get to see or alter
     the incoming values tuple."""
-    return _Peg(('nest(%r)', p),
+    return _Peg(('seclude(%r)', p),
                 lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))])
@@ -283,9 +283,9 @@ def _parse_grammar(string):
 
     factor         = delay(lambda:
                      '~' +_+ factor                     >> lift(invert)
-                   | nest(primary + (  '*' +_+             lift(star)
-                                     | '+' +_+             lift(plus)
-                                     | '?' +_+             lift(maybe) ).maybe()))
+                   | seclude(primary + (  '*' +_+          lift(star)
+                                        | '+' +_+          lift(plus)
+                                        | '?' +_+          lift(maybe) ).maybe()))
 
     primary        = ('(' +_+ peg + ')' +_
                    | '{' +_+ peg + '}' +_               >> lift(capture)
@@ -294,7 +294,7 @@ def _parse_grammar(string):
                    | ':' +_+ word                       >> unquote
                    | name                               >> mk_rule_ref)
 
-    rule           = name + '=' +_+ (peg>>lift(nest)) + '.' +_ >> hug
+    rule           = name + '=' +_+ (peg>>lift(seclude)) + '.' +_ >> hug
     grammar        = _+ rule.plus() + match('$')
 
     try:
