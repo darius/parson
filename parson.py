@@ -220,7 +220,7 @@ def one_of(item):
     return label(one_that(lambda x: item == x),
                  'one_of(%r)', item)
 
-someone = label(one_that(lambda x: True), 'someone')
+anyone = label(one_that(lambda x: True), 'anyone')
 
 
 # Non-strings can include nested sequences:
