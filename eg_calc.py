@@ -9,7 +9,7 @@ end = ~anyone
 
 def match(p, x): return (p + end)([x])
 
-def an_instance(typ): return one_that(lambda x: isinstance(x, typ))
+def an_instance(type_): return one_that(lambda x: isinstance(x, type_))
 
 def capture1(p): return capture(p) >> (lambda x: x[0]) # Ouch
 var = capture1(anyone)
