@@ -238,6 +238,7 @@ def _is_indexable(x):
     try: x[0]
     except TypeError: return False
     except KeyError: return False
+    except IndexError: return True
     return True
 
 ## (nest(one_of(1)) + one_of(5)).attempt([1, 5])
