@@ -42,10 +42,9 @@ flatten1 = delay(lambda:
 # Figure 2.7 in the OMeta thesis, more or less:
 
 def walk(p, q=capture1(an_instance(int))):
-    expr = (  nest(one_of('+') + p.star() + end) >> tag('+')
+    return (  nest(one_of('+') + p.star() + end) >> tag('+')
             | nest(one_of('-') + p.star() + end) >> tag('-')
             | q)
-    return expr
 
 def tag(constant):
     return lambda *args: (constant,) + args
