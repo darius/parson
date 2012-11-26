@@ -29,4 +29,34 @@ eg2 = ['+', ['-', 2, 4], 3]
 ## match(calc, eg2)
 #. (1,)
 
-# TODO: optimizer example
+
+# Exercise: transforming trees with generic walks
+
+flatten1 = delay(lambda:
+                   nest(one_of('+') + flatten1.star() + end)
+                 | capture1(an_instance(int)))
+
+## match(flatten1, ['+', ['+', ['+', 1, ['+', 2]]]])
+#. (1, 2)
+
+# Figure 2.7 in the OMeta thesis, more or less:
+
+def walk(p, q=capture1(an_instance(int))):
+    expr = (  nest(one_of('+') + p.star() + end) >> tag('+')
+            | nest(one_of('-') + p.star() + end) >> tag('-')
+            | q)
+    return expr
+
+def tag(constant):
+    return lambda *args: (constant,) + args
+
+flatten2 = delay(lambda:
+                   nest(one_of('+') + flatten2 + end)
+                 | nest(one_of('+') + inside.star() + end) >> tag('+')
+                 | walk(flatten2))
+inside   = delay(lambda:
+                   nest(one_of('+') + inside.star() + end)
+                 | flatten2)
+
+## match(flatten2, ['+', ['+', ['+', 1, ['+', 2], ['+', 3, 4]]]])
+#. (('+', 1, 2, 3, 4),)
