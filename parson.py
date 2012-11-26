@@ -212,8 +212,7 @@ def one_that(ok):
         try: item = s[i]
         except IndexError: return []
         return [(_step(far, i+1), vals)] if ok(item) else []
-    return _Peg(('one_that(%s)', _fn_name(ok)),
-                run)
+    return _Peg(('one_that(%s)', _fn_name(ok)), run)
 
 def one_of(item):
     "Return a peg that eats one element equal to the argument."
