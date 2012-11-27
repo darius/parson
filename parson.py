@@ -123,7 +123,7 @@ def delay(thunk, *face):        # XXX document face
 
 # TODO: need doc comments or something
 fail  = _Peg('fail', lambda s, far, st: [])
-empty = _Peg('empty', lambda s, far, st: [st])
+empty = label(~fail, 'empty')
              
 position = _Peg('position', lambda s, far, (i, vals): [(i, vals + (i,))])
                 
