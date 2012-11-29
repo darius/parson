@@ -58,10 +58,9 @@ anyone = /./ | /\n/.   # Ugh.
 
      mk_choice   = lambda *xs: ' / '.join(xs),
      mk_fixed    = lambda tag, choice: '%s{ %s }' % (tag, choice),
-     mk_sequence = lambda *xs: ' '.join('(%s)' % x if ' / ' in x else x
-                                        for x in xs),
+     mk_sequence = lambda *xs: ' '.join(map(wrap, xs)),
      mk_shuffle  = lambda *xs: '{ %s }' % (' / '.join(xs)),
-     mk_weighted = lambda *spairs: ' / '.join('[%s] %s' % (w, '(%s)' % x if ' / ' in x else x)
+     mk_weighted = lambda *spairs: ' / '.join('[%s] %s' % (w, wrap(x))
                                               for w, x in zip(spairs[0::2],
                                                               spairs[1::2])),
 
@@ -72,6 +71,9 @@ anyone = /./ | /\n/.   # Ugh.
      mk_aan = lambda: '-a-an-',
      mk_concat = lambda: '-adjoining-',
      )
+
+def wrap(x):
+    return '(%s)' % x if ' / ' in x else x
 
 def parse_camel(s):
     assert re.match(r'([A-Z][a-z]*)*$', s)
