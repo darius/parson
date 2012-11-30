@@ -39,7 +39,7 @@ quoted_char     = /\\(.)/ | /([^'])/.
 regex_char      = /(\\.)/ | /([^\/])/.
 
 name            = /([A-Za-z_]\w*)/ _.
-_               = /(?:\s|#[^\n]*\n?)*/.
+_               = /(?:\s|#.*)*/.
 """
 
 g = Grammar(meta_grammar)(**globals())
@@ -54,5 +54,5 @@ g = Grammar(meta_grammar)(**globals())
 #. quoted_char seclude((match('\\\\(.)')|match("([^'])")))
 #. regex_char seclude((match('(\\\\.)')|match('([^\\/])')))
 #. name seclude((match('([A-Za-z_]\\w*)')+'<_>'))
-#. _ seclude(match('(?:\\s|#[^\\n]*\\n?)*'))
+#. _ seclude(match('(?:\\s|#.*)*'))
 #. 
