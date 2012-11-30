@@ -135,10 +135,11 @@ def literal(string):
 def match(regex):
     """Return a peg that matches what regex does, adding any captures
     to the values tuple."""
+    compiled = re.compile(regex)
     return _Peg(('match(%r)', regex),
                 lambda s, far, (i, vals):
-                    [(_step(far, i + m.end()), vals + m.groups())
-                     for m in [re.match(regex, s[i:])] if m])
+                    [(_step(far, m.end()), vals + m.groups())
+                     for m in [compiled.match(s, i)] if m])
 
 def _step(far, i):
     "Update far with a new position."
