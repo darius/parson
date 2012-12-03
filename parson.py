@@ -66,7 +66,7 @@ class _Peg(object):
         """Parse a prefix of sequence and return a tuple of values, or
         raise Unparsable."""
         far = [0]
-        for i, vals in self.run(sequence, far, (0, ())):
+        for _, vals in self.run(sequence, far, (0, ())):
             return vals
         raise Unparsable(self, sequence[:far[0]], sequence[far[0]:])
     def attempt(self, sequence):
