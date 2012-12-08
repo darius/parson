@@ -105,20 +105,26 @@ def match(regex, flags=0):
 def capture(p):
     def run(s):
         for vals, nub in p.run(s):
-#            if nub is nil: return [((s,), nub)] # XXX do we need this?
-            # XXX a string method, won't work for other sequences:
-            if s.endswith(nub): return [((s[:-len(nub)],), nub)]
+            # XXX use the position change instead, once we're tracking that:
+            if s is not nil and nub is not nil:
+                i = len(s) - len(nub)
+                if s[i:] == nub:
+                    return [((s[:i],), nub)]
             raise Exception("Bad capture")
         return []
     return _Peg(run)
 
 ## capture(match('h..') + match('.'))('hi there')
 #. ('hi t',)
-## startswith('hi')('hi there')
-#. ()
+## capture(item(anything) + item(anything))([3])
+## capture(item(anything) + item(anything))([3, 1])
+#. ([3, 1],)
 
 
 # More derived combinators
+
+## startswith('hi')('hi there')
+#. ()
 
 def startswith(s): return match(re.escape(s))
 
