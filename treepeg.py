@@ -58,6 +58,10 @@ nil = ['nil']
 fail    = _Peg(lambda s: [])
 succeed = _Peg(lambda s: [((), s)])
 
+## anything('hi')
+#. ('hi',)
+## chain(anything, succeed)('hi')
+
 def cond(p, q, r):
     def run(s):
         pv = p.run(s)
