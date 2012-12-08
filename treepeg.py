@@ -50,6 +50,9 @@ class _Peg(object):
     plus = plus
     star = star
 
+
+# Basic combinators
+
 nil = ['nil']
 
 fail    = _Peg(lambda s: [])
@@ -113,6 +116,7 @@ def capture(p):
 #. ('hi t',)
 ## startswith('hi')('hi there')
 #. ()
+
 
 # More derived combinators
 
