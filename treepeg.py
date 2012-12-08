@@ -61,6 +61,7 @@ succeed = _Peg(lambda s: [((), s)])
 ## anything('hi')
 #. ('hi',)
 ## chain(anything, succeed)('hi')
+#. ('hi',)
 
 def cond(p, q, r):
     def run(s):
@@ -72,12 +73,11 @@ def cond(p, q, r):
 
 def satisfying(ok):
     "Eat a subject s when ok(s), producing (s,)."
-    return _Peg(lambda s: [((s,), nil)] if ok(s) else [])
+    return _Peg(lambda s: [((s,), nil)] if s is not nil and ok(s) else [])
 
 def chain(p, q):
     return _Peg(lambda s: [(pvals + qvals, qnub)
                            for pvals, pnub in p.run(s)
-                           if pnub is not nil
                            for qvals, qnub in q.run(pnub)])
 
 def alter(p, f):
@@ -94,6 +94,7 @@ def delay(thunk):
 def item(p):
     "Eat the first item of a sequence, iff p matches it."
     def run(s):
+        if s is nil: return []
         try: first = s[0]
         except IndexError: return []
         except TypeError: return []
@@ -103,8 +104,10 @@ def item(p):
 
 def match(regex, flags=0):
     compiled = re.compile(regex, flags)
-    return _Peg(lambda s: [(m.groups(), s[m.end():])
-                           for m in [compiled.match(s)] if m])
+    return _Peg(lambda s: 
+                [] if s is nil
+                else [(m.groups(), s[m.end():])
+                      for m in [compiled.match(s)] if m])
 
 def capture(p):
     def run(s):
