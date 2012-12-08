@@ -56,8 +56,12 @@ fail    = _Peg(lambda s: [])
 succeed = _Peg(lambda s: [((), s)])
 
 def cond(p, q, r):
-    if p is q: return _Peg(lambda s: p.run(s) or r.run(s)) # (an optimization)
-    else: return _Peg(lambda s: (q if p.run(s) else r).run(s))
+    def run(s):
+        pv = p.run(s)
+        choice = q if pv else r
+        if choice is p: return pv # (an optimization)
+        else: return choice.run(s)
+    return _Peg(run)
 
 def satisfying(ok):
     "Eat a subject s when ok(s), producing (s,)."
