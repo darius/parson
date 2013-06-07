@@ -260,6 +260,7 @@ def Grammar(string):
     def bind(**subs):           # subs = substitutions
         for rule, f in items:
             rules[rule] = label(f(subs), rule)
+        # XXX warn about unresolved :foo interpolations at this point?
         return _Struct(**rules)
     return bind
 
@@ -309,7 +310,8 @@ def _parse_grammar(string):
                      '~' +_+ factor                     >> lift(invert)
                    | seclude(primary + (  '*' +_+          lift(star)
                                         | '+' +_+          lift(plus)
-                                        | '?' +_+          lift(maybe) ).maybe()))
+                                        | '?' +_+          lift(maybe)
+                                      ).maybe()))
 
     primary        = ('(' +_+ peg + ')' +_
                    | '{' +_+ peg + '}' +_               >> lift(capture)
