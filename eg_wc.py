@@ -13,7 +13,7 @@ wc     = zero + blanks + (add1 + marks + blanks).star()
 
 ## wc('  ')
 #. (0,)
-## wc('  a b c ')
+## wc('a b c ')
 #. (3,)
 ## wc(example_input)
 #. (10,)
