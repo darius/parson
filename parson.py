@@ -268,8 +268,9 @@ class _Struct(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+_builtins = __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
 _default_subs = dict((k, feed(v))
-                     for k, v in __builtins__.items() if callable(v))
+                     for k, v in _builtins.items() if callable(v))
 _default_subs.update(dict(hug=feed(hug), join=feed(join), position=position))
 
 def _parse_grammar(string):
