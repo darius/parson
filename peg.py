@@ -15,17 +15,52 @@ def Drop(cont): return lambda (_, trail): (cont, trail)
 def Nip(cont): return lambda (entry, (_, trail)): (cont, (entry, trail))
 def Dup(cont): return lambda (entry, trail): (cont, (entry, (entry, trail)))
 
-def Alter(fn):     return lambda pr, f, s: lambda ((vs,cs,ks), trail): (
-    s, ((fn(*vs),cs,ks), trail))
-def Item(ok):      return lambda pr, f, s: lambda ((vs,cs,ks), trail): (
-    (s, ((vs+(cs[0],), cs[1:], ks), trail)) if cs and ok(cs[0])
-    else (f, trail))
-def Ref(name):     return lambda pr, f, s: lambda ((vs,cs,ks), trail): (
-    pr[name], ((vs,cs,((f,s),ks)), trail))
+def fnsucceed(((vs,cs,((_,sk),ks)), trail)):
+    return sk, ((vs,cs,ks), trail)
+def fnfail(((vs,cs,((fk,_),ks)), trail)):
+    return fk, trail
 
-def Fail(pr, f, s): return Drop(f)
-def Chain(q, r):   return lambda pr, f, s: q(pr, f, r(pr, f, s))
-def Cond(q, n, y): return lambda pr, f, s: Dup(q(pr, n(pr, f, s), Drop(y(pr, f, s))))
+def finalfail(trail):
+    assert trail is ()
+    return None, 'fail'
+def finalsucceed(((vs,cs,ks), trail)):
+    assert trail is ()
+    assert ks is ()
+    return None, (vs, cs)
+
+Fail = 'fail', None
+def Alter(fn):     return 'alter', fn
+def Item(ok):      return 'item', ok
+def Ref(name):     return 'ref', name
+def Chain(q, r):   return 'chain', (q, r)
+def Cond(q, n, y): return 'cond', (q, n, y)
+
+def translate(pr, peg, f, s):
+    tag, arg = peg
+    if tag == 'fail':
+        return Drop(f) 
+    elif tag == 'alter':
+        fn = arg
+        return lambda ((vs,cs,ks), trail): (s, ((fn(*vs),cs,ks), trail))
+    elif tag == 'item':
+        ok = arg
+        return lambda ((vs,cs,ks), trail): (
+            (s, ((vs+(cs[0],), cs[1:], ks), trail)) if cs and ok(cs[0])
+            else (f, trail))
+    elif tag == 'ref':
+        name = arg
+        return lambda ((vs,cs,ks), trail): (
+            pr[name], ((vs,cs,((f,s),ks)), trail))
+    elif tag == 'chain':
+        return translate(pr, arg[0], f,
+                         translate(pr, arg[1], f, s))
+    elif tag == 'cond':
+        q, n, y = arg
+        return Dup(translate(pr, q,
+                             translate(pr, n, f, s),
+                             Drop(translate(pr, y, f, s))))
+    else:
+        assert False
 
 def trampoline(cont, trail):
     while cont is not None:
@@ -33,23 +68,11 @@ def trampoline(cont, trail):
     return trail
 
 def run(q, defns, vs, cs):
-    def fail(trail):
-        assert trail is ()
-        return None, 'fail'
-    def succeed(((vs,cs,ks), trail)):
-        assert trail is ()
-        assert ks is ()
-        return None, (vs, cs)
     pr = {}
     for name, defn in defns.items():
-        pr[name] = defn(pr, fnfail, fnsucceed)
-    return trampoline(q(pr, fail, succeed),
+        pr[name] = translate(pr, defn, fnfail, fnsucceed)
+    return trampoline(translate(pr, q, finalfail, finalsucceed),
                       ((vs,cs,()), ()))
-
-def fnsucceed(((vs,cs,((_,sk),ks)), trail)):
-    return sk, ((vs,cs,ks), trail)
-def fnfail(((vs,cs,((fk,_),ks)), trail)):
-    return fk, trail
 
 
 # Smoke test
