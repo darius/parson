@@ -110,3 +110,8 @@ def test(string):
 #    return run(bit, (), string)
 #    return run(twobits, {}, (), string)
     return run(Ref('nbits'), nbits_defs, (), string)
+
+## test('xy')
+#. ((), 'xy')
+## test('01101a')
+#. (('0', '1', '1', '0', '1'), 'a')
