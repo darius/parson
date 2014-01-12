@@ -11,6 +11,12 @@ to do: bounce less often
 +
 """
 
+# continuation: trail -> result
+# trail: () | ((vs,cs,ks), trail)
+# vs: tuple of values from semantic actions
+# cs: input character sequence (the current tail thereof)
+# ks: () | ((fail_cont,success_cont), ks)
+
 def Drop(cont): return lambda (_, trail): (cont, trail)
 def Nip(cont): return lambda (entry, (_, trail)): (cont, (entry, trail))
 def Dup(cont): return lambda (entry, trail): (cont, (entry, (entry, trail)))
@@ -28,12 +34,24 @@ def finalsucceed(((vs,cs,ks), trail)):
     assert ks is ()
     return None, (vs, cs)
 
+def trampoline(cont, trail):
+    while cont is not None:
+        cont, trail = cont(trail)
+    return trail
+
+
+# peg constructors
+
 Fail = 'fail', None
 def Alter(fn):     return 'alter', fn
 def Item(ok):      return 'item', ok
 def Ref(name):     return 'ref', name
 def Chain(q, r):   return 'chain', (q, r)
 def Cond(q, n, y): return 'cond', (q, n, y)
+
+
+# (program, peg, fail_cont, success_cont) -> cont
+# where program: dict(string -> cont)
 
 def translate(pr, peg, f, s):
     tag, arg = peg
@@ -65,11 +83,6 @@ def translate(pr, peg, f, s):
         return Dup(translate(pr, q, translate(pr, n, f, s), yy))
     else:
         assert False
-
-def trampoline(cont, trail):
-    while cont is not None:
-        cont, trail = cont(trail)
-    return trail
 
 def run(q, defns, vs, cs):
     pr = {}
