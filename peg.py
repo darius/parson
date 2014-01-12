@@ -1,5 +1,5 @@
 """
-A PEG matcher using explicit control instead of recursion.
+A PEG parser using explicit control instead of recursion.
 Avoids Python stack overflow.
 Also a step towards compiling instead of interpreting.
 
@@ -74,7 +74,7 @@ def translate(pr, peg, f, s):
                          translate(pr, arg[1], f, s))
     elif tag == 'cond':
         q, n, y = arg
-        if q == y:
+        if y == q:
             yy = Nip(s)
         elif y[0] == 'chain' and y[1][0] == q:
             yy = Nip(translate(pr, y[1][1], f, s))
