@@ -3,7 +3,7 @@ A PEG matcher using explicit control instead of recursion.
 Avoids Python stack overflow.
 Also a step towards compiling instead of interpreting.
 
-to do: optimize q==y with Nip
+to do: test this: optimize q==y with Nip
 to do: produce code instead of closures
 to do: bounce less often
 
