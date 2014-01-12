@@ -56,9 +56,13 @@ def translate(pr, peg, f, s):
                          translate(pr, arg[1], f, s))
     elif tag == 'cond':
         q, n, y = arg
-        return Dup(translate(pr, q,
-                             translate(pr, n, f, s),
-                             Drop(translate(pr, y, f, s))))
+        if q == y:
+            yy = Nip(s)
+        elif y[0] == 'chain' and y[1][0] == q:
+            yy = Nip(translate(pr, y[1][1], f, s))
+        else:
+            yy = Drop(translate(pr, y, f, s))
+        return Dup(translate(pr, q, translate(pr, n, f, s), yy))
     else:
         assert False
 
