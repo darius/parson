@@ -6,9 +6,6 @@ Also a step towards compiling instead of interpreting.
 to do: test this: optimize q==y with Nip
 to do: produce code instead of closures
 to do: bounce less often
-
-=
-+
 """
 
 # peg constructors
