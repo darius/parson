@@ -23,7 +23,7 @@ def Cond(q, n, y): return 'cond', (q, n, y)
 
 def translate(pr, peg, f, s):
     tag, arg = peg
-    if tag == 'fail':    return KDrop(f) 
+    if   tag == 'fail':  return KDrop(f) 
     elif tag == 'alter': return KAlter(arg, s)
     elif tag == 'item':  return KItem(arg, f, s)
     elif tag == 'ref':   return KCall(pr, arg, f, s)
