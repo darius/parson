@@ -298,31 +298,33 @@ def _parse_grammar(string):
     regex_char     = match(r'(\\.|[^/])')
     quoted_char    = match(r'\\(.)') | match(r"([^'])")
 
-    peg            = delay(lambda: 
-                     term + '|' +_+ peg                 >> lift(either)
-                   | term
-                   | empty                              >> lift(lambda: empty))
+    pe             = seclude(delay(lambda: 
+                     term + ('|' +_+ pe + lift(either)).maybe()
+                   | lift(lambda: empty)))
 
-    term           = delay(lambda:
-                     factor + term                      >> lift(chain)
-                   | factor)
+    term           = seclude(delay(lambda:
+                     factor + (term + lift(chain)).maybe()))
 
-    factor         = delay(lambda:
-                     '~' +_+ factor                     >> lift(invert)
-                   | seclude(primary + (  '*' +_+          lift(star)
-                                        | '+' +_+          lift(plus)
-                                        | '?' +_+          lift(maybe)
-                                      ).maybe()))
+    factor         = seclude(delay(lambda:
+                     '~' +_+ factor                     + lift(invert)
+                   | primary + ( '*' +_+ lift(star)
+                               | '+' +_+ lift(plus)
+                               | '?' +_+ lift(maybe)
+                               ).maybe()))
 
-    primary        = ('(' +_+ peg + ')' +_
-                   | '{' +_+ peg + '}' +_               >> lift(capture)
+    primary        = ('(' +_+ pe + ')' +_
+                   | '[' +_+ pe + ']' +_                >> lift(seclude)
+                   | '{' +_+ pe + '}' +_                >> lift(capture)
                    | "'" + quoted_char.star() + "'" +_  >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
                    | ':' +_+ word                       >> unquote
                    | name                               >> mk_rule_ref)
 
-    rule           = name + '=' +_+ (peg>>lift(seclude)) + '.' +_ >> hug
-    grammar        = _+ rule.plus() + match('$')
+    rule           = seclude(
+                     name + ('=' +_+ pe
+                             | '::=' +_+ (pe >> lift(seclude)))
+                     + '.' +_ + hug)
+    grammar        = _+ rule.plus() + ~match('.')
 
     try:
         items = grammar(string)
@@ -491,13 +493,9 @@ def exceptionally(thunk):
 
 nums = Grammar(r"""
 # This is a comment.
-main = nums /$/.  # So's this.
-
-nums = num ',' nums
-     | num
-     | .
-
-num  = /([0-9]+)/ :int.
+main ::= nums ~/./.  # So's this.
+nums ::= (num (',' nums)*)?.
+num  ::= /([0-9]+)/ :int.
 """)()
 sum_nums = lambda s: sum(nums.main(s))
 
@@ -516,7 +514,7 @@ sum_nums = lambda s: sum(nums.main(s))
 
 
 gsub_grammar = Grammar(r"""
-gsub = (:p :replace | /(.)/) gsub | .
+gsub = [:p :replace | /(.)/]*.
 """)
 def gsub(text, p, replacement):
     g = gsub_grammar(p=p, replace=lambda: replacement)

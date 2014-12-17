@@ -14,40 +14,39 @@ def translate(grammar):
 g = Grammar(r"""
 grammar = _ defn*.
 
-defn = var '='_ exp ';'_ :hug.
+defn ::= var '='_ exp ';'_ :hug.
 
-exp = 'Choice'   args    :mk_choice
-    | 'Fixed'    args    :mk_fixed
-    | 'Sequence' args    :mk_sequence
-    | 'Shuffle'  args    :mk_shuffle
-    | 'Weighted' args    :mk_weighted
-    | /Period\b/_        :mk_period
-    | /Comma\b/_         :mk_comma
-    | /Semicolon\b/_     :mk_semicolon
-    | /Dash\b/_          :mk_dash
-    | /AAn\b/_           :mk_aan
-    | /Concat\b/_        :mk_concat
-    | /null\b/_          :mk_null
-    | var
-    | string
-    | int.
+exp ::= 'Choice'   args    :mk_choice
+     |  'Fixed'    args    :mk_fixed
+     |  'Sequence' args    :mk_sequence
+     |  'Shuffle'  args    :mk_shuffle
+     |  'Weighted' args    :mk_weighted
+     |  /Period\b/_        :mk_period
+     |  /Comma\b/_         :mk_comma
+     |  /Semicolon\b/_     :mk_semicolon
+     |  /Dash\b/_          :mk_dash
+     |  /AAn\b/_           :mk_aan
+     |  /Concat\b/_        :mk_concat
+     |  /null\b/_          :mk_null
+     |  var
+     |  string
+     |  int.
 
-args = '('_ exps? ')'_.
-exps = exp (','_ exps)*.
+args ::= '('_ exps? ')'_.
+exps ::= exp (','_ exps)*.
 
-var = /([A-Za-z_]\w*)/_  :mk_var.
+var ::= /([A-Za-z_]\w*)/_  :mk_var.
 
-int = /(\d+)/            :mk_int.
+int ::= /(\d+)/            :mk_int.
 
-string = '"' qchars '"'_ :join :mk_string.
-qchars = qchar*.
-qchar = ~/["\\]/ /(.)/.
+string ::= '"' qchar* '"'_ :join :mk_string.
+qchar ::= ~/["\\]/ /(.)/.
 
-_ = (space | comment)*.
-space = /\s+/.
-comment = '/*' (~'*/' anyone)* '*/'.
+_ ::= (space | comment)*.
+space ::= /\s+/.
+comment ::= '/*' (~'*/' anyone)* '*/'.
 
-anyone = /./ | /\n/.   # Ugh.
+anyone ::= /./ | /\n/.   # Ugh.
 """)(hug = hug,
      join = join,
 
@@ -136,7 +135,6 @@ def parse_camel(s):
 #. -name- = gender{ -male-name- / -female-name- }
 #. -male-name- = Bernard / Joseph / Emmett / Ogden / Eugene / Xerxes / Joshua / Lemuel / Etienne
 #. -female-name- = Emmalissa / Chloe / Tiffani / Eunice / Zoe / Jennifer / Imelda / Yvette / Melantha
-#. 
 
 ## wake = open('mutagen/wake.js').read()
 ## translate(wake)
@@ -167,4 +165,3 @@ def parse_camel(s):
 #. -group-desc- = [2] the / [2] ((the / -a-an-) -group-word- of) / [1] ((the / ()) (six / eight / ten / dozen))
 #. -group-word- = { crowd / group / cluster / party / mob / flurry }
 #. -base-people- = men / women / ladies / men / women / farmers / factory-workers / soldiers / mourners
-#. 

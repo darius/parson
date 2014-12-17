@@ -55,53 +55,52 @@ fold_infix_app = lambda _left, _op, _right: \
 #                          lambda _left,_op,_right: [_op, _left, _right]]
 
 toy_grammar = Grammar(r"""
-main      = _ E /$/.
+main    ::= _ E ~/./.
 
-E         = Fp '`'_ V '`'_ E     :fold_infix_app
-          | Fp                   :fold_apps
-          | '&'_ Vp '=>'_ E      :fold_lam
-          | /let\b/_ Decls E     :make_let
-          | /case\b/_ E Cases    :make_case.
+E       ::= Fp '`'_ V '`'_ E     :fold_infix_app
+         |  Fp                   :fold_apps
+         |  '&'_ Vp '=>'_ E      :fold_lam
+         |  /let\b/_ Decls E     :make_let
+         |  /case\b/_ E Cases    :make_case.
 
-Cases     = Case+ :hug.
-Case      = '|'_ Param '=>'_ E   :hug.
+Cases   ::= Case+ :hug.
+Case    ::= '|'_ Param '=>'_ E   :hug.
 
-Param     = Const
-          | V
-          | '('_ Param ')'_
-          | '['_ ParamList ']'_.
+Param   ::= Const
+         |  V
+         |  '('_ Param ')'_
+         |  '['_ ParamList ']'_.
 
-ParamList = Param ','_ Param    :make_list_pattern.
+ParamList::= Param ','_ Param    :make_list_pattern.
 
-Decls    = Decl+ :hug.
-Decl     = /defer\b/_ V ';'_       :make_defer
-         | /bind\b/_ V '='_ E ';'_ :make_bind
-         | Vp '='_ E ';'_          :make_eqn.
+Decls  ::= Decl+ :hug.
+Decl   ::= /defer\b/_ V ';'_       :make_defer
+        |  /bind\b/_ V '='_ E ';'_ :make_bind
+        |  Vp '='_ E ';'_          :make_eqn.
 
-Fp       = F+ :hug.
-F        = Const                :make_const
-         | V                    :make_var
-         | '('_ E ')'_
-         | '{'_ F Fp '}'_       :fold_send
-         | '['_ EList ']'_      :hug :make_list_expr.
+Fp     ::= F+ :hug.
+F      ::= Const                :make_const
+        |  V                    :make_var
+        |  '('_ E ')'_
+        |  '{'_ F Fp '}'_       :fold_send
+        |  '['_ EList ']'_      :hug :make_list_expr.
 
-EList    = E ','_ EList
-         | E?.
+EList  ::= (E (','_ EList)?)?.
 
-Vp       = V+ :hug.
-V        = Identifier
-         | Operator.
+Vp     ::= V+ :hug.
+V      ::= Identifier
+        |  Operator.
 
-Identifier = /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b\s*/.
-Operator   = /(<=|:=|[!+-.])\s*/.
+Identifier ::= /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b\s*/.
+Operator   ::= /(<=|:=|[!+-.])\s*/.
 
-Const    = '.'_ V               :make_lit_sym
-         | /"([^"]*)"/_         :repr
-         | /(-?\d+)/_
-         | '('_ ')'_            :parens
-         | '['_ ']'_            :brackets.
+Const  ::= '.'_ V               :make_lit_sym
+        |  /"([^"]*)"/_         :repr
+        |  /(-?\d+)/_
+        |  '('_ ')'_            :parens
+        |  '['_ ']'_            :brackets.
 
-_        = /\s*/.
+_      ::= /\s*/.
 """)(**globals())
 
 ## toy_grammar.main('.+')
@@ -111,28 +110,20 @@ _        = /\s*/.
 
 ## print toy_grammar.main('0')
 #. ('0',)
-#. 
 ## print toy_grammar.main('x')
 #. ('x',)
-#. 
 ## print toy_grammar.main('let x=y; x')[0]
 #. (let ((x) y) x)
-#. 
 ## print toy_grammar.main.attempt('')
 #. None
-#. 
 ## print toy_grammar.main('x x . y')[0]
 #. ((x x) (quote y))
-#. 
 ## print toy_grammar.main.attempt('(when (in the)')
 #. None
-#. 
 ## print toy_grammar.main('&M => (&f => M (f f)) (&f => M (f f))')[0]
 #. (lambda (M) ((lambda (f) (M (f f))) (lambda (f) (M (f f)))))
-#. 
 ## print toy_grammar.main('&a b c => a b')[0]
 #. (lambda (a) (lambda (b) (lambda (c) (a b))))
-#. 
 
 ## toy_grammar.main('x')
 #. ('x',)
@@ -190,7 +181,6 @@ make_mint
 #print toy_grammar.main('let defer mint; mint')
 ## print toy_grammar.main(mint)[0]
 #. (let ((make_mint name) (case (make_brand name) ((list sealer unsealer) (let (defer mint) ((real_mint name msg) (case msg ((quote __print_on) (lambda (out) ((out (quote print)) ((name (quote .)) "'s mint")))) ((quote make_purse) (lambda (initial_balance) (let ((_) (assert (is_int initial_balance))) ((_) (assert ((0 (quote <=)) initial_balance))) ((balance) (make_box initial_balance)) ((decr amount) (let ((_) (assert (is_int amount))) ((_) (assert ((((0 (quote <=)) amount) (quote and)) ((amount (quote <=)) balance)))) ((balance (quote :=)) (((balance (quote !)) (quote -)) amount)))) ((purse msg) (case msg ((quote __print_on) (lambda (out) ((out (quote print)) (((((('has ' (quote .)) (to_str balance)) (quote .)) name) (quote .)) ' bucks')))) ((quote balance) (balance (quote !))) ((quote sprout) ((mint (quote make_purse)) 0)) ((quote get_decr) ((sealer (quote seal)) decr)) ((quote deposit) (lambda (amount) (lambda (source) (let ((_) (((unsealer (quote unseal)) (source (quote get_decr))) amount)) ((balance (quote :=)) (((balance (quote !)) (quote +)) amount)))))))) purse))))) (bind mint real_mint) mint)))) make_mint)
-#. 
 
 mintskel = r"""
 let make_mint name =
@@ -204,7 +194,6 @@ make_mint
 """
 ## print toy_grammar.main(mintskel)[0]
 #. (let ((make_mint name) (case (make_brand name) ((list sealer unsealer) (let (defer mint) mint)))) make_mint)
-#. 
 
 voting = r"""
 let make_one_shot f =
@@ -230,4 +219,3 @@ start_voting
 """
 ## print toy_grammar.main(voting)[0]
 #. (let ((make_one_shot f) (let ((armed) (make_box True)) (lambda (x) (let ((_) (assert ((armed (quote !)) (quote not)))) ((_) ((armed (quote :=)) False)) (f x))))) ((start_voting voters choices timer) (let ((ballot_box) ((map (lambda (_) (make_box 0))) choices)) ((poll voter) (let ((make_checkbox pair) (case pair ((list choice tally) (list (((choice ,) make_one_shot) (lambda (_) ((tally (quote :=)) (((tally (quote !)) (quote +)) 1)))))))) ((ballot) ((map make_checkbox) ((zip choices) ballot_box))) (voter <- ballot))) ((_) ((for_each poll) voters)) (list ((close_polls ,) totals)))) start_voting)
-#. 
