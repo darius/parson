@@ -40,8 +40,6 @@ regex_char    ::= /(\\.)/ | /([^\/])/.
 name          ::= /([A-Za-z_]\w*)/ _.
 _             ::= /(?:\s|#.*)*/.
 """
-## feed(int)
-#. :(<type 'int'>)
 
 g = Grammar(meta_grammar)(**globals())
 ## for k, v in g.main(meta_grammar): print k, v

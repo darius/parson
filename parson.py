@@ -188,7 +188,7 @@ def feed(fn):
     """Return a peg that always succeeds, changing the values tuple
     from xs to (fn(*xs),). (We're feeding fn with the values.)"""
     return label(alter(lambda *vals: (fn(*vals),)),
-                 ':(%s)', _fn_name(fn))
+                 ':%s', _fn_name(fn))
 
 
 # Some often-useful actions for feed().
