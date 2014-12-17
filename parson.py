@@ -35,17 +35,17 @@ def Peg(x):
 def maybe(p):
     "Return a peg matching 0 or 1 of what p matches."
     return label(either(p, empty),
-                 '%r.maybe()', p)
+                 '(%r)?', p)
 
 def plus(p):
     "Return a peg matching 1 or more of what p matches."
     return label(chain(p, star(p)),
-                 '%r.plus()', p)
+                 '(%r)+', p)
 
 def star(p):
     "Return a peg matching 0 or more of what p matches."
     return label(recur(lambda p_star: maybe(chain(p, p_star))),
-                 '%r.star()', p)
+                 '(%r)*', p)
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
@@ -136,7 +136,7 @@ def match(regex):
     """Return a peg that matches what regex does, adding any captures
     to the values tuple."""
     compiled = re.compile(regex)
-    return _Peg(('match(%r)', regex),
+    return _Peg(('/%s/', regex),
                 lambda s, far, (i, vals):
                     [(_step(far, m.end()), vals + m.groups())
                      for m in [compiled.match(s, i)] if m])
@@ -157,7 +157,7 @@ def capture(p):
 def seclude(p):
     """Return a peg like p, but where p doesn't get to see or alter
     the incoming values tuple."""
-    return _Peg(('seclude(%r)', p),
+    return _Peg(('[%r]', p),
                 lambda s, far, (i, vals):
                     [(i2, vals + vals2)
                      for i2, vals2 in p.run(s, far, (i, ()))])
@@ -172,7 +172,7 @@ def either(p, q):
 def chain(p, q):
     """Return a peg that succeeds when p and q both do, with q
     starting where p left off."""
-    return _Peg(('(%r+%r)', p, q),
+    return _Peg(('(%r %r)', p, q),
                 lambda s, far, st:
                     [st3 
                      for st2 in p.run(s, far, st)
@@ -188,7 +188,7 @@ def feed(fn):
     """Return a peg that always succeeds, changing the values tuple
     from xs to (fn(*xs),). (We're feeding fn with the values.)"""
     return label(alter(lambda *vals: (fn(*vals),)),
-                 'feed(%s)', _fn_name(fn))
+                 ':(%s)', _fn_name(fn))
 
 
 # Some often-useful actions for feed().

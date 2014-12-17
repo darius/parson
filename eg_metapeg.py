@@ -6,7 +6,7 @@ from parson import *
 
 def meta_mk_feed(name):
     def fn(*args): return '%s(%s)' % (name, ' '.join(map(repr, args)))
-    return label(feed(fn), 'feed(%s)', name)
+    return label(feed(fn), ':'+name)
 def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 
 def mk_empty(): return empty
@@ -40,16 +40,18 @@ regex_char    ::= /(\\.)/ | /([^\/])/.
 name          ::= /([A-Za-z_]\w*)/ _.
 _             ::= /(?:\s|#.*)*/.
 """
+## feed(int)
+#. :(<type 'int'>)
 
 g = Grammar(meta_grammar)(**globals())
 ## for k, v in g.main(meta_grammar): print k, v
-#. main seclude(('<_>'+('<rule>'.plus()+~(match('.')))))
-#. rule seclude(('<name>'+(((literal('=')+('<_>'+'<pe>'))|(literal('::=')+('<_>'+seclude(('<pe>'+feed(seclude))))))+(literal('.')+('<_>'+feed(hug))))))
-#. pe seclude((('<term>'+(literal('|')+('<_>'+('<pe>'+feed(either)))).maybe())|feed(mk_empty)))
-#. term seclude(('<factor>'+('<term>'+feed(chain)).maybe()))
-#. factor seclude(((literal('~')+('<_>'+('<factor>'+feed(invert))))|('<primary>'+((literal('*')+('<_>'+feed(star)))|((literal('+')+('<_>'+feed(plus)))|(literal('?')+('<_>'+feed(maybe))))).maybe())))
-#. primary seclude(((literal('(')+('<_>'+('<pe>'+(literal(')')+'<_>'))))|((literal('[')+('<_>'+('<pe>'+(literal(']')+('<_>'+feed(seclude))))))|((literal('{')+('<_>'+('<pe>'+(literal('}')+('<_>'+feed(capture))))))|((match("'")+('<quoted_char>'.star()+(match("'")+('<_>'+feed(mk_literal)))))|((literal('/')+('<regex_char>'.star()+(literal('/')+('<_>'+feed(mk_match)))))|((literal(':')+('<_>'+('<name>'+feed(meta_mk_feed))))|('<name>'+feed(meta_mk_rule_ref)))))))))
-#. quoted_char seclude((match('\\\\(.)')|match("([^'])")))
-#. regex_char seclude((match('(\\\\.)')|match('([^\\/])')))
-#. name seclude((match('([A-Za-z_]\\w*)')+'<_>'))
-#. _ seclude(match('(?:\\s|#.*)*'))
+#. main [('<_>' (('<rule>')+ ~(/./)))]
+#. rule [('<name>' (((literal('=') ('<_>' '<pe>'))|(literal('::=') ('<_>' [('<pe>' :seclude)]))) (literal('.') ('<_>' :hug))))]
+#. pe [(('<term>' ((literal('|') ('<_>' ('<pe>' :either))))?)|:mk_empty)]
+#. term [('<factor>' (('<term>' :chain))?)]
+#. factor [((literal('~') ('<_>' ('<factor>' :invert)))|('<primary>' (((literal('*') ('<_>' :star))|((literal('+') ('<_>' :plus))|(literal('?') ('<_>' :maybe)))))?))]
+#. primary [((literal('(') ('<_>' ('<pe>' (literal(')') '<_>'))))|((literal('[') ('<_>' ('<pe>' (literal(']') ('<_>' :seclude)))))|((literal('{') ('<_>' ('<pe>' (literal('}') ('<_>' :capture)))))|((/'/ (('<quoted_char>')* (/'/ ('<_>' :mk_literal))))|((literal('/') (('<regex_char>')* (literal('/') ('<_>' :mk_match))))|((literal(':') ('<_>' ('<name>' :meta_mk_feed)))|('<name>' :meta_mk_rule_ref)))))))]
+#. quoted_char [(/\\(.)/|/([^'])/)]
+#. regex_char [(/(\\.)/|/([^\/])/)]
+#. name [(/([A-Za-z_]\w*)/ '<_>')]
+#. _ [/(?:\s|#.*)*/]
