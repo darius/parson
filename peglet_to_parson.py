@@ -3,7 +3,7 @@ Convert a Peglet grammar to a Parson one.
 Doesn't do everything: you need to change undefined names to :names in the output.
 """
 
-from parson import Grammar, Unparsable, hug, join
+from parson import Grammar, join
 
 grammar = Grammar(r"""
 grammar ::= _? rule*              :join.
