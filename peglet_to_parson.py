@@ -8,7 +8,7 @@ from parson import Grammar, alter
 name = r'[A-Za-z_]\w*'
 
 grammar = Grammar(r"""
-grammar ::= _? rule*.
+grammar ::= _? rule* ~/./.
 rule    ::= name _ '= ' :equ token* [:dot] _?.
 token   ::= '|'                     :bar
          |  /(\/\w*\/\s)/

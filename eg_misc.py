@@ -15,14 +15,12 @@ def Tag(label):
     return lambda *parts: (label,) + parts
 
 name = Grammar(r"""
-name    ::= title first middle last.
-title   ::= title_ :Title _ |.
-title_  ::= /(Dr|Mr|Ms|Mrs|St)[.]?/ | /(Pope(?:ss)?)/.
-first   ::= /([A-Za-z]+)/ :First _.
-middle  ::= middle_ :Middle _ |.
-middle_ ::= /([A-Z])[.]/ | /([A-Za-z]+)/.
-last    ::= /([A-Za-z]+)/ :Last.
-_       ::= /\s+/.
+name   ::= title first middle last.
+title  ::= (/(Dr|Mr|Ms|Mrs|St)[.]?/ | /(Pope(?:ss)?)/) _ :Title |.
+first  ::= /([A-Za-z]+)/ _ :First.
+middle ::= (/([A-Z])[.]/ | /([A-Za-z]+)/) _ :Middle |.
+last   ::= /([A-Za-z]+)/ :Last.
+_      ::= /\s+/.
 """)(Title  = Tag('title'),
      First  = Tag('first'),
      Middle = Tag('middle'),
@@ -31,33 +29,27 @@ _       ::= /\s+/.
 #. (('title', 'Popess'), ('first', 'Darius'), ('middle', 'Q'), ('last', 'Bacon'))
 
 ichbins = Grammar(r"""
-main     ::=  _ sexp.
+main    ::= _ sexp.
 
-sexp     ::=  /\\(.)/         _ :lit_char
-          |   '"' qchars '"'  _ :join
-          |   symchars        _ :join
-          |   /'/ _ sexp        :quote
-          |   '(' _ sexps ')' _ :hug.
+sexp    ::= /\\(.)/         _ :lit_char
+         |  '"' qchar* '"'  _ :join
+         |  symchar+        _ :join
+         |  /'/ _ sexp        :quote
+         |  '(' _ sexp* ')' _ :hug.
 
-sexps    ::=  sexp sexps
-          |  .
+qchar   ::= /\\(.)/
+         |  /([^"])/.
 
-qchars   ::=  /\\(.)/ qchars
-          |   /([^"])/ qchars
-          |   .
+symchar ::= /([^\s\\"'()])/.
 
-symchars ::=  symchar symchars
-          |   symchar.
-symchar  ::=  /([^\s\\"'()])/.
-
-_        ::=  /\s*/.
+_       ::= /\s*/.
 """)(lit_char = ord,
      join     = join,
      quote    = lambda x: ('quote', x),
      hug      = hug)
 
-## ichbins.sexps('() (hey)')
-#. ((), ('hey',))
+## ichbins.sexp('(hey)')
+#. (('hey',),)
 
 ## ichbins.main('hi')
 #. ('hi',)
@@ -73,27 +65,23 @@ _        ::=  /\s*/.
 as_and_bs = Grammar(r"""
 allS ::= S ~/./.
 
-S    ::= /a/ B
-      |  /b/ A
+S    ::= 'a' B
+      |  'b' A
       |  .
 
-A    ::= /a/ S
-      |  /b/ A A.
+A    ::= 'a' S
+      |  'b' A A.
 
-B    ::= /b/ S
-      |  /a/ B B.
+B    ::= 'b' S
+      |  'a' B B.
 """)()
 
 ## as_and_bs.allS("abaabbbbaa")
 #. ()
 
 nums = Grammar(r"""
-allnums ::= nums ~/./.
-
-nums    ::= num ',' nums
-         |  num
-         |  .
-
+allnums ::= nums? ~/./.
+nums    ::= num (',' num)*.
 num     ::= /(\d+)/ :int.
 """)(int=int)
 sum_nums = lambda s: sum(nums.allnums(s))
@@ -110,40 +98,36 @@ one_word = Grammar(r"word ::= /\w+/ :position.")(position=position)
 ## one_word.word.attempt(' ')
 
 namevalues = Grammar(r"""
-list   ::= _ pairs ~/./.
-pairs  ::= pair pairs
-        |  .
-pair   ::= name '=' _ name /[,;]?/ _   :hug.
-name   ::= /(\w+)/ _.
-_      ::= /\s*/.
+list ::= _ pair* ~/./.
+pair ::= name '=' _ name /[,;]?/ _   :hug.
+name ::= /(\w+)/ _.
+_    ::= /\s*/.
 """)(**globals())
 namevalues_dict = lambda s: dict(namevalues.list(s))
 ## namevalues_dict("a=b, c = hi; next = pi")
 #. {'a': 'b', 'c': 'hi', 'next': 'pi'}
 
-# Splitting a string. But with lpeg it's parametric over a pattern p.
+# Splitting a string. TODO: But with lpeg it's parametric over a pattern p.
 # NB this assumes p doesn't match '', and that it doesn't capture.
 
 splitting = Grammar(r"""
-split  ::= p split
-        |  chunk :join split
-        |  .
-chunk  ::= p
-        |  /(.)/ chunk.
-p      ::= /\s/.
+split ::= (p | chunk :join) split | .  # XXX why not a *?
+chunk ::= p
+       |  /(.)/ chunk.
+p     ::= /\s/.
 """)(**globals())
 ## splitting.split('hello a world  is    nice    ')
 #. ('hello', 'a', 'world', 'is', 'nice')
+## splitting.chunk('hello a world  is    nice    ')
+#. ('h', 'e', 'l', 'l', 'o')
 
 # Searching for a pattern: also parameterized by p.
 # (skipped)
 
 balanced_parens = Grammar(r"""
-bal  ::=  '(' cs ')'.
-cs   ::=  c cs
-      |   .
-c    ::=  /[^()]/
-      |   bal.
+bal ::= '(' c* ')'.
+c   ::= /[^()]/
+     |  bal.
 """)()
 
 ## balanced_parens.bal.attempt('()')
@@ -153,27 +137,23 @@ c    ::=  /[^()]/
 # gsub: another parameterized one
 
 gsub = lambda text, replacement: ''.join(Grammar(r"""
-gsub ::=  p gsub
-      |   /(.)/ gsub
-      |   .
-p    ::=  /WHEE/ :replace.
+gsub ::= (p | /(.)/) gsub
+      |  .
+p    ::= /WHEE/ :replace.
 """)(replace=lambda: replacement).gsub(text))
+# TODO actually replace p
 
 ## gsub('hi there WHEEWHEE to you WHEEEE', 'GLARG')
 #. 'hi there GLARGGLARG to you GLARGEE'
 
 csv = Grammar(r"""
-record ::=   field fields ~/./.
-fields ::=   ',' field fields
-        |    .
+record ::= field (',' field)* ~/./.
 
-field  ::=   '"' qchars /"\s*/ :join
-        |    /([^,"\n]*)/.
+field  ::= '"' qchar* /"\s*/ :join
+        |  /([^,"\n]*)/.
 
-qchars ::=   qchar qchars
-        |    .
-qchar  ::=   /([^"])/
-        |    '""' :dquote.
+qchar  ::= /([^"])/
+        |  '""' :dquote.
 """)(join = join,
      dquote = lambda: '"')
 
@@ -197,17 +177,16 @@ def p(grammar, rule, text):
         return e
 
 metagrammar = r"""
-grammar       ::=  _ rule+.
-rule          ::=  name '=' _ expr '.' _    :make_rule.
-expr          ::=  term.
-term          ::=  factors ':' _ name       :reduce_
-               |   factors.
-factors       ::=  factor factors           :seq
-               |                            :empty.
-factor        ::=  /'((?:\\.|[^'])*)'/ _    :literal
-               |   name                     :rule_ref.
-name          ::=  /(\w+)/ _.
-_             ::=  /\s*/.
+grammar ::= _ rule+.
+rule    ::= name '=' _ expr '.' _    :make_rule.
+expr    ::= term ('|' expr           :alt)*.
+term    ::= factors (':' _ name      :reduce_)?.
+factors ::= factor factors           :seq
+         |                           :empty.
+factor  ::= /'((?:\\.|[^'])*)'/ _    :literal
+         |  name                     :rule_ref.
+name    ::= /(\w+)/ _.
+_       ::= /\s*/.
 """
 
 def make_rule(name, expr): return '%s: %s' % (name, expr)
@@ -226,10 +205,10 @@ def rule_ref(name):        return '<%s>' % name
 #. ('/goodbye/+<world>+<>',)
 
 bal = r"""
-allbalanced ::=  _ bal ~/./.
-_           ::=  /\s*/.
-bal         ::=  '(' _ bal ')' _ :hug bal
-             |   /(\w+)/ _
+allbalanced ::= _ bal ~/./.
+_           ::= /\s*/.
+bal         ::= '(' _ bal ')' _ :hug bal
+             |  /(\w+)/ _
              |  .
 """
 ## p(bal, 'allbalanced', '(x) y')
@@ -238,12 +217,10 @@ bal         ::=  '(' _ bal ')' _ :hug bal
 #. Unparsable(allbalanced, 'x ', 'y')
 
 curl = r"""
-one_expr ::=  _ expr ~/./.
-_        ::=  /\s*/.
-expr     ::=  '{' _ exprs '}' _ :hug
-          |   /([^{}\s]+)/ _.
-exprs    ::=  expr exprs
-          |   .
+one_expr ::= _ expr ~/./.
+_        ::= /\s*/.
+expr     ::= '{' _ expr* '}' _ :hug
+          |  /([^{}\s]+)/ _.
 """
 ## p(curl, 'one_expr', '')
 #. Unparsable(one_expr, '', '')
