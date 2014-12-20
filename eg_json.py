@@ -17,8 +17,8 @@ mk_number  = float
 json_parse = Grammar(r"""
 start    ::= _ value.
 
-object   ::= '{'_ members? '}'_       :mk_object.
-members  ::= pair (','_ pair)*.
+object   ::= '{'_ pairs? '}'_         :mk_object.
+pairs    ::= pair (','_ pair)*.
 pair     ::= string ':'_ value        :hug.
 
 array    ::= '['_ elements? ']'_      :hug.
@@ -36,8 +36,8 @@ char     ::= /([^\x00-\x1f"\\])/
 xd       ::= /([0-9a-fA-F])/.
 
 number   ::= int (frac exp? | exp)? _ :join :mk_number.
-int      ::= /(-?)(0)/ ~/\d/
-          |  /(-?)([1-9]\d*)/.
+int      ::= /(-?0)/ ~/\d/
+          |  /(-?[1-9]\d*)/.
 frac     ::= /([.]\d+)/.
 exp      ::= /([eE][+-]?\d+)/.
 
