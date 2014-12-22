@@ -16,7 +16,7 @@ token   ::= '|'                     :bar
          |  '!'                     :inv
          |  _ ~(name _ '= ' | ~/./)
          |  ~('= '|name) /(\S+)/    :regex.
-name    ::= /("""+name+""")/.
+name    ::= /("""+name+""")/ ~~(/\s/ | ~/./).
 _       ::= /(\s+)/.
 """)
 actions = dict(dot   = lambda: '.',
