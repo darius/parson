@@ -18,7 +18,7 @@ def chat():
             print e, ('' if pc is None else 'at line %d' % lines[pc][0])
 
 grammar = Grammar(r"""
-command  ::= /(\d+)/_ :int /(.*)/        /$/ :set_line
+command   :  /(\d+)/_ :int /(.*)/        /$/ :set_line
           |  'run'  /\b/_                /$/ :run
           |  'new'  /\b/_                /$/ :new
           |  'load' /\b/_ /(\S+)/_       /$/ :load
@@ -26,7 +26,7 @@ command  ::= /(\d+)/_ :int /(.*)/        /$/ :set_line
           |  stmt
           |                              /$/.
 
-stmt     ::= 'print'  /\b/_ printing                  /$/        :next
+stmt      :  'print'  /\b/_ printing                  /$/        :next
           |  '?'          _ printing                  /$/        :next
           |  'input'  /\b/_ id                        /$/ :input :next
           |  'goto'   /\b/_ exp0                      /$/        :goto
@@ -38,37 +38,37 @@ stmt     ::= 'print'  /\b/_ printing                  /$/        :next
           |  'rem'    /\b/   /.*/                     /$/        :next
           | ('let'    /\b/_)? id '='_ exp0            /$/ :store :next.
 
-printing ::= (display writes)?.
-writes   ::= ';'_        printing
+printing  :  (display writes)?.
+writes    :  ';'_        printing
           |  ','_ :space printing
           |       :newline.
-display  ::= exp0 :write
+display   :  exp0 :write
           |  '"' [qchar :write]* '"'_.
-qchar    ::= /"(")/
+qchar     :  /"(")/
           |  /([^"])/.
 
-relexp   ::= exp0 (  '<>'_ exp0 :ne
+relexp    :  exp0 (  '<>'_ exp0 :ne
                    | '<='_ exp0 :le
                    | '<' _ exp0 :lt
                    | '=' _ exp0 :eq
                    | '>='_ exp0 :ge
                    | '>' _ exp0 :gt
                   )?.
-exp0     ::= exp1 (  '+'_ exp1 :add
+exp0      :  exp1 (  '+'_ exp1 :add
                    | '-'_ exp1 :sub
                   )*.
-exp1     ::= exp2 (  '*'_ exp2 :mul
+exp1      :  exp2 (  '*'_ exp2 :mul
                    | '/'_ exp2 :idiv
                   )*.
-exp2     ::= primary ('^'_ exp2 :pow)?.
+exp2      :  primary ('^'_ exp2 :pow)?.
 
-primary  ::= '-'_ exp1 :neg
+primary   :  '-'_ exp1 :neg
           |  /(\d+)/_  :int
           |  id        :fetch
           |  '('_ exp0 ')'_.
 
-id       ::= /([a-z])/_.  # TODO: longer names, screening out reserved words
-_        ::= /\s*/.
+id        :  /([a-z])/_.  # TODO: longer names, screening out reserved words
+_         :  /\s*/.
 """)
 
 

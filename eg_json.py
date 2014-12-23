@@ -15,33 +15,33 @@ mk_number  = float
 
 # Following http://www.json.org/
 json_parse = Grammar(r"""
-start    ::= _ value.
+start     :  _ value.
 
-object   ::= '{'_ pairs? '}'_         :mk_object.
-pairs    ::= pair (','_ pair)*.
-pair     ::= string ':'_ value        :hug.
+object    :  '{'_ pairs? '}'_         :mk_object.
+pairs     :  pair (','_ pair)*.
+pair      :  string ':'_ value        :hug.
 
-array    ::= '['_ elements? ']'_      :hug.
-elements ::= value (','_ value)*.
+array     :  '['_ elements? ']'_      :hug.
+elements  :  value (','_ value)*.
 
-value    ::= string | number
+value     :  string | number
           |  object | array
           |  /(true|false|null)\b/_   :mk_literal.
 
-string   ::= '"' char* '"'_           :join.
-char     ::= /([^\x00-\x1f"\\])/
+string    :  '"' char* '"'_           :join.
+char      :  /([^\x00-\x1f"\\])/
           |  /\\(["\/\\])/
           |  /(\\[bfnrt])/            :escape
           |  /(\\u)/ xd xd xd xd      :join :escape.
-xd       ::= /([0-9a-fA-F])/.
+xd        :  /([0-9a-fA-F])/.
 
-number   ::= int (frac exp? | exp)? _ :join :mk_number.
-int      ::= /(-?0)/ ~/\d/
+number    :  int (frac exp? | exp)? _ :join :mk_number.
+int       :  /(-?0)/ ~/\d/
           |  /(-?[1-9]\d*)/.
-frac     ::= /([.]\d+)/.
-exp      ::= /([eE][+-]?\d+)/.
+frac      :  /([.]\d+)/.
+exp       :  /([eE][+-]?\d+)/.
 
-_        ::= /\s*/.
+_         :  /\s*/.
 """)(**globals()).start
 
 # XXX The spec says "whitespace may be inserted between any pair of

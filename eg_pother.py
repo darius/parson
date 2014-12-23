@@ -55,52 +55,52 @@ fold_infix_app = lambda _left, _op, _right: \
 #                          lambda _left,_op,_right: [_op, _left, _right]]
 
 toy_grammar = Grammar(r"""
-main    ::= _ E ~/./.
+main       :  _ E ~/./.
 
-E       ::= Fp '`'_ V '`'_ E     :fold_infix_app
-         |  Fp                   :fold_apps
-         |  '&'_ Vp '=>'_ E      :fold_lam
-         |  /let\b/_ Decls E     :make_let
-         |  /case\b/_ E Cases    :make_case.
+E          :  Fp '`'_ V '`'_ E     :fold_infix_app
+           |  Fp                   :fold_apps
+           |  '&'_ Vp '=>'_ E      :fold_lam
+           |  /let\b/_ Decls E     :make_let
+           |  /case\b/_ E Cases    :make_case.
 
-Cases   ::= Case+ :hug.
-Case    ::= '|'_ Param '=>'_ E   :hug.
+Cases      :  Case+ :hug.
+Case       :  '|'_ Param '=>'_ E   :hug.
 
-Param   ::= Const
-         |  V
-         |  '('_ Param ')'_
-         |  '['_ ParamList ']'_.
+Param      :  Const
+           |  V
+           |  '('_ Param ')'_
+           |  '['_ ParamList ']'_.
 
-ParamList::= Param ','_ Param    :make_list_pattern.
+ParamList  :  Param ','_ Param    :make_list_pattern.
 
-Decls  ::= Decl+ :hug.
-Decl   ::= /defer\b/_ V ';'_       :make_defer
-        |  /bind\b/_ V '='_ E ';'_ :make_bind
-        |  Vp '='_ E ';'_          :make_eqn.
+Decls      :  Decl+ :hug.
+Decl       :  /defer\b/_ V ';'_       :make_defer
+           |  /bind\b/_ V '='_ E ';'_ :make_bind
+           |  Vp '='_ E ';'_          :make_eqn.
 
-Fp     ::= F+ :hug.
-F      ::= Const                :make_const
-        |  V                    :make_var
-        |  '('_ E ')'_
-        |  '{'_ F Fp '}'_       :fold_send
-        |  '['_ EList ']'_      :hug :make_list_expr.
+Fp         :  F+ :hug.
+F          :  Const                :make_const
+           |  V                    :make_var
+           |  '('_ E ')'_
+           |  '{'_ F Fp '}'_       :fold_send
+           |  '['_ EList ']'_      :hug :make_list_expr.
 
-EList  ::= (E (','_ EList)?)?.
+EList      :  (E (','_ EList)?)?.
 
-Vp     ::= V+ :hug.
-V      ::= Identifier
-        |  Operator.
+Vp         :  V+ :hug.
+V          :  Identifier
+           |  Operator.
 
-Identifier ::= /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b\s*/.
-Operator   ::= /(<=|:=|[!+-.])\s*/.
+Identifier :  /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b\s*/.
+Operator   :  /(<=|:=|[!+-.])\s*/.
 
-Const  ::= '.'_ V               :make_lit_sym
-        |  /"([^"]*)"/_         :repr
-        |  /(-?\d+)/_
-        |  '('_ ')'_            :parens
-        |  '['_ ']'_            :brackets.
+Const      :  '.'_ V               :make_lit_sym
+           |  /"([^"]*)"/_         :repr
+           |  /(-?\d+)/_
+           |  '('_ ')'_            :parens
+           |  '['_ ']'_            :brackets.
 
-_      ::= /\s*/.
+_          :  /\s*/.
 """)(**globals())
 
 ## toy_grammar.main('.+')

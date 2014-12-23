@@ -322,7 +322,7 @@ def _parse_grammar(string):
 
     rule           = seclude(
                      name + ('=' +_+ pe
-                             | '::=' +_+ (pe >> lift(seclude)))
+                             | ':' +_+ (pe >> lift(seclude)))
                      + '.' +_ + hug)
     grammar        = _+ rule.plus() + ~match('.')
 
@@ -493,9 +493,9 @@ def exceptionally(thunk):
 
 nums = Grammar(r"""
 # This is a comment.
-main ::= nums ~/./.  # So's this.
-nums ::= (num (',' num)*)?.
-num  ::= /([0-9]+)/ :int.
+main : nums ~/./.  # So's this.
+nums : (num (',' num)*)?.
+num  : /([0-9]+)/ :int.
 """)()
 sum_nums = lambda s: sum(nums.main(s))
 

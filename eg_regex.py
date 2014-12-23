@@ -40,20 +40,20 @@ def genseq(x, y, Ns):
     return set(m1+m2 for m1 in xmatches for m2 in ymatches if len(m1+m2) in Ns)
 
 grammar = Grammar(r"""
-regex   ::= exp ~/./.
-exp     ::= term ('|' exp     :either)*
+regex    :  exp ~/./.
+exp      :  term ('|' exp     :either)*
          |                    :empty.
-term    ::= factor (term      :chain)*.
-factor  ::= primary (  '*'    :star
+term     :  factor (term      :chain)*.
+factor   :  primary (  '*'    :star
                      | '+'    :plus
                      | '?'    :optional
                     )?.
-primary ::= '(' exp ')'
+primary  :  '(' exp ')'
          |  '[' char* ']'     :join :oneof
          |  '.'               :dot
          |  /\\(.)/           :literal
          |  /([^.()*+?|[\]])/ :literal.
-char    ::= /\\(.)/
+char     :  /\\(.)/
          |  /([^\]])/.
 """)
 parser = grammar(**globals())

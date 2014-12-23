@@ -14,9 +14,9 @@ def translate(grammar):
 g = Grammar(r"""
 grammar = _ defn*.
 
-defn ::= var '='_ exp ';'_ :hug.
+defn :  var '='_ exp ';'_  :hug.
 
-exp ::= 'Choice'   args    :mk_choice
+exp  :  'Choice'   args    :mk_choice
      |  'Fixed'    args    :mk_fixed
      |  'Sequence' args    :mk_sequence
      |  'Shuffle'  args    :mk_shuffle
@@ -32,21 +32,21 @@ exp ::= 'Choice'   args    :mk_choice
      |  string
      |  int.
 
-args ::= '('_ exps? ')'_.
-exps ::= exp (','_ exps)*.
+args :  '('_ exps? ')'_.
+exps :  exp (','_ exps)*.
 
-var ::= /([A-Za-z_]\w*)/_  :mk_var.
+var  :  /([A-Za-z_]\w*)/_  :mk_var.
 
-int ::= /(\d+)/            :mk_int.
+int  :  /(\d+)/            :mk_int.
 
-string ::= '"' qchar* '"'_ :join :mk_string.
-qchar ::= ~/["\\]/ /(.)/.
+string :  '"' qchar* '"'_  :join :mk_string.
+qchar  :  ~/["\\]/ /(.)/.
 
-_ ::= (space | comment)*.
-space ::= /\s+/.
-comment ::= '/*' (~'*/' anyone)* '*/'.
+_       :  (space | comment)*.
+space   :  /\s+/.
+comment :  '/*' (~'*/' anyone)* '*/'.
 
-anyone ::= /./ | /\n/.   # Ugh.
+anyone  :  /./ | /\n/.   # Ugh.
 """)(hug = hug,
      join = join,
 
