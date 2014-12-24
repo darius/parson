@@ -10,8 +10,6 @@ def meta_mk_feed(name):
 def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 
 def mk_empty(): return empty
-def mk_literal(*cs): return literal(''.join(cs))
-def mk_match(*cs): return match(''.join(cs))
 
 meta_grammar = r"""
 main         :  _ rule+ ~/./.
@@ -29,10 +27,13 @@ factor       :  '~'_ factor                    :invert
 primary      :  '('_ pe ')'_
              |  '['_ pe ']'_                   :seclude
              |  '{'_ pe '}'_                   :capture
-             |  /'/ quoted_char* /'/_          :mk_literal
-             |  '/' regex_char*  '/'_          :mk_match
-             |  ':'_ name                      :meta_mk_feed
+             |  qstring                        :literal
+             |  '/' regex_char*  '/'_          :join :match
+             |  ':'_ (name                     :meta_mk_feed
+                     |qstring                  :push)
              |  name                           :meta_mk_rule_ref.
+
+qstring      :  /'/ quoted_char* /'/_          :join.
 
 quoted_char  :  /\\(.)/ | /([^'])/.
 regex_char   :  /(\\.)/ | /([^\/])/.
@@ -48,7 +49,8 @@ g = Grammar(meta_grammar)(**globals())
 #. pe [(('<term>' ((literal('|') ('<_>' ('<pe>' :either))))?)|:mk_empty)]
 #. term [('<factor>' (('<term>' :chain))?)]
 #. factor [((literal('~') ('<_>' ('<factor>' :invert)))|('<primary>' (((literal('*') ('<_>' :star))|((literal('+') ('<_>' :plus))|(literal('?') ('<_>' :maybe)))))?))]
-#. primary [((literal('(') ('<_>' ('<pe>' (literal(')') '<_>'))))|((literal('[') ('<_>' ('<pe>' (literal(']') ('<_>' :seclude)))))|((literal('{') ('<_>' ('<pe>' (literal('}') ('<_>' :capture)))))|((/'/ (('<quoted_char>')* (/'/ ('<_>' :mk_literal))))|((literal('/') (('<regex_char>')* (literal('/') ('<_>' :mk_match))))|((literal(':') ('<_>' ('<name>' :meta_mk_feed)))|('<name>' :meta_mk_rule_ref)))))))]
+#. primary [((literal('(') ('<_>' ('<pe>' (literal(')') '<_>'))))|((literal('[') ('<_>' ('<pe>' (literal(']') ('<_>' :seclude)))))|((literal('{') ('<_>' ('<pe>' (literal('}') ('<_>' :capture)))))|(('<qstring>' :literal)|((literal('/') (('<regex_char>')* (literal('/') ('<_>' (:join :match)))))|((literal(':') ('<_>' (('<name>' :meta_mk_feed)|('<qstring>' :push))))|('<name>' :meta_mk_rule_ref)))))))]
+#. qstring [(/'/ (('<quoted_char>')* (/'/ ('<_>' :join))))]
 #. quoted_char [(/\\(.)/|/([^'])/)]
 #. regex_char [(/(\\.)/|/([^\/])/)]
 #. name [(/([A-Za-z_]\w*)/ '<_>')]

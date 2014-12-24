@@ -21,13 +21,13 @@ exp  :  'Choice'   args    :mk_choice
      |  'Sequence' args    :mk_sequence
      |  'Shuffle'  args    :mk_shuffle
      |  'Weighted' args    :mk_weighted
-     |  /Period\b/_        :mk_period
-     |  /Comma\b/_         :mk_comma
-     |  /Semicolon\b/_     :mk_semicolon
-     |  /Dash\b/_          :mk_dash
-     |  /AAn\b/_           :mk_aan
-     |  /Concat\b/_        :mk_concat
-     |  /null\b/_          :mk_null
+     |  /Period\b/_        :'.'
+     |  /Comma\b/_         :','
+     |  /Semicolon\b/_     :';'
+     |  /Dash\b/_          :'--'
+     |  /AAn\b/_           :'-a-an-'
+     |  /Concat\b/_        :'-adjoining-'
+     |  /null\b/_          :'()'
      |  var
      |  string
      |  int.
@@ -39,7 +39,7 @@ var  :  /([A-Za-z_]\w*)/_  :mk_var.
 
 int  :  /(\d+)/            :mk_int.
 
-string :  '"' qchar* '"'_  :join :mk_string.
+string :  '"' qchar* '"'_  :join.
 qchar  :  ~/["\\]/ /(.)/.
 
 _       :  (space | comment)*.
@@ -51,8 +51,6 @@ anyone  :  /./ | /\n/.   # Ugh.
      join = join,
 
      mk_int = int,
-     mk_null = lambda: '()',
-     mk_string = lambda s: s,
      mk_var = lambda s: '-'+'-'.join(parse_camel(s))+'-',
 
      mk_choice   = lambda *xs: ' / '.join(xs),
@@ -62,13 +60,6 @@ anyone  :  /./ | /\n/.   # Ugh.
      mk_weighted = lambda *spairs: ' / '.join('[%s] %s' % (w, wrap(x))
                                               for w, x in zip(spairs[0::2],
                                                               spairs[1::2])),
-
-     mk_period = lambda: '.',
-     mk_comma = lambda: ',',
-     mk_semicolon = lambda: ';',
-     mk_dash = lambda: '--',
-     mk_aan = lambda: '-a-an-',
-     mk_concat = lambda: '-adjoining-',
      )
 
 def wrap(x):

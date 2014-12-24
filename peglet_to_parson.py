@@ -9,27 +9,24 @@ name = r'[A-Za-z_]\w*'
 
 grammar = Grammar(r"""
 grammar  :  _? rule* ~/./.
-rule     :  name _ '= ' :equ token* [:dot] _?.
-token    :  '|'                     :bar
+rule     :  name _ '= ' :equ token* :'.' _?.
+token    :  '|'                     :'|'
          |  /(\/\w*\/\s)/
          |  name ~(_ '= ')
-         |  '!'                     :inv
+         |  '!'                     :'~'
          |  _ ~(name _ '= ' | ~/./)
-         |  ~('= '|name) /(\S+)/    :regex.
+         |  ~('= '|name) /(\S+)/    :mk_regex.
 name     :  /("""+name+""")/ ~~(/\s/ | ~/./).
 _        :  /(\s+)/.
 """)
-actions = dict(dot   = lambda: '.',
-               bar   = lambda: '  | ',
-               inv   = lambda: '~',
-               regex = lambda s: '/' + s.replace('/', '\\/') + '/')
+def mk_regex(s): return '/' + s.replace('/', '\\/') + '/'
 
 def peglet_to_parson(text):
     nonterminals = set()
     def equ(name, space):
         nonterminals.add(name)
         return name, space, ': '
-    g = grammar(equ=alter(equ), **actions)
+    g = grammar(equ=alter(equ), mk_regex=mk_regex)
     tokens = g.grammar(text)
     return ''.join(':'+token if re.match(name+'$', token) and token not in nonterminals
                    else token

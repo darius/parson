@@ -31,9 +31,6 @@ def make_case(e, cases): return ('(case %s %s)'
                                  % (e, ' '.join('(%s %s)' % pair
                                                 for pair in cases)))
 
-parens = lambda: '()'
-brackets = lambda: '[]'
-
 def foldr(f, z, xs):
     for x in reversed(xs):
         z = f(x, z)
@@ -97,8 +94,8 @@ Operator   :  /(<=|:=|[!+-.])\s*/.
 Const      :  '.'_ V               :make_lit_sym
            |  /"([^"]*)"/_         :repr
            |  /(-?\d+)/_
-           |  '('_ ')'_            :parens
-           |  '['_ ']'_            :brackets.
+           |  '('_ ')'_            :'()'
+           |  '['_ ']'_            :'[]'.
 
 _          :  /\s*/.
 """)(**globals())

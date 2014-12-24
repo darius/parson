@@ -136,14 +136,13 @@ c    :  /[^()]/
 
 # gsub: another parameterized one
 
-gsub = lambda text, replacement: ''.join(Grammar(r"""
-gsub  :  (p | /(.)/) gsub
-      |  .
-p     :  /WHEE/ :replace.
-""")(replace=lambda: replacement).gsub(text))
-# TODO actually replace p
+gsub = lambda text, pattern, replacement: ''.join(Grammar(r"""
+gsub:  (p | /(.)/) gsub
+    |  .
+p:     :pattern :replace.
+""")(pattern=pattern, replace=lambda: replacement).gsub(text))
 
-## gsub('hi there WHEEWHEE to you WHEEEE', 'GLARG')
+## gsub('hi there WHEEWHEE to you WHEEEE', 'WHEE', 'GLARG')
 #. 'hi there GLARGGLARG to you GLARGEE'
 
 csv = Grammar(r"""
@@ -153,7 +152,7 @@ field   :  '"' qchar* /"\s*/ :join
         |  /([^,"\n]*)/.
 
 qchar   :  /([^"])/
-        |  '""' :dquote.
+        |  '""' :'"'.
 """)(join = join,
      dquote = lambda: '"')
 

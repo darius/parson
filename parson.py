@@ -190,6 +190,10 @@ def feed(fn):
     return label(alter(lambda *vals: (fn(*vals),)),
                  ':%s', _fn_name(fn))
 
+def push(c):
+    return label(alter(lambda *xs: xs + (c,)),
+                 'push(%r)' % (c,),)
+                 
 
 # Some often-useful actions for feed().
 
@@ -288,8 +292,9 @@ def _parse_grammar(string):
     unquote    = lambda name: lambda subs: Peg(subs.get(name)
                                                or _default_subs[name])
 
-    mk_literal = lambda *cs: lambda subs: literal(''.join(cs))
-    mk_match   = lambda *cs: lambda subs: match(''.join(cs))
+    mk_literal  = lambda string: lambda subs: literal(string)
+    mk_push_lit = lambda string: lambda subs: push(string)
+    mk_match    = lambda *cs: lambda subs: match(''.join(cs))
 
     _              = match(r'(?:\s|#[^\n]*\n?)*')   # Whitespace and comments
     name           = match(r'([A-Za-z_]\w*)') +_
@@ -297,6 +302,8 @@ def _parse_grammar(string):
 
     regex_char     = match(r'(\\.|[^/])')
     quoted_char    = match(r'\\(.)') | match(r"([^'])")
+
+    qstring        = "'" + quoted_char.star() + "'" +_  >> join
 
     pe             = seclude(delay(lambda: 
                      term + ('|' +_+ pe + lift(either)).maybe()
@@ -315,9 +322,10 @@ def _parse_grammar(string):
     primary        = ('(' +_+ pe + ')' +_
                    | '[' +_+ pe + ']' +_                >> lift(seclude)
                    | '{' +_+ pe + '}' +_                >> lift(capture)
-                   | "'" + quoted_char.star() + "'" +_  >> mk_literal
+                   | qstring                            >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
-                   | ':' +_+ word                       >> unquote
+                   | ':' +_+ ( word                     >> unquote
+                             | qstring                  >> mk_push_lit)
                    | name                               >> mk_rule_ref)
 
     rule           = seclude(
@@ -490,6 +498,12 @@ def exceptionally(thunk):
 
 ## exceptionally(lambda: Grammar(r"a = ")())
 #. GrammarError('Bad grammar', ('a = ', ''))
+
+pushy = Grammar(r"""
+main: :'x'.
+""")()
+## pushy.main('')
+#. ('x',)
 
 nums = Grammar(r"""
 # This is a comment.
