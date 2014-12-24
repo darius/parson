@@ -3,7 +3,7 @@ A bunch of small examples, some of them from the LPEG documentation.
 Crudely converted from Peglet. TODO: make them nicer.
 """
 
-from parson import Grammar, Unparsable, hug, join, position
+from parson import Grammar, Unparsable, exceptionally, hug, join, position
 
 parse_words = Grammar(r'words  :  /\W*(\w+)/ words | .')()
 
@@ -242,3 +242,21 @@ hi  :  /this/ /is/
 #. ()
 ## p(multiline_rules, 'hi', "thisisnot")
 #. Unparsable(hi, 'thisis', 'not')
+
+paras = Grammar(r"""
+paras: para* _ ~/./.
+para:  _ word+ (/\n\n/ | ~/./) :hug.
+word:  /(\S+)/ _.
+_:     (~/\n\n/ /\s/)*.
+""")()
+
+eg = r"""  hi  there   hey
+how are you?
+  fine.
+
+thanks.
+
+ok then."""
+
+## exceptionally(lambda: paras.paras(eg))
+#. (('hi', 'there', 'hey', 'how', 'are', 'you?', 'fine.'), ('thanks.',), ('ok', 'then.'))
