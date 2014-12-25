@@ -260,10 +260,10 @@ def Grammar(string):
     >>> g.a('x')
     ()
     """
-    items = _parse_grammar(string)
+    skeletons = _parse_grammar(string)
     def bind(**subs):           # subs = substitutions
         rules = {}
-        for rule, f in items:
+        for rule, (_,f) in skeletons:
             rules[rule] = label(f(rules, subs), rule)
         # XXX warn about unresolved :foo interpolations at this point?
         return _Struct(**rules)
@@ -274,21 +274,19 @@ class _Struct(object):
         self.__dict__.update(kwargs)
 
 def _parse_grammar(string):
-    refs = set()
-    grammar = _make_grammar_grammar(refs)
-
     try:
-        items = grammar(string)
+        skeletons = _grammar_grammar(string)
     except Unparsable, e:
         raise GrammarError("Bad grammar", e.failure)
-    lhses = [L for L, R in items]
-    undefined = sorted(refs - set(lhses))
+    lhses = [L for L, R in skeletons]
+    all_refs = set().union(*[refs for L, (refs,_) in skeletons])
+    undefined = sorted(all_refs - set(lhses))
     if undefined:
         raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
     dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
     if dups:
         raise GrammarError("Multiply-defined rules: %s" % ', '.join(dups))
-    return items
+    return skeletons
 
 class GrammarError(Exception): pass
 
@@ -297,19 +295,22 @@ _default_subs = dict((k, feed(v))
                      for k, v in _builtins.items() if callable(v))
 _default_subs.update(dict(hug=feed(hug), join=feed(join), position=position))
 
-def _make_grammar_grammar(refs):
+def _make_grammar_grammar():
 
     def mk_rule_ref(name):
-        refs.add(name)
-        return lambda rules, subs: delay(lambda: rules[name], name)
+        return (set([name]),
+                lambda rules, subs: delay(lambda: rules[name], name))
 
-    def constant(peg): return lambda rules, subs: peg
+    def constant(peg): return (set(), lambda rules, subs: peg)
 
     def lift(peg_op):
-        return lambda *lifted: lambda rules, subs: peg_op(*[f(rules, subs) for f in lifted])
+        return lambda *lifted: (
+            set().union(*[refs for refs,_ in lifted]),
+            lambda rules, subs: peg_op(*[f(rules, subs) for _,f in lifted])
+        )
 
-    unquote     = lambda name: lambda rules, subs: Peg(subs.get(name)
-                                                       or _default_subs[name])
+    unquote     = lambda name: (set(), lambda rules, subs: Peg(subs.get(name)
+                                                               or _default_subs[name]))
 
     mk_literal  = lambda string: constant(literal(string))
     mk_push_lit = lambda string: constant(push(string))
@@ -354,6 +355,8 @@ def _make_grammar_grammar(refs):
     grammar        = _+ rule.plus() + ~anyone
 
     return grammar
+
+_grammar_grammar = _make_grammar_grammar()
 
 
 # Smoke test: combinators
