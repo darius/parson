@@ -5,7 +5,7 @@ http://www.eblong.com/zarf/mutagen/mutagen.js
 """
 
 import re
-from parson import Grammar, hug, join
+from parson import Grammar
 
 def translate(grammar):
     for x, y in reversed(g.grammar(grammar)):
@@ -37,7 +37,7 @@ exps :  exp (','_ exps)*.
 
 var  :  /([A-Za-z_]\w*)/_  :mk_var.
 
-int  :  /(\d+)/            :mk_int.
+int  :  /(\d+)/            :int.
 
 string :  '"' qchar* '"'_  :join.
 qchar  :  ~/["\\]/ /(.)/.
@@ -47,12 +47,7 @@ space   :  /\s+/.
 comment :  '/*' (~'*/' anyone)* '*/'.
 
 anyone  :  /./ | /\n/.   # Ugh.
-""")(hug = hug,
-     join = join,
-
-     mk_int = int,
-     mk_var = lambda s: '-'+'-'.join(parse_camel(s))+'-',
-
+""")(mk_var      = lambda s: '-'+'-'.join(parse_camel(s))+'-',
      mk_choice   = lambda *xs: ' / '.join(xs),
      mk_fixed    = lambda tag, choice: '%s{ %s }' % (tag, choice),
      mk_sequence = lambda *xs: ' '.join(map(wrap, xs)),

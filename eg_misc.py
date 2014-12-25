@@ -3,7 +3,7 @@ A bunch of small examples, some of them from the LPEG documentation.
 Crudely converted from Peglet. TODO: make them nicer.
 """
 
-from parson import Grammar, Unparsable, exceptionally, hug, join, position
+from parson import Grammar, Unparsable, exceptionally
 
 parse_words = Grammar(r'words  :  /\W*(\w+)/ words | .')()
 
@@ -44,9 +44,7 @@ symchar  :  /([^\s\\"'()])/.
 
 _        :  /\s*/.
 """)(lit_char = ord,
-     join     = join,
-     quote    = lambda x: ('quote', x),
-     hug      = hug)
+     quote    = lambda x: ('quote', x))
 
 ## ichbins.sexp('(hey)')
 #. (('hey',),)
@@ -83,13 +81,13 @@ nums = Grammar(r"""
 allnums  :  nums? ~/./.
 nums     :  num (',' num)*.
 num      :  /(\d+)/ :int.
-""")(int=int)
+""")()
 sum_nums = lambda s: sum(nums.allnums(s))
 
 ## sum_nums('10,30,43')
 #. 83
 
-one_word = Grammar(r"word  :  /\w+/ :position.")(position=position)
+one_word = Grammar(r"word  :  /\w+/ :position.")()
 
 ## one_word.word('hello')
 #. (5,)
@@ -153,8 +151,7 @@ field   :  '"' qchar* /"\s*/ :join
 
 qchar   :  /([^"])/
         |  '""' :'"'.
-""")(join = join,
-     dquote = lambda: '"')
+""")()
 
 ## csv.record('')
 #. ('',)

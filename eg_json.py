@@ -2,7 +2,7 @@
 Example: parse JSON.
 """
 
-from parson import Grammar, hug, join
+from parson import Grammar
 
 literals = dict(true=True,
                 false=False,
