@@ -260,10 +260,11 @@ def Grammar(string):
     >>> g.a('x')
     ()
     """
-    rules, items = _parse_grammar(string)
+    items = _parse_grammar(string)
     def bind(**subs):           # subs = substitutions
+        rules = {}
         for rule, f in items:
-            rules[rule] = label(f(subs), rule)
+            rules[rule] = label(f(rules, subs), rule)
         # XXX warn about unresolved :foo interpolations at this point?
         return _Struct(**rules)
     return bind
@@ -272,26 +273,47 @@ class _Struct(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+def _parse_grammar(string):
+    refs = set()
+    grammar = _make_grammar_grammar(refs)
+
+    try:
+        items = grammar(string)
+    except Unparsable, e:
+        raise GrammarError("Bad grammar", e.failure)
+    lhses = [L for L, R in items]
+    undefined = sorted(refs - set(lhses))
+    if undefined:
+        raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
+    dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
+    if dups:
+        raise GrammarError("Multiply-defined rules: %s" % ', '.join(dups))
+    return items
+
+class GrammarError(Exception): pass
+
 _builtins = __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
 _default_subs = dict((k, feed(v))
                      for k, v in _builtins.items() if callable(v))
 _default_subs.update(dict(hug=feed(hug), join=feed(join), position=position))
 
-def _make_grammar_grammar(rules, refs):
+def _make_grammar_grammar(refs):
 
     def mk_rule_ref(name):
         refs.add(name)
-        return lambda subs: delay(lambda: rules[name], name)
+        return lambda rules, subs: delay(lambda: rules[name], name)
+
+    def constant(peg): return lambda rules, subs: peg
 
     def lift(peg_op):
-        return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
+        return lambda *lifted: lambda rules, subs: peg_op(*[f(rules, subs) for f in lifted])
 
-    unquote     = lambda name: lambda subs: Peg(subs.get(name)
-                                                or _default_subs[name])
+    unquote     = lambda name: lambda rules, subs: Peg(subs.get(name)
+                                                       or _default_subs[name])
 
-    mk_literal  = lambda string: lambda subs: literal(string)
-    mk_push_lit = lambda string: lambda subs: push(string)
-    mk_match    = lambda *cs: lambda subs: match(''.join(cs))
+    mk_literal  = lambda string: constant(literal(string))
+    mk_push_lit = lambda string: constant(push(string))
+    mk_match    = lambda *cs: constant(match(''.join(cs)))
 
     _              = match(r'(?:\s|#[^\n]*\n?)*')   # Whitespace and comments
     name           = match(r'([A-Za-z_]\w*)') +_
@@ -332,26 +354,6 @@ def _make_grammar_grammar(rules, refs):
     grammar        = _+ rule.plus() + ~anyone
 
     return grammar
-
-def _parse_grammar(string):
-    rules = {}
-    refs = set()
-    grammar = _make_grammar_grammar(rules, refs)
-
-    try:
-        items = grammar(string)
-    except Unparsable, e:
-        raise GrammarError("Bad grammar", e.failure)
-    lhses = [L for L, R in items]
-    undefined = sorted(refs - set(lhses))
-    if undefined:
-        raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
-    dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
-    if dups:
-        raise GrammarError("Multiply-defined rules: %s" % ', '.join(dups))
-    return rules, items
-
-class GrammarError(Exception): pass
 
 
 # Smoke test: combinators
