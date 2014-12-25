@@ -277,10 +277,7 @@ _default_subs = dict((k, feed(v))
                      for k, v in _builtins.items() if callable(v))
 _default_subs.update(dict(hug=feed(hug), join=feed(join), position=position))
 
-def _parse_grammar(string):
-
-    rules = {}
-    refs = set()
+def _make_grammar_grammar(rules, refs):
 
     def mk_rule_ref(name):
         refs.add(name)
@@ -289,8 +286,8 @@ def _parse_grammar(string):
     def lift(peg_op):
         return lambda *lifted: lambda subs: peg_op(*[f(subs) for f in lifted])
 
-    unquote    = lambda name: lambda subs: Peg(subs.get(name)
-                                               or _default_subs[name])
+    unquote     = lambda name: lambda subs: Peg(subs.get(name)
+                                                or _default_subs[name])
 
     mk_literal  = lambda string: lambda subs: literal(string)
     mk_push_lit = lambda string: lambda subs: push(string)
@@ -332,7 +329,14 @@ def _parse_grammar(string):
                      name + ('=' +_+ pe
                              | ':' +_+ (pe >> lift(seclude)))
                      + '.' +_ + hug)
-    grammar        = _+ rule.plus() + ~match('.')
+    grammar        = _+ rule.plus() + ~anyone
+
+    return grammar
+
+def _parse_grammar(string):
+    rules = {}
+    refs = set()
+    grammar = _make_grammar_grammar(rules, refs)
 
     try:
         items = grammar(string)
