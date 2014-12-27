@@ -6,7 +6,7 @@ Wirth, _Compiler Construction_, Appendix A.
 from parson import Grammar
 
 grammar = r"""
-ident:                /[A-Za-z]\w*/.   # XXX what's \w? letter|digit?
+ident:                /[A-Za-z][A-Za-z\d]*/.
 integer:              digit+.
 digit:                /(\d)/.
 selector:             ('.' ident | '[' expression ']')*.
