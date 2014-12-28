@@ -220,3 +220,22 @@ if __name__ == '__main__':
 ## basic.command('print 3/2')
 #. 1
 #. (None,)
+
+## basic.command('new')
+#. ()
+## basic.command('load countdown.bas')
+#. ()
+## basic.command('run')
+#. 10
+#. 9
+#. 8
+#. 7
+#. 6
+#. 5
+#. 4
+#. 3
+#. 2
+#. 1
+#. 0
+#. Blast off!
+#. ()
