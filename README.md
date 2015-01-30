@@ -25,7 +25,7 @@ Anti-selling points:
     untuned, etc. I'd like you to use it if you think you might give
     feedback on the design; otherwise, no promises.
 
-  * Semantic actions work in an unconventional way that may remind you
+  * Semantic actions work in a nontraditional way that may remind you
     of Forth and which I haven't yet tried to make play well in typed
     languages like Haskell. It's concise and just right for parsing,
     but maybe in the end it'll turn out too cute and make me rip it
@@ -44,8 +44,13 @@ more polished.
 Examples
 ========
 
-todo:
-grammar syntax
-combinators
-recursion with combinators
-actions
+TODO:
+  * grammar syntax
+  * combinators
+  * recursion with combinators
+  * actions
+
+Examples of where I'm using it for more than examples:
+  * https://github.com/darius/tinyhiss
+  * https://github.com/darius/pythological
+  * https://github.com/darius/squee
