@@ -2,7 +2,7 @@
 The customary calculator example.
 """
 
-from operator import *
+import operator
 from parson import Grammar
 
 g = Grammar(r"""
@@ -21,7 +21,7 @@ exp3  :  '('_ exp0 ')'_
       |  /(\d+)/_ :int.
 
 _     =  /\s*/.
-""")(**globals())
+""")(**operator.__dict__)
 
 ## g.top('42 * (5-3) + -2^2')
 #. (80,)
