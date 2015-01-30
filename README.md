@@ -44,13 +44,19 @@ more polished.
 Examples
 ========
 
-TODO:
+For now, see all the eg_whatever.py files here. eg_calc.py,
+eg_misc.py, eg_wc.py, and eg_regex.py have the smallest ones.
+eg_trees.py shows parsing of tree structures, OMeta-style. Other
+examples include programming languages and other somewhat-bigger
+stuff.
+
+Basic things still to explain:
   * grammar syntax
   * combinators
   * recursion with combinators
   * actions
 
 Examples of where I'm using it for more than examples:
-  * https://github.com/darius/tinyhiss
-  * https://github.com/darius/pythological
-  * https://github.com/darius/squee
+  * https://github.com/darius/tinyhiss -- Smalltalkish
+  * https://github.com/darius/pythological -- Prologish
+  * https://github.com/darius/squee -- More of my own thing
