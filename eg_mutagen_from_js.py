@@ -40,11 +40,11 @@ var  :  /([A-Za-z_]\w*)/_  :mk_var.
 int  :  /(\d+)/            :int.
 
 string :  '"' qchar* '"'_  :join.
-qchar  :  ~/["\\]/ /(.)/.
+qchar  :  !/["\\]/ /(.)/.
 
 _       :  (space | comment)*.
 space   :  /\s+/.
-comment :  '/*' (~'*/' anyone)* '*/'.
+comment :  '/*' (!'*/' anyone)* '*/'.
 
 anyone  :  /./ | /\n/.   # Ugh.
 """)(mk_var      = lambda s: '-'+'-'.join(parse_camel(s))+'-',

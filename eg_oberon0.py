@@ -6,7 +6,7 @@ Wirth, _Compiler Construction_, Appendix A.
 from parson import Grammar
 
 grammar_source = r"""
-ident:                ~keyword /([A-Za-z][A-Za-z0-9]*)\b/_.
+ident:                !keyword /([A-Za-z][A-Za-z0-9]*)\b/_.
 integer:              digit+ :join :int.
 digit:                /(\d)/_.
 selector:             ('.'_ ident | '['_ expression ']'_)*.
@@ -51,9 +51,9 @@ module:               'MODULE'_ ident ';'_ declarations
 _:                    whitespace*.
 whitespace:           /\s+/ | comment.
 comment:              '(*' commentchunk* '*)'.
-commentchunk:         comment | ~'*)' /.|\n/.   # XXX are comments nested in Oberon-0?
+commentchunk:         comment | !'*)' /.|\n/.   # XXX are comments nested in Oberon-0?
 keyword:              /BEGIN|END|MODULE|VAR|TYPE|CONST|PROCEDURE|RECORD|ARRAY|OF|WHILE|DO|IF|ELSIF|THEN|ELSE|OR|DIV|MOD/ /\b/.
-top:                  _ module ~/./.
+top:                  _ module !/./.
 """
 grammar = Grammar(grammar_source)()
 

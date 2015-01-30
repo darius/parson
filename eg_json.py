@@ -36,7 +36,7 @@ char      :  /([^\x00-\x1f"\\])/
 xd        :  /([0-9a-fA-F])/.
 
 number    :  int (frac exp? | exp)? _ :join :mk_number.
-int       :  /(-?0)/ ~/\d/
+int       :  /(-?0)/ !/\d/
           |  /(-?[1-9]\d*)/.
 frac      :  /([.]\d+)/.
 exp       :  /([eE][+-]?\d+)/.

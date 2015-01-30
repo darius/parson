@@ -256,7 +256,7 @@ def _is_indexable(x):
 def Grammar(string):
     """XXX doc comment
     Contrived example:
-    >>> g = Grammar(r"a = 'x'|b.   b = ~:p /regex/.  # comment")(p=fail)
+    >>> g = Grammar(r"a = 'x'|b.   b = !:p /regex/.  # comment")(p=fail)
     >>> g.a('x')
     ()
     """
@@ -333,7 +333,7 @@ def _make_grammar_grammar():
                      factor + (term + lift(chain)).maybe()))
 
     factor         = seclude(delay(lambda:
-                     '~' +_+ factor                     + lift(invert)
+                     '!' +_+ factor                     + lift(invert)
                    | primary + ( '*' +_+ lift(star)
                                | '+' +_+ lift(plus)
                                | '?' +_+ lift(maybe)
@@ -516,7 +516,7 @@ main: :'x'.
 
 nums = Grammar(r"""
 # This is a comment.
-main : nums ~/./.  # So's this.
+main : nums !/./.  # So's this.
 nums : (num (',' num)*)?.
 num  : /([0-9]+)/ :int.
 """)()

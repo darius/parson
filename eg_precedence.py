@@ -47,7 +47,7 @@ exps = PrececedenceParser(exp1, [
         ])
 
 g = Grammar(r"""
-top  = _ :exps ~/./.
+top  = _ :exps !/./.
 
 exp3 : '('_ :exps ')'_
      | '-'_ :exp1 :neg

@@ -12,7 +12,7 @@ def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 def mk_empty(): return empty
 
 meta_grammar = r"""
-main         :  _ rule+ ~/./.
+main         :  _ rule+ !/./.
 rule         :  name ('='_   pe
                      |':'_ [pe :seclude])
                 '.'_                           :hug.
@@ -20,7 +20,7 @@ rule         :  name ('='_   pe
 pe           :  term ('|'_ pe :either)?
              |                                 :mk_empty.
 term         :  factor (term :chain)?.
-factor       :  '~'_ factor                    :invert
+factor       :  '!'_ factor                    :invert
              |  primary ('*'_ :star
                         |'+'_ :plus
                         |'?'_ :maybe)?.
@@ -48,7 +48,7 @@ g = Grammar(meta_grammar)(**globals())
 #. rule [('<name>' (((literal('=') ('<_>' '<pe>'))|(literal(':') ('<_>' [('<pe>' :seclude)]))) (literal('.') ('<_>' :hug))))]
 #. pe [(('<term>' ((literal('|') ('<_>' ('<pe>' :either))))?)|:mk_empty)]
 #. term [('<factor>' (('<term>' :chain))?)]
-#. factor [((literal('~') ('<_>' ('<factor>' :invert)))|('<primary>' (((literal('*') ('<_>' :star))|((literal('+') ('<_>' :plus))|(literal('?') ('<_>' :maybe)))))?))]
+#. factor [((literal('!') ('<_>' ('<factor>' :invert)))|('<primary>' (((literal('*') ('<_>' :star))|((literal('+') ('<_>' :plus))|(literal('?') ('<_>' :maybe)))))?))]
 #. primary [((literal('(') ('<_>' ('<pe>' (literal(')') '<_>'))))|((literal('[') ('<_>' ('<pe>' (literal(']') ('<_>' :seclude)))))|((literal('{') ('<_>' ('<pe>' (literal('}') ('<_>' :capture)))))|(('<qstring>' :literal)|((literal('/') (('<regex_char>')* (literal('/') ('<_>' (:join :match)))))|((literal(':') ('<_>' (('<name>' :meta_mk_feed)|('<qstring>' :push))))|('<name>' :meta_mk_rule_ref)))))))]
 #. qstring [(/'/ (('<quoted_char>')* (/'/ ('<_>' :join))))]
 #. quoted_char [(/\\(.)/|/([^'])/)]
