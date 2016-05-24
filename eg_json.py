@@ -32,14 +32,13 @@ string    :  '"' char* '"'_           :join.
 char      :  /([^\x00-\x1f"\\])/
           |  /\\(["\/\\])/
           |  /(\\[bfnrt])/            :escape
-          |  /(\\u)/ xd xd xd xd      :join :escape.
-xd        :  /([0-9a-fA-F])/.
+          |  /(\\u[0-9a-fA-F]{4})/    :escape.
 
-number    :  int (frac exp? | exp)? _ :join :mk_number.
-int       :  /(-?0)/ !/\d/
-          |  /(-?[1-9]\d*)/.
-frac      :  /([.]\d+)/.
-exp       :  /([eE][+-]?\d+)/.
+number    :  { '-'? int (frac exp? | exp)? } _ :mk_number.
+int       :  '0' !/\d/
+          |  /[1-9]\d*/.
+frac      :  '.' /\d+/.
+exp       :  /[eE][+-]?\d+/.
 
 _         :  /\s*/.
 """)(**globals()).start
