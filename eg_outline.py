@@ -16,7 +16,7 @@ def Node(margin):
 
 line = '* ' + P.match(r'(.*)\n?')
 
-outline = Node(0).star() + ~P.match(r'.')
+outline = Node(0).star() + ~P.anyone
 
 
 eg = """\
