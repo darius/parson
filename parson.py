@@ -49,7 +49,7 @@ def star(p):
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
-    return _Peg(('~(%r)', p),
+    return _Peg(('!(%r)', p),
                 lambda s, far, st: [] if p.run(s, [0], st) else [st])
 
 class _Peg(object):
@@ -205,10 +205,6 @@ def join(*strs):
     "Make one string out of any number of string arguments."
     return ''.join(strs)
 
-def make_none():
-    "Just return None. Handy as the alternative for an optional peg."
-    return None
-
 
 # Alternative: non-regex basic matchers, good for non-string inputs.
 
@@ -297,7 +293,7 @@ class GrammarError(Exception): pass
 _builtins = __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
 _default_subs = dict((k, feed(v))
                      for k, v in _builtins.items() if callable(v))
-_default_subs.update({'hug': feed(hug), 'join': feed(join), 'None': feed(make_none),
+_default_subs.update({'hug': feed(hug), 'join': feed(join), 'None': push(None),
                       'position': position})
 
 def _make_grammar_grammar():
