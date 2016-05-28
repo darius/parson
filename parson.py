@@ -194,6 +194,14 @@ def push(c):
     return label(alter(lambda *xs: xs + (c,)),
                  'push(%r)' % (c,),)
                  
+def trace(message):
+    "A peg that succeeds, and says so."
+    # TODO: better debugging means
+    def tracer(s, far, (i, vals)):
+        print message, i, vals
+        return [(i, vals)]
+    return P._Peg('trace', tracer)
+
 
 # Some often-useful actions for feed().
 
