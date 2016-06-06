@@ -99,7 +99,7 @@ list  :  _ pair* !/./.
 pair  :  name '=' _ name /[,;]?/ _   :hug.
 name  :  /(\w+)/ _.
 _     :  /\s*/.
-""")(**globals())
+""")()
 namevalues_dict = lambda s: dict(namevalues.list(s))
 ## namevalues_dict("a=b, c = hi; next = pi")
 #. {'a': 'b', 'c': 'hi', 'next': 'pi'}
@@ -112,7 +112,7 @@ split  :  (p | chunk :join) split | .  # XXX why not a *?
 chunk  :  p
        |  /(.)/ chunk.
 p      :  /\s/.
-""")(**globals())
+""")()
 ## splitting.split('hello a world  is    nice    ')
 #. ('hello', 'a', 'world', 'is', 'nice')
 ## splitting.chunk('hello a world  is    nice    ')

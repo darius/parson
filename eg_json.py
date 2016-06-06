@@ -7,13 +7,9 @@ from parson import Grammar
 literals = dict(true=True,
                 false=False,
                 null=None)
-mk_literal = literals.get
-
-mk_object  = lambda *pairs: dict(pairs)
-escape     = lambda s: s.decode('unicode-escape')
 
 # Following http://www.json.org/
-json_parse = Grammar(r"""
+json_grammar = Grammar(r"""
 start     :  _ value.
 
 object    :  '{'_ pairs? '}'_         :mk_object.
@@ -40,7 +36,11 @@ frac      :  '.' /\d+/.
 exp       :  /[eE][+-]?\d+/.
 
 _         :  /\s*/.
-""")(**globals()).start
+""")(mk_literal = literals.get,
+     mk_object  = lambda *pairs: dict(pairs),
+     escape     = lambda string: string.decode('unicode-escape'))
+
+json_parse = json_grammar.start
 
 # XXX The spec says "whitespace may be inserted between any pair of
 # tokens, but leaves open just what's a token. So is the '-' in '-1' a
