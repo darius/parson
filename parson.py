@@ -261,21 +261,23 @@ def _is_indexable(x):
 
 # Build pegs from a string representation of a grammar.
 
-def Grammar(string):
+class Grammar(object):
     """XXX doc comment
     Contrived example:
     >>> g = Grammar(r"a = 'x'|b.   b = !:p /regex/.  # comment")(p=fail)
     >>> g.a('x')
     ()
     """
-    skeletons = _parse_grammar(string)
-    def bind(**subs):           # subs = substitutions
+    def __init__(self, string):
+        self.skeletons = _parse_grammar(string)
+    def __call__(self, **subs):
+        return self.bind(subs)
+    def bind(self, subs):       # subs = substitutions
         rules = {}
-        for rule, (_,f) in skeletons:
+        for rule, (_,f) in self.skeletons:
             rules[rule] = label(f(rules, subs), rule)
         # XXX warn about unresolved :foo interpolations at this point?
         return _Struct(**rules)
-    return bind
 
 class _Struct(object):
     def __init__(self, **kwargs):
@@ -304,6 +306,15 @@ _default_subs = dict((k, feed(v))
 _default_subs.update({'hug': feed(hug), 'join': feed(join), 'None': push(None),
                       'position': position})
 
+def _lookup(subs, name):
+    # We don't use subs.get(name) because subs might be a dictlike object
+    # that manufactures a value for any name, in which case it'd be a 
+    # nuisance for that subs object to have to implement get() too.
+    try:
+        return subs[name]
+    except KeyError:
+        return _default_subs[name]
+
 def _make_grammar_grammar():
 
     def mk_rule_ref(name):
@@ -318,8 +329,7 @@ def _make_grammar_grammar():
             lambda rules, subs: peg_op(*[f(rules, subs) for _,f in lifted])
         )
 
-    unquote     = lambda name: (set(), lambda rules, subs: Peg(subs.get(name)
-                                                               or _default_subs[name]))
+    unquote     = lambda name: (set(), lambda rules, subs: Peg(_lookup(subs, name)))
 
     mk_literal  = lambda string: constant(literal(string))
     mk_push_lit = lambda string: constant(push(string))
