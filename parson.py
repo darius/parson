@@ -2,7 +2,7 @@
 Parsing with PEGs.
 """
 
-import re
+import re, types
 
 # Glossary:
 #   peg     object representing a parsing expression
@@ -273,6 +273,8 @@ class Grammar(object):
     def __call__(self, **subs):
         return self.bind(subs)
     def bind(self, subs):       # subs = substitutions
+        if isinstance(subs, types.ModuleType):
+            subs = subs.__dict__
         rules = {}
         for rule, (_,f) in self.skeletons:
             rules[rule] = label(f(rules, subs), rule)
