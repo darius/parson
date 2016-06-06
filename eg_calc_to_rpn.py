@@ -16,8 +16,8 @@ exp2  :  '('_ exp0 ')'_
       |  /(\d+)/_
       |  ident                :'fetch'.
 
-ident =  /([A-Za-z]+)/_.
-_     =  /\s*/.
+ident :  /([A-Za-z]+)/_.
+_     :  /\s*/.
 """)(assign=alter(lambda name, *exp: exp + (name, 'store')))
 
 ## print ' '.join(g.top('v = 42 * (5+3) + 2*2; v = v + 1;'))
