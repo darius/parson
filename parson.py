@@ -366,3 +366,9 @@ def _make_grammar_grammar():
     return grammar
 
 _grammar_grammar = _make_grammar_grammar()
+
+
+# To help testing. (XXX move this out of the main library)
+def exceptionally(thunk):
+    try: return thunk()
+    except Exception, e: return e

@@ -140,10 +140,6 @@ def foldr(f, z, xs):
 
 # Smoke test: grammars
 
-def exceptionally(thunk):
-    try: return thunk()
-    except Exception, e: return e
-
 ## exceptionally(lambda: Grammar(r"a = . b = a. a = .")())
 #. GrammarError('Multiply-defined rules: a',)
 
