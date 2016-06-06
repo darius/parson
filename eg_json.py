@@ -11,7 +11,6 @@ mk_literal = literals.get
 
 mk_object  = lambda *pairs: dict(pairs)
 escape     = lambda s: s.decode('unicode-escape')
-mk_number  = float
 
 # Following http://www.json.org/
 json_parse = Grammar(r"""
@@ -34,7 +33,7 @@ char      :  /([^\x00-\x1f"\\])/
           |  /(\\[bfnrt])/            :escape
           |  /(\\u[0-9a-fA-F]{4})/    :escape.
 
-number    :  { '-'? int (frac exp? | exp)? } _ :mk_number.
+number    :  { '-'? int (frac exp? | exp)? } _ :float.
 int       :  '0' !/\d/
           |  /[1-9]\d*/.
 frac      :  '.' /\d+/.
