@@ -15,7 +15,7 @@ def mul(exp1, exp2): return lambda s: (exp1(s) + exp2(s+1)
                                        + ['mul r%d, r%d, r%d' % (s, s+1, s)])
 
 g = Grammar(r"""
-top   :  _ stmt !/./.
+top   :  _ stmt :end.
 
 stmt  :  ident ':='_ exp0   :assign.
 

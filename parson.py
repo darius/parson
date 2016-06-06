@@ -233,6 +233,7 @@ def one_of(item):
                  'one_of(%r)', item)
 
 anyone = label(one_that(lambda x: True), 'anyone')
+end = label(~anyone, 'end')
 
 
 # Non-strings can include nested sequences:
@@ -306,7 +307,7 @@ _builtins = __builtins__ if isinstance(__builtins__, dict) else __builtins__.__d
 _default_subs = dict((k, feed(v))
                      for k, v in _builtins.items() if callable(v))
 _default_subs.update({'hug': feed(hug), 'join': feed(join), 'None': push(None),
-                      'position': position})
+                      'anyone': anyone, 'end': end, 'position': position})
 
 def _lookup(subs, name):
     # We don't use subs.get(name) because subs might be a dictlike object
@@ -373,7 +374,7 @@ def _make_grammar_grammar():
                      name + ('=' +_+ pe
                              | ':' +_+ (pe >> lift(seclude)))
                      + '.' +_ + hug)
-    grammar        = _+ rule.plus() + ~anyone
+    grammar        = _+ rule.plus() + end
 
     return grammar
 

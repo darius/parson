@@ -60,7 +60,7 @@ _        :  /\s*/.
 # From http://www.inf.puc-rio.br/~roberto/lpeg/
 
 as_and_bs = Grammar(r"""
-allS  :  S !/./.
+allS  :  S :end.
 
 S     :  'a' B
       |  'b' A
@@ -77,7 +77,7 @@ B     :  'b' S
 #. ()
 
 nums = Grammar(r"""
-allnums  :  nums? !/./.
+allnums  :  nums? :end.
 nums     :  num (',' num)*.
 num      :  /(\d+)/ :int.
 """)()
@@ -95,7 +95,7 @@ one_word = Grammar(r"word  :  /\w+/ :position.")()
 ## one_word.word.attempt(' ')
 
 namevalues = Grammar(r"""
-list  :  _ pair* !/./.
+list  :  _ pair* :end.
 pair  :  name '=' _ name /[,;]?/ _   :hug.
 name  :  /(\w+)/ _.
 _     :  /\s*/.
@@ -200,7 +200,7 @@ def rule_ref(name):        return '<%s>' % name
 #. ('/goodbye/+<world>+<>',)
 
 bal = r"""
-allbalanced  :  _ bal !/./.
+allbalanced  :  _ bal :end.
 _            :  /\s*/.
 bal          :  '(' _ bal ')' _ :hug bal
              |  /(\w+)/ _
@@ -212,7 +212,7 @@ bal          :  '(' _ bal ')' _ :hug bal
 #. Unparsable(allbalanced, 'x ', 'y')
 
 curl = r"""
-one_expr  :  _ expr !/./.
+one_expr  :  _ expr :end.
 _         :  /\s*/.
 expr      :  '{' _ expr* '}' _ :hug
           |  /([^{}\s]+)/ _.
@@ -240,8 +240,8 @@ hi  :  /this/ /is/
 #. Unparsable(hi, 'thisis', 'not')
 
 paras = Grammar(r"""
-paras: para* _ !/./.
-para:  _ word+ (/\n\n/ | !/./) :hug.
+paras: para* _ :end.
+para:  _ word+ (/\n\n/ | :end) :hug.
 word:  /(\S+)/ _.
 _:     (!/\n\n/ /\s/)*.
 """)()

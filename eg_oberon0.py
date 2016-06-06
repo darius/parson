@@ -53,7 +53,7 @@ whitespace:           /\s+/ | comment.
 comment:              '(*' commentchunk* '*)'.
 commentchunk:         comment | !'*)' /.|\n/.   # XXX are comments nested in Oberon-0?
 keyword:              /BEGIN|END|MODULE|VAR|TYPE|CONST|PROCEDURE|RECORD|ARRAY|OF|WHILE|DO|IF|ELSIF|THEN|ELSE|OR|DIV|MOD/ /\b/.
-top:                  _ module !/./.
+top:                  _ module :end.
 """
 grammar = Grammar(grammar_source)()
 

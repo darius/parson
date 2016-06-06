@@ -5,7 +5,7 @@ Tiny example of 'compiling'.
 from parson import Grammar, alter
 
 g = Grammar(r"""
-top   :  _ stmt* !/./.
+top   :  _ stmt* :end.
 
 stmt  :  ident '='_ exp0 ';'_ :assign.
 

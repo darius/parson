@@ -40,7 +40,7 @@ def genseq(x, y, Ns):
     return set(m1+m2 for m1 in xmatches for m2 in ymatches if len(m1+m2) in Ns)
 
 grammar = Grammar(r"""
-regex    :  exp !/./.
+regex    :  exp :end.
 exp      :  term ('|' exp     :either)*
          |                    :empty.
 term     :  factor (term      :chain)*.

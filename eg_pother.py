@@ -52,7 +52,7 @@ fold_infix_app = lambda _left, _op, _right: \
 #                          lambda _left,_op,_right: [_op, _left, _right]]
 
 toy_grammar = Grammar(r"""
-main       :  _ E !/./.
+main       :  _ E :end.
 
 E          :  Fp '`'_ V '`'_ E     :fold_infix_app
            |  Fp                   :fold_apps

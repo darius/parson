@@ -12,7 +12,7 @@ def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 def mk_empty(): return empty
 
 meta_grammar = r"""
-main         :  _ rule+ !/./.
+main         :  _ rule+ :end.
 rule         :  name ('='_   pe
                      |':'_ [pe :seclude])
                 '.'_                           :hug.
@@ -44,7 +44,7 @@ _            :  /(?:\s|#.*)*/.
 
 g = Grammar(meta_grammar)(**globals())
 ## for k, v in g.main(meta_grammar): print k, v
-#. main [('<_>' (('<rule>')+ !(/./)))]
+#. main [('<_>' (('<rule>')+ :end))]
 #. rule [('<name>' (((literal('=') ('<_>' '<pe>'))|(literal(':') ('<_>' [('<pe>' :seclude)]))) (literal('.') ('<_>' :hug))))]
 #. pe [(('<term>' ((literal('|') ('<_>' ('<pe>' :either))))?)|:mk_empty)]
 #. term [('<factor>' (('<term>' :chain))?)]

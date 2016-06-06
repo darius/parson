@@ -8,15 +8,15 @@ from parson import Grammar, alter
 name = r'[A-Za-z_]\w*'
 
 grammar = Grammar(r"""
-grammar  :  _? rule* !/./.
+grammar  :  _? rule* :end.
 rule     :  name _ '= ' :equ token* :'.' _?.
 token    :  '|'                     :'|'
          |  /(\/\w*\/\s)/
          |  name !(_ '= ')
          |  '!'                     :'!'
-         |  _ !(name _ '= ' | !/./)
+         |  _ !(name _ '= ' | :end)
          |  !('= '|name) /(\S+)/    :mk_regex.
-name     :  /("""+name+""")/ !!(/\s/ | !/./).
+name     :  /("""+name+""")/ !!(/\s/ | :end).
 _        :  /(\s+)/.
 """)
 def mk_regex(s): return '/' + s.replace('/', '\\/') + '/'

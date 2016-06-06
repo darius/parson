@@ -6,7 +6,7 @@ import operator
 from parson import Grammar
 
 g = Grammar(r"""
-top   :  _ exp0 !/./.
+top   :  _ exp0 :end.
 
 exp0  :  exp1 (  '+'_  exp1 :add
                | '-'_  exp1 :sub)*.
