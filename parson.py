@@ -366,8 +366,8 @@ def _make_grammar_grammar():
                    | '{' +_+ pe + '}' +_                >> lift(capture)
                    | qstring                            >> mk_literal
                    | '/' + regex_char.star() + '/' +_   >> mk_match
-                   | ':' +_+ ( word                     >> unquote
-                             | qstring                  >> mk_push_lit)
+                   | ':' + ( word                       >> unquote
+                           | qstring                    >> mk_push_lit)
                    | name                               >> mk_rule_ref)
 
     rule           = seclude(
