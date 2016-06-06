@@ -11,8 +11,9 @@ parse_words = Grammar(r'words  :  /\W*(\w+)/ words | .')()
 ## parse_words.words('"Hi, there", he said.')
 #. ('Hi', 'there', 'he', 'said')
 
-def Tag(label):
-    return lambda *parts: (label,) + parts
+class Tagger(dict):
+    def __missing__(self, key):
+        return lambda *parts: (key,) + parts
 
 name = Grammar(r"""
 name    :  title first middle last.
@@ -21,12 +22,10 @@ first   :  /([A-Za-z]+)/ _ :First.
 middle  :  (/([A-Z])[.]/ | /([A-Za-z]+)/) _ :Middle |.
 last    :  /([A-Za-z]+)/ :Last.
 _       :  /\s+/.
-""")(Title  = Tag('title'),
-     First  = Tag('first'),
-     Middle = Tag('middle'),
-     Last   = Tag('last'))
+""").bind(Tagger())
+
 ## name.name('Popess Darius Q. Bacon')
-#. (('title', 'Popess'), ('first', 'Darius'), ('middle', 'Q'), ('last', 'Bacon'))
+#. (('Title', 'Popess'), ('First', 'Darius'), ('Middle', 'Q'), ('Last', 'Bacon'))
 
 ichbins = Grammar(r"""
 main     :  _ sexp.
