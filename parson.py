@@ -79,6 +79,7 @@ class _Peg(object):
     def __ror__(self, other):  return either(Peg(other), self)
     def __rshift__(self, fn):  return label(seclude(chain(self, Peg(fn))),
                                             '(%r>>%s)', self, _fn_name(fn))
+    def __rrshift__(self, lhs): return Peg(lhs) >> self
     __invert__ = invert
     maybe = maybe
     plus = plus
