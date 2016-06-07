@@ -5,10 +5,10 @@ Crudely converted from Peglet. TODO: make them nicer.
 
 from parson import Grammar, Unparsable, exceptionally
 
-parse_words = Grammar(r'words  :  /\W*(\w+)/ words | .')()
+parse_words = Grammar(r'/\W*(\w+)/*')()
 
 # The equivalent re.split() would return extra '' results first and last:
-## parse_words.words('"Hi, there", he said.')
+## parse_words('"Hi, there", he said.')
 #. ('Hi', 'there', 'he', 'said')
 
 class Tagger(dict):
@@ -28,7 +28,7 @@ _       :  /\s+/.
 #. (('Title', 'Popess'), ('First', 'Darius'), ('Middle', 'Q'), ('Last', 'Bacon'))
 
 ichbins = Grammar(r"""
-main     :  _ sexp.
+_ sexp :end.
 
 sexp     :  /\\(.)/         _ :lit_char
          |  '"' qchar* '"'  _ :join
@@ -48,19 +48,19 @@ _        :  /\s*/.
 ## ichbins.sexp('(hey)')
 #. (('hey',),)
 
-## ichbins.main('hi')
+## ichbins('hi')
 #. ('hi',)
-## ichbins.main(r"""(hi '(john mccarthy) \c )""")
+## ichbins(r"""(hi '(john mccarthy) \c )""")
 #. (('hi', ('quote', ('john', 'mccarthy')), 99),)
-## ichbins.main(r""" ""  """)
+## ichbins(r""" ""  """)
 #. ('',)
-## ichbins.main(r""" "hey"  """)
+## ichbins(r""" "hey"  """)
 #. ('hey',)
 
 # From http://www.inf.puc-rio.br/~roberto/lpeg/
 
 as_and_bs = Grammar(r"""
-allS  :  S :end.
+S :end.
 
 S     :  'a' B
       |  'b' A
@@ -73,7 +73,7 @@ B     :  'b' S
       |  'a' B B.
 """)()
 
-## as_and_bs.allS("abaabbbbaa")
+## as_and_bs("abaabbbbaa")
 #. ()
 
 nums = Grammar(r"""
@@ -86,13 +86,13 @@ sum_nums = lambda s: sum(nums.allnums(s))
 ## sum_nums('10,30,43')
 #. 83
 
-one_word = Grammar(r"word  :  /\w+/ :position.")()
+one_word = Grammar(r"/\w+/ :position")()
 
-## one_word.word('hello')
+## one_word('hello')
 #. (5,)
-## one_word.word('hello there')
+## one_word('hello there')
 #. (5,)
-## one_word.word.attempt(' ')
+## one_word.attempt(' ')
 
 namevalues = Grammar(r"""
 list  :  _ pair* :end.

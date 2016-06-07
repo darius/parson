@@ -276,15 +276,20 @@ class Grammar(object):
     def bind(self, subs):       # subs = substitutions
         if isinstance(subs, types.ModuleType):
             subs = subs.__dict__
+        result = None
         rules = {}
         for rule, (_,f) in self.skeletons:
-            rules[rule] = label(f(rules, subs), rule)
+            if rule is None:
+                result = f(rules, subs)
+            else:
+                rules[rule] = label(f(rules, subs), rule)
         # XXX warn about unresolved :foo interpolations at this point?
-        return _Struct(**rules)
+        if result is None:
+            result = _Struct()
+        result.__dict__.update(rules)
+        return result
 
-class _Struct(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+class _Struct(object): pass
 
 def _parse_grammar(string):
     try:
@@ -339,7 +344,8 @@ def _make_grammar_grammar():
     mk_push_lit = lambda string: constant(push(string))
     mk_match    = lambda *cs: constant(match(''.join(cs)))
 
-    _              = match(r'(?:\s|#[^\n]*\n?)*')   # Whitespace and comments
+    whitespace     = match(r'(?:\s|#[^\n]*\n?)+')
+    _              = whitespace.maybe()
     name           = match(r'([A-Za-z_]\w*)') +_
     word           = match(r'(\w+)') +_
 
@@ -373,9 +379,13 @@ def _make_grammar_grammar():
 
     rule           = seclude(
                      name + ('=' +_+ pe
-                             | ':' +_+ (pe >> lift(seclude)))
+                             | ':' + whitespace # Whitespace is *required* after this ':',
+                                                # and *forbidden* after the ':' in 'primary'.
+                                   + (pe >> lift(seclude)))
                      + '.' +_ + hug)
-    grammar        = _+ rule.plus() + end
+    anon           = push(None) + pe + hug + ('.' +_+ rule.star()).maybe()
+    grammar        = _+ (  rule.plus() + end
+                         | anon + end)
 
     return grammar
 
