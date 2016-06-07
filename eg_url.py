@@ -10,7 +10,9 @@ grammar = r"""  url :end.
 
 url           : httpaddress | mailtoaddress.
 
-mailtoaddress : {'mailto'} ':' :'protocol' xalpha+ '@' hostname.
+mailtoaddress : {'mailto'} ':'   :'protocol'
+                {(!'@' xalpha)+} :'user'
+                '@' {hostname}   :'host'.
 
 httpaddress   : {'http'} '://' :'protocol' hostport ('/' path)? ('?' search)? ('#' fragment)?.
 
@@ -44,6 +46,8 @@ hex           : /[\dA-Fa-f]/.
 g = Grammar(grammar)()
 
 ## g.attempt('true')
+## g('mailto:coyote@acme.com')
+#. ('mailto', 'protocol', 'coyote', 'user', 'acme.com', 'host')
 ## g('http://google.com')
 #. ('http', 'protocol', 'google.com', 'host')
 ## g('http://en.wikipedia.org/wiki/Uniform_resource_locator')
