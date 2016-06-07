@@ -11,10 +11,11 @@ def meta_mk_rule_ref(name): return '<'+name+'>'  # XXX
 
 def mk_empty(): return empty
 
-meta_grammar = r"""
-main         :  _ rule+ :end.
+meta_grammar = r""" _ (rule+ :end | anon :end).
+
+anon         :  :None pe :hug ('.'_ rule*)?.
 rule         :  name ('='_   pe
-                     |':'_ [pe :seclude])
+                     |':' whitespace [pe :seclude])
                 '.'_                           :hug.
 
 pe           :  term ('|'_ pe :either)?
@@ -39,13 +40,15 @@ quoted_char  :  /\\(.)/ | /([^'])/.
 regex_char   :  /(\\.)/ | /([^\/])/.
 
 name         :  /([A-Za-z_]\w*)/ _.
-_            :  /(?:\s|#.*)*/.
+_            :  whitespace?.
+whitespace   :  /(?:\s|#.*)+/.
 """
 
-g = Grammar(meta_grammar)(**globals())
-## for k, v in g.main(meta_grammar): print k, v
-#. main [('<_>' (('<rule>')+ :end))]
-#. rule [('<name>' (((literal('=') ('<_>' '<pe>'))|(literal(':') ('<_>' [('<pe>' :seclude)]))) (literal('.') ('<_>' :hug))))]
+metapeg = Grammar(meta_grammar)(**globals())
+## for k, v in metapeg(meta_grammar): print k, v
+#. None ('<_>' ((('<rule>')+ :end)|('<anon>' :end)))
+#. anon [(:None ('<pe>' (:hug ((literal('.') ('<_>' ('<rule>')*)))?)))]
+#. rule [('<name>' (((literal('=') ('<_>' '<pe>'))|(literal(':') ('<whitespace>' [('<pe>' :seclude)]))) (literal('.') ('<_>' :hug))))]
 #. pe [(('<term>' ((literal('|') ('<_>' ('<pe>' :either))))?)|:mk_empty)]
 #. term [('<factor>' (('<term>' :chain))?)]
 #. factor [((literal('!') ('<_>' ('<factor>' :invert)))|('<primary>' (((literal('*') ('<_>' :star))|((literal('+') ('<_>' :plus))|(literal('?') ('<_>' :maybe)))))?))]
@@ -54,4 +57,5 @@ g = Grammar(meta_grammar)(**globals())
 #. quoted_char [(/\\(.)/|/([^'])/)]
 #. regex_char [(/(\\.)/|/([^\/])/)]
 #. name [(/([A-Za-z_]\w*)/ '<_>')]
-#. _ [/(?:\s|#.*)*/]
+#. _ [('<whitespace>')?]
+#. whitespace [/(?:\s|#.*)+/]
