@@ -2,7 +2,7 @@
 Parsing with PEGs.
 """
 
-import re, types
+import collections, re, types
 
 # Glossary:
 #   peg     object representing a parsing expression
@@ -296,7 +296,8 @@ def _parse_grammar(string):
     undefined = sorted(all_refs - set(lhses))
     if undefined:
         raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
-    dups = sorted(L for L in set(lhses) if 1 != lhses.count(L))
+    counts = collections.Counter(lhses)
+    dups = sorted(lhs for lhs,n in counts.items() if 1 < n)
     if dups:
         raise GrammarError("Multiply-defined rules: %s" % ', '.join(dups))
     return skeletons
