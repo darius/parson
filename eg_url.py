@@ -19,7 +19,7 @@ httpaddress   : {'http'} '://' :'protocol' hostport ('/' path)? ('?' search)? ('
 hostport      : host (':' port)?.
 
 host          : {hostname | hostnumber} :'host'.
-hostname      : ialpha ('.' ialpha)*.
+hostname      : ialpha ++ '.'.
 hostnumber    : digits '.' digits '.' digits '.' digits.
 
 port          : {digits} :'port'.
@@ -27,7 +27,7 @@ port          : {digits} :'port'.
 path          : {(segment '/')* segment?} :'path'.
 segment       : xpalpha+.
 
-search        : {xalpha+ ('+' xalpha+)*}  :'search'.
+search        : {(xalpha+) ++ '+'}        :'search'.
 fragment      : {xalpha+}                 :'fragment'.
 
 xalpha        : alpha | digit | safe | extra | escape.
