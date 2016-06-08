@@ -4,12 +4,12 @@ Systems of linear equations, reimplementing a hand-coded parser by Dave Long.
 
 from parson import Grammar
 
-grammar = r"""  _ equations? :end.
+grammar = r"""  _ equations :end.
 
-equations: equation (';'_ equation)*.
+equations: equation ** (';'_).
 
 equation:  sum '='_ sum                 :hug.
-sum:       term ('+'_ term)*            :sum.
+sum:       term ++ ('+'_)               :sum.
 term:      number ('*'_ variable | :'') :swap
          | variable [:'1' :complex]     :hug.
 variable:  /([a-zA-Z]+)/ _.
