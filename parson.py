@@ -288,12 +288,14 @@ class Grammar(object):
         if isinstance(subs, types.ModuleType):
             subs = subs.__dict__
         result = None
-        rules = {}
-        for rule, (_,f) in self.skeletons:
+        rules = {name: delay(lambda: rules[name], name)
+                 for (name,_,_) in self.skeletons if name is not None}
+        for rule, fnord_rule_type, (_,f) in self.skeletons:
+            peg = f(rules, fnord_rule_type == '', subs)
             if rule is None:
-                result = f(rules, subs)
+                result = peg
             else:
-                rules[rule] = label(f(rules, subs), rule)
+                rules[rule] = label(peg, rule)
         # XXX warn about unresolved :foo interpolations at this point?
         if result is None:
             result = _Struct()
@@ -307,8 +309,8 @@ def _parse_grammar(string):
         skeletons = _grammar_grammar(string)
     except Unparsable, e:
         raise GrammarError("Bad grammar", e.failure)
-    lhses = [L for L, R in skeletons]
-    all_refs = set().union(*[refs for L, (refs,_) in skeletons])
+    lhses = [L for L, _, R in skeletons]
+    all_refs = set().union(*[refs for L, _, (refs,_) in skeletons])
     undefined = sorted(all_refs - set(lhses))
     if undefined:
         raise GrammarError("Undefined rules: %s" % ', '.join(undefined))
@@ -339,21 +341,33 @@ def _make_grammar_grammar():
 
     def mk_rule_ref(name):
         return (set([name]),
-                lambda rules, subs: delay(lambda: rules[name], name))
+                lambda rules, af, subs: delay(lambda: rules[name], name))
 
-    def constant(peg): return (set(), lambda rules, subs: peg)
+    def constant(peg): return (set(), lambda rules, af, subs: peg)
 
     def lift(peg_op):
         return lambda *lifted: (
             set().union(*[refs for refs,_ in lifted]),
-            lambda rules, subs: peg_op(*[f(rules, subs) for _,f in lifted])
+            lambda rules, af, subs: peg_op(*[f(rules, af, subs) for _,f in lifted])
         )
 
-    unquote     = lambda name: (set(), lambda rules, subs: Peg(_lookup(subs, name)))
+    def mk_fnordly((refs, mk_peg)):
+        def mk_result(rules, allow_fnord, subs):
+            result = mk_peg(rules, allow_fnord, subs)
+            if allow_fnord and 'FNORD' in rules:
+                # N.B. we don't add FNORD to refs; it won't matter.
+                result = chain(result, delay(lambda: rules['FNORD'], 'FNORD'))
+            return result
+        return (refs, mk_result)
+
+    unquote     = lambda name: (set(), lambda rules, af, subs: Peg(_lookup(subs, name)))
 
     mk_literal  = lambda string: constant(literal(string))
+    mk_keyword  = lambda string: constant(literal(string) + word_boundary)
     mk_push_lit = lambda string: constant(push(string))
     mk_match    = lambda *cs: constant(match(''.join(cs)))
+
+    word_boundary  = match(r'\b')
 
     whitespace     = match(r'(?:\s|#[^\n]*\n?)+')
     _              = whitespace.maybe()
@@ -362,8 +376,12 @@ def _make_grammar_grammar():
 
     regex_char     = match(r'(\\.|[^/])')
     quoted_char    = match(r'\\(.)') | match(r"([^'])")
+    dquoted_char   = match(r'\\(.)') | match(r'([^"])')
 
-    qstring        = "'" + quoted_char.star() + "'" +_  >> join
+    qstring        = "'" +  quoted_char.star() + "'" +_  >> join
+    dqstring       = '"' + dquoted_char.star() + '"' +_  >> join
+
+    fnordly        = (literal('~') + _) | mk_fnordly
 
     pe             = seclude(delay(lambda: 
                      term + ('|' +_+ pe + lift(either)).maybe()
@@ -384,19 +402,27 @@ def _make_grammar_grammar():
     primary        = ('(' +_+ pe + ')' +_
                    | '[' +_+ pe + ']' +_                >> lift(seclude)
                    | '{' +_+ pe + '}' +_                >> lift(capture)
-                   | qstring                            >> mk_literal
-                   | '/' + regex_char.star() + '/' +_   >> mk_match
+                   | seclude(qstring + mk_literal + fnordly)
+                   | seclude(dqstring + mk_keyword + fnordly)
+                   | seclude('/' + regex_char.star() + '/' +_+ mk_match + fnordly)
                    | ':' + ( word                       >> unquote
                            | qstring                    >> mk_push_lit)
                    | name                               >> mk_rule_ref)
 
     rule           = seclude(
-                     name + ('=' +_+ pe
-                             | ':' + whitespace # Whitespace is *required* after this ':',
-                                                # and *forbidden* after the ':' in 'primary'.
-                                   + (pe >> lift(seclude)))
+                     name + match('(~?)') + _
+                     + ('=' +_+ pe
+                       | ':' + whitespace # Whitespace is *required* after this ':',
+                                          # and *forbidden* after the ':' in 'primary'.
+                         + (pe >> lift(seclude)))
                      + '.' +_ + hug)
-    anon           = push(None) + pe + hug + ('.' +_+ rule.star()).maybe()
+
+    anon           = (push(None)
+                      + push('')
+                      + seclude(push('') + mk_literal + fnordly + pe + lift(chain))
+                      + hug
+                      + ('.' +_+ rule.star()).maybe())
+
     grammar        = _+ (  rule.plus() + end
                          | anon + end)
 

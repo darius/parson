@@ -6,53 +6,54 @@ Wirth, _Compiler Construction_, Appendix A.
 from parson import Grammar
 
 grammar_source = r"""
-ident:                !keyword /([A-Za-z][A-Za-z0-9]*)\b/_.
-integer:              digit+ :join :int.
-digit:                /(\d)/_.
-selector:             ('.'_ ident | '['_ expression ']'_)*.
+ident:                !keyword /([A-Za-z][A-Za-z0-9]*)\b/.
+integer:              digit+ FNORD :join :int.
+selector:             ('.' ident | '[' expression ']')*.
 factor:               ident selector
                     | integer
-                    | '('_ expression ')'_
-                    | '~'_ factor.
+                    | '(' expression ')'
+                    | '~' factor.
 term:                 factor ++ MulOperator.
-MulOperator:          '*'_ | 'DIV'_ | 'MOD'_ | '&'_.
-SimpleExpression:     ('+'_|'-'_)? term ++ AddOperator.
-AddOperator:          '+'_ | '-'_ | 'OR'_.
+MulOperator:          '*' | "DIV" | "MOD" | '&'.
+SimpleExpression:     ('+'|'-')? term ++ AddOperator.
+AddOperator:          '+' | '-' | "OR".
 expression:           SimpleExpression (relation SimpleExpression)?.
-relation:             '='_ | '#'_ | '<='_ | '<'_ | '>='_ | '>'_.
-assignment:           ident selector ':='_ expression.
-ActualParameters:     '('_ expression ** (','_) ')'_.
+relation:             '=' | '#' | '<=' | '<' | '>=' | '>'.
+assignment:           ident selector ':=' expression.
+ActualParameters:     '(' expression ** ',' ')'.
 ProcedureCall:        ident ActualParameters?.
-IfStatement:          'IF'_ expression 'THEN'_ StatementSequence
-                      ('ELSIF'_ expression 'THEN'_ StatementSequence)*
-                      ('ELSE'_ StatementSequence)?
-                      'END'_.
-WhileStatement:       'WHILE'_ expression 'DO'_ StatementSequence 'END'_.
+IfStatement:          "IF" expression "THEN" StatementSequence
+                      ("ELSIF" expression "THEN" StatementSequence)*
+                      ("ELSE" StatementSequence)?
+                      "END".
+WhileStatement:       "WHILE" expression "DO" StatementSequence "END".
 statement:            (assignment | ProcedureCall | IfStatement | WhileStatement)?.
-StatementSequence:    statement ++ (';'_).   # XXX isn't it a problem that statement can be empty?
-IdentList:            ident ++ (','_).
-ArrayType:            'ARRAY'_ expression 'OF'_ type.
-FieldList:            (IdentList ':'_ type)?.
-RecordType:           'RECORD'_ FieldList ++ (';'_) 'END'_.
+StatementSequence:    statement ++ ';'.   # XXX isn't it a problem that statement can be empty?
+IdentList:            ident ++ ','.
+ArrayType:            "ARRAY" expression "OF" type.
+FieldList:            (IdentList ':' type)?.
+RecordType:           "RECORD" FieldList ++ ';' "END".
 type:                 ident | ArrayType | RecordType.
-FPSection:            ('VAR'_)? IdentList ':'_ type.
-FormalParameters:     '('_ FPSection ** (';'_) ')'_.
-ProcedureHeading:     'PROCEDURE'_ ident FormalParameters?.
-ProcedureBody:        declarations ('BEGIN'_ StatementSequence)? 'END'_.
-ProcedureDeclaration: ProcedureHeading ';'_ ProcedureBody ident.
-declarations:         ('CONST'_ (ident '='_ expression ';'_)*)?
-                      ('TYPE'_ (ident '='_ type ';'_)*)?
-                      ('VAR'_ (IdentList ':'_ type ';'_)*)?
-                      (ProcedureDeclaration ';'_)*.
-module:               'MODULE'_ ident ';'_ declarations
-                      ('BEGIN'_ StatementSequence)? 'END'_ ident '.'_.
+FPSection:            ("VAR")? IdentList ':' type.
+FormalParameters:     '(' FPSection ** ';' ')'.
+ProcedureHeading:     "PROCEDURE" ident FormalParameters?.
+ProcedureBody:        declarations ("BEGIN" StatementSequence)? "END".
+ProcedureDeclaration: ProcedureHeading ';' ProcedureBody ident.
+declarations:         ("CONST" (ident '=' expression ';')*)?
+                      ("TYPE" (ident '=' type ';')*)?
+                      ("VAR" (IdentList ':' type ';')*)?
+                      (ProcedureDeclaration ';')*.
+module:               "MODULE" ident ';' declarations
+                      ("BEGIN" StatementSequence)? "END" ident '.'.
 
-_:                    whitespace*.
-whitespace:           /\s+/ | comment.
-comment:              '(*' commentchunk* '*)'.
-commentchunk:         comment | !'*)' /.|\n/.   # XXX are comments nested in Oberon-0?
-keyword:              /BEGIN|END|MODULE|VAR|TYPE|CONST|PROCEDURE|RECORD|ARRAY|OF|WHILE|DO|IF|ELSIF|THEN|ELSE|OR|DIV|MOD/ /\b/.
-top:                  _ module :end.
+FNORD         ~:      whitespace*.
+whitespace    ~:      /\s+/ | comment.
+comment       ~:      '(*' commentchunk* '*)'.
+commentchunk  ~:      comment | !'*)' :anyone.   # XXX are comments nested in Oberon-0?
+keyword       ~:      /BEGIN|END|MODULE|VAR|TYPE|CONST|PROCEDURE|RECORD|ARRAY|OF|WHILE|DO|IF|ELSIF|THEN|ELSE|OR|DIV|MOD/ /\b/.
+digit         ~:      /(\d)/.
+
+top:                  '' module :end.
 """
 grammar = Grammar(grammar_source)()
 

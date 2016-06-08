@@ -5,31 +5,31 @@ The customary calculator example.
 import operator
 from parson import Grammar
 
-g = Grammar(r"""
-top   :  _ exp0 :end.
+calc = Grammar(r"""  exp0 :end.
 
-exp0  :  exp1 (  '+'_  exp1 :add
-               | '-'_  exp1 :sub)*.
-exp1  :  exp2 (  '*'_  exp2 :mul
-               | '//'_ exp2 :div
-               | '/'_  exp2 :truediv
-               | '%'_  exp2 :mod)*.
-exp2  :  exp3 (  '^'_  exp2 :pow)?.
+exp0  :  exp1 ( '+'  exp1 :add
+              | '-'  exp1 :sub )*.
+exp1  :  exp2 ( '*'  exp2 :mul
+              | '//' exp2 :div
+              | '/'  exp2 :truediv
+              | '%'  exp2 :mod )*.
+exp2  :  exp3 ( '^'  exp2 :pow )?.
 
-exp3  :  '('_ exp0 ')'_
-      |  '-'_ exp1 :neg
-      |  /(\d+)/_ :int.
+exp3  :  '(' exp0 ')'
+      |  '-' exp1 :neg
+      |  /(\d+)/  :int.
 
-_     =  /\s*/.
+FNORD~:  /\s*/.
+
 """).bind(operator)
 
-## g.top('42 * (5-3) + -2^2')
+## calc('42 * (5-3) + -2^2')
 #. (80,)
-## g.top('2^3^2')
+## calc('2^3^2')
 #. (512,)
-## g.top('5-3-1')
+## calc('5-3-1')
 #. (1,)
-## g.top('3//2')
+## calc('3//2')
 #. (1,)
-## g.top('3/2')
+## calc('3/2')
 #. (1.5,)

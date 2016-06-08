@@ -92,13 +92,12 @@ one_word = Grammar(r"/\w+/ :position")()
 #. (5,)
 ## one_word.attempt(' ')
 
-namevalues = Grammar(r"""
-list  :  _ pair* :end.
-pair  :  name '=' _ name /[,;]?/ _   :hug.
-name  :  /(\w+)/ _.
-_     :  /\s*/.
+namevalues = Grammar(r"""  pair* :end.
+pair   :  name '=' name /[,;]?/ :hug.
+name   :  /(\w+)/.
+FNORD ~:  /\s*/.
 """)()
-namevalues_dict = lambda s: dict(namevalues.list(s))
+namevalues_dict = lambda s: dict(namevalues(s))
 ## namevalues_dict("a=b, c = hi; next = pi")
 #. {'a': 'b', 'c': 'hi', 'next': 'pi'}
 
@@ -170,16 +169,16 @@ def p(grammar, rule, text):
         return e
 
 metagrammar = r"""
-grammar  :  _ rule+.
-rule     :  name '=' _ expr '.' _    :make_rule.
-expr     :  term ('|' expr           :alt)*.
-term     :  factors (':' _ name      :reduce_)?.
-factors  :  factor factors           :seq
-         |                           :empty.
-factor   :  /'((?:\\.|[^'])*)'/ _    :literal
-         |  name                     :rule_ref.
-name     :  /(\w+)/ _.
-_        :  /\s*/.
+grammar  :  '' rule+.
+rule     :  name '=' expr '.'    :make_rule.
+expr     :  term ('|' expr       :alt)?.
+term     :  factors (':' name    :reduce_)?.
+factors  :  factor factors       :seq
+         |                       :empty.
+factor   :  /'((?:\\.|[^'])*)'/  :literal
+         |  name                 :rule_ref.
+name     :  /(\w+)/.
+FNORD   ~:  /\s*/.
 """
 
 def make_rule(name, expr): return '%s: %s' % (name, expr)
@@ -198,10 +197,10 @@ def rule_ref(name):        return '<%s>' % name
 #. ('/goodbye/+<world>+<>',)
 
 bal = r"""
-allbalanced  :  _ bal :end.
-_            :  /\s*/.
-bal          :  '(' _ bal ')' _ :hug bal
-             |  /(\w+)/ _
+FNORD       ~:  /\s*/.
+allbalanced  :  '' bal :end.
+bal          :  '(' bal ')' :hug bal
+             |  /(\w+)/
              |  .
 """
 ## p(bal, 'allbalanced', '(x) y')
@@ -210,10 +209,10 @@ bal          :  '(' _ bal ')' _ :hug bal
 #. Unparsable(allbalanced, 'x ', 'y')
 
 curl = r"""
-one_expr  :  _ expr :end.
-_         :  /\s*/.
-expr      :  '{' _ expr* '}' _ :hug
-          |  /([^{}\s]+)/ _.
+FNORD    ~:  /\s*/.
+one_expr  :  '' expr :end.
+expr      :  '{' expr* '}' :hug
+          |  /([^{}\s]+)/.
 """
 ## p(curl, 'one_expr', '')
 #. Unparsable(one_expr, '', '')

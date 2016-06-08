@@ -8,44 +8,42 @@ import re
 from parson import Grammar
 
 def translate(grammar):
-    for x, y in reversed(g.grammar(grammar)):
+    for x, y in reversed(parse(grammar)):
         print x, '=', y
 
-g = Grammar(r"""
-grammar = _ defn*.
+parse = Grammar(r""" defn*.
 
-defn :  var '='_ exp ';'_  :hug.
+defn :  var '=' exp ';'  :hug.
 
-exp  :  'Choice'   args    :mk_choice
-     |  'Fixed'    args    :mk_fixed
-     |  'Sequence' args    :mk_sequence
-     |  'Shuffle'  args    :mk_shuffle
-     |  'Weighted' args    :mk_weighted
-     |  /Period\b/_        :'.'
-     |  /Comma\b/_         :','
-     |  /Semicolon\b/_     :';'
-     |  /Dash\b/_          :'--'
-     |  /AAn\b/_           :'-a-an-'
-     |  /Concat\b/_        :'-adjoining-'
-     |  /null\b/_          :'()'
+exp  :  "Choice"   args  :mk_choice
+     |  "Fixed"    args  :mk_fixed
+     |  "Sequence" args  :mk_sequence
+     |  "Shuffle"  args  :mk_shuffle
+     |  "Weighted" args  :mk_weighted
+     |  "Period"         :'.'
+     |  "Comma"          :','
+     |  "Semicolon"      :';'
+     |  "Dash"           :'--'
+     |  "AAn"            :'-a-an-'
+     |  "Concat"         :'-adjoining-'
+     |  "null"           :'()'
      |  var
      |  string
      |  int.
 
-args :  '('_ exp ** (','_) ')'_.
+args :  '(' exp ** ',' ')'.
 
-var  :  /([A-Za-z_]\w*)/_  :mk_var.
+var  :  /([A-Za-z_]\w*)/ :mk_var.
 
-int  :  /(\d+)/            :int.
+int  :  /(\d+)/          :int.
 
-string :  '"' qchar* '"'_  :join.
-qchar  :  !/["\\]/ /(.)/.
+string  ~:  '"' qchar* '"' FNORD  :join.
+qchar   ~:  !/["\\]/ /(.)/.
 
-_       :  (space | comment)*.
-space   :  /\s+/.
-comment :  '/*' (!'*/' anyone)* '*/'.
+FNORD   ~:  (space | comment)*.
+space   ~:  /\s+/.
+comment ~:  '/*' (!'*/' :anyone)* '*/'.
 
-anyone  :  /./ | /\n/.   # Ugh.
 """)(mk_var      = lambda s: '-'+'-'.join(parse_camel(s))+'-',
      mk_choice   = lambda *xs: ' / '.join(xs),
      mk_fixed    = lambda tag, choice: '%s{ %s }' % (tag, choice),
@@ -59,20 +57,18 @@ anyone  :  /./ | /\n/.   # Ugh.
 def wrap(x):
     return '(%s)' % x if ' / ' in x else x
 
-def parse_camel(s):
-    assert re.match(r'([A-Z][a-z]*)*$', s)
-    return [part.lower() for part in re.findall(r'[A-Z][a-z]*', s)]
+parse_camel = Grammar(r'[/([A-Z][a-z]*)/ :lower]* :end')(lower=lambda s: s.lower())
 
 ## parse_camel('HiThere')
-#. ['hi', 'there']
+#. ('hi', 'there')
 
-## g.grammar('A = "hi";')
+## parse('A = "hi";')
 #. (('-a-', 'hi'),)
-## g.grammar('A = Choice();')
+## parse('A = Choice();')
 #. (('-a-', ''),)
-## g.grammar('A = Choice("hi");')
+## parse('A = Choice("hi");')
 #. (('-a-', 'hi'),)
-## g.grammar('A = Choice("hi", "there"); B = A;')
+## parse('A = Choice("hi", "there"); B = A;')
 #. (('-a-', 'hi / there'), ('-b-', '-a-'))
 
 ## goreyfate = open('mutagen/goreyfate.js').read()

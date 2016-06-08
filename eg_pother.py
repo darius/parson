@@ -52,50 +52,50 @@ fold_infix_app = lambda _left, _op, _right: \
 #                          lambda _left,_op,_right: [_op, _left, _right]]
 
 toy_grammar = Grammar(r"""
-main       :  _ E :end.
+main       :  '' E :end.
 
-E          :  Fp '`'_ V '`'_ E     :fold_infix_app
-           |  Fp                   :fold_apps
-           |  '&'_ Vp '=>'_ E      :fold_lam
-           |  /let\b/_ Decls E     :make_let
-           |  /case\b/_ E Cases    :make_case.
+E          :  Fp '`' V '`' E     :fold_infix_app
+           |  Fp                 :fold_apps
+           |  '&' Vp '=>' E      :fold_lam
+           |  "let" Decls E      :make_let
+           |  "case" E Cases     :make_case.
 
 Cases      :  Case+ :hug.
-Case       :  '|'_ Param '=>'_ E   :hug.
+Case       :  '|' Param '=>' E   :hug.
 
 Param      :  Const
            |  V
-           |  '('_ Param ')'_
-           |  '['_ ParamList ']'_.
+           |  '(' Param ')'
+           |  '[' ParamList ']'.
 
-ParamList  :  Param ','_ Param    :make_list_pattern.
+ParamList  :  Param ',' Param    :make_list_pattern.
 
 Decls      :  Decl+ :hug.
-Decl       :  /defer\b/_ V ';'_       :make_defer
-           |  /bind\b/_ V '='_ E ';'_ :make_bind
-           |  Vp '='_ E ';'_          :make_eqn.
+Decl       :  "defer" V ';'      :make_defer
+           |  "bind" V '=' E ';' :make_bind
+           |  Vp '=' E ';'       :make_eqn.
 
 Fp         :  F+ :hug.
-F          :  Const                :make_const
-           |  V                    :make_var
-           |  '('_ E ')'_
-           |  '{'_ F Fp '}'_       :fold_send
-           |  '['_ E ** (','_) ']'_   :hug :make_list_expr.
+F          :  Const              :make_const
+           |  V                  :make_var
+           |  '(' E ')'
+           |  '{' F Fp '}'       :fold_send
+           |  '[' E ** (',') ']' :hug :make_list_expr.
 
 Vp         :  V+ :hug.
 V          :  Identifier
            |  Operator.
 
-Identifier :  /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b\s*/.
-Operator   :  /(<=|:=|[!+-.])\s*/.
+Identifier :  /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b/.
+Operator   :  /(<=|:=|[!+-.])/.
 
-Const      :  '.'_ V               :make_lit_sym
-           |  /"([^"]*)"/_         :repr
-           |  /(-?\d+)/_
-           |  '('_ ')'_            :'()'
-           |  '['_ ']'_            :'[]'.
+Const      :  '.' V               :make_lit_sym
+           |  /"([^"]*)"/         :repr
+           |  /(-?\d+)/
+           |  '(' ')'            :'()'
+           |  '[' ']'            :'[]'.
 
-_          :  /\s*/.
+FNORD     ~:  /\s*/.
 """)(**globals())
 
 ## toy_grammar.main('.+')
