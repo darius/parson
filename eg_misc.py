@@ -76,15 +76,13 @@ B     :  'b' S
 ## as_and_bs("abaabbbbaa")
 #. ()
 
-nums = Grammar(r"""
-allnums  :  nums? :end.
-nums     :  num (',' num)*.
-num      :  /(\d+)/ :int.
+sum_nums = Grammar(r"""
+num ** ',' :end :hug :sum.
+num: /(\d+)/ :int.
 """)()
-sum_nums = lambda s: sum(nums.allnums(s))
 
 ## sum_nums('10,30,43')
-#. 83
+#. (83,)
 
 one_word = Grammar(r"/\w+/ :position")()
 
@@ -143,7 +141,7 @@ p:     :pattern :replace.
 #. 'hi there GLARGGLARG to you GLARGEE'
 
 csv = Grammar(r"""
-record  :  field (',' field)* !/./.
+record  :  field ** ',' !/./.
 
 field   :  '"' qchar* /"\s*/ :join
         |  /([^,"\n]*)/.

@@ -12,12 +12,10 @@ literals = dict(true=True,
 json_grammar = Grammar(r"""
 start     :  _ value.
 
-object    :  '{'_ pairs? '}'_         :mk_object.
-pairs     :  pair (','_ pair)*.
+object    :  '{'_ pair ** (','_) '}'_ :mk_object.
 pair      :  string ':'_ value        :hug.
 
-array     :  '['_ elements? ']'_      :hug.
-elements  :  value (','_ value)*.
+array     :  '['_ value ** (','_) ']'_ :hug.
 
 value     :  string | number
           |  object | array

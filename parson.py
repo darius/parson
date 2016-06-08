@@ -37,15 +37,25 @@ def maybe(p):
     return label(either(p, empty),
                  '(%r)?', p)
 
-def plus(p):
-    "Return a peg matching 1 or more of what p matches."
-    return label(chain(p, star(p)),
-                 '(%r)+', p)
+def plus(p, separator=None):
+    "Return a peg matching 1 or more of what p matches (maybe with separator)."
+    if separator is None:
+        return label(chain(p, star(p)),
+                     '(%r)+', p)
+    else:
+        return label(chain(p, star(chain(separator, p))),
+                     '(%r)++(%r)', p, separator)
 
-def star(p):
-    "Return a peg matching 0 or more of what p matches."
-    return label(recur(lambda p_star: maybe(chain(p, p_star))),
-                 '(%r)*', p)
+def star(p, separator=None):
+    "Return a peg matching 0 or more of what p matches (maybe with separator)."
+    if separator is None:
+        # p* = (p p*)?
+        return label(recur(lambda p_star: maybe(chain(p, p_star))),
+                     '(%r)*', p)
+    else:
+        # p**sep = (p (sep p)*)?
+        return label(maybe(chain(p, star(chain(separator, p)))),
+                     '(%r)**(%r)', p, separator)
 
 def invert(p):
     "Return a peg that succeeds just when p fails."
@@ -364,7 +374,9 @@ def _make_grammar_grammar():
 
     factor         = seclude(delay(lambda:
                      '!' +_+ factor                     + lift(invert)
-                   | primary + ( '*' +_+ lift(star)
+                   | primary + ( '**' +_+ primary + lift(star)
+                               | '++' +_+ primary + lift(plus)
+                               | '*' +_+ lift(star)
                                | '+' +_+ lift(plus)
                                | '?' +_+ lift(maybe)
                                ).maybe()))

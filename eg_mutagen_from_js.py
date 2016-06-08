@@ -32,8 +32,7 @@ exp  :  'Choice'   args    :mk_choice
      |  string
      |  int.
 
-args :  '('_ exps? ')'_.
-exps :  exp (','_ exps)*.
+args :  '('_ exp ** (','_) ')'_.
 
 var  :  /([A-Za-z_]\w*)/_  :mk_var.
 

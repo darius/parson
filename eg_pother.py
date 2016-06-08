@@ -80,9 +80,7 @@ F          :  Const                :make_const
            |  V                    :make_var
            |  '('_ E ')'_
            |  '{'_ F Fp '}'_       :fold_send
-           |  '['_ EList ']'_      :hug :make_list_expr.
-
-EList      :  (E (','_ EList)?)?.
+           |  '['_ E ** (','_) ']'_   :hug :make_list_expr.
 
 Vp         :  V+ :hug.
 V          :  Identifier

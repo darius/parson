@@ -158,7 +158,7 @@ main: :'x'.
 nums = Grammar(r"""
 # This is a comment.
 main : nums !/./.  # So's this.
-nums : (num (',' num)*)?.
+nums : num ** ','.
 num  : /([0-9]+)/ :int.
 """)()
 sum_nums = lambda s: sum(nums.main(s))

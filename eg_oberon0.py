@@ -14,15 +14,14 @@ factor:               ident selector
                     | integer
                     | '('_ expression ')'_
                     | '~'_ factor.
-term:                 factor (MulOperator factor)*.
+term:                 factor ++ MulOperator.
 MulOperator:          '*'_ | 'DIV'_ | 'MOD'_ | '&'_.
-SimpleExpression:     ('+'_|'-'_)? term (AddOperator term)*.
+SimpleExpression:     ('+'_|'-'_)? term ++ AddOperator.
 AddOperator:          '+'_ | '-'_ | 'OR'_.
 expression:           SimpleExpression (relation SimpleExpression)?.
 relation:             '='_ | '#'_ | '<='_ | '<'_ | '>='_ | '>'_.
 assignment:           ident selector ':='_ expression.
-ActualParameters:     '('_ ExpList? ')'_.
-ExpList:              expression (','_ expression)*.
+ActualParameters:     '('_ expression ** (','_) ')'_.
 ProcedureCall:        ident ActualParameters?.
 IfStatement:          'IF'_ expression 'THEN'_ StatementSequence
                       ('ELSIF'_ expression 'THEN'_ StatementSequence)*
@@ -30,14 +29,14 @@ IfStatement:          'IF'_ expression 'THEN'_ StatementSequence
                       'END'_.
 WhileStatement:       'WHILE'_ expression 'DO'_ StatementSequence 'END'_.
 statement:            (assignment | ProcedureCall | IfStatement | WhileStatement)?.
-StatementSequence:    statement (';'_ statement)*.
-IdentList:            ident (','_ ident)*.
+StatementSequence:    statement ++ (';'_).   # XXX isn't it a problem that statement can be empty?
+IdentList:            ident ++ (','_).
 ArrayType:            'ARRAY'_ expression 'OF'_ type.
 FieldList:            (IdentList ':'_ type)?.
-RecordType:           'RECORD'_ FieldList (';'_ FieldList)* 'END'_.
+RecordType:           'RECORD'_ FieldList ++ (';'_) 'END'_.
 type:                 ident | ArrayType | RecordType.
 FPSection:            ('VAR'_)? IdentList ':'_ type.
-FormalParameters:     '('_ (FPSection (';'_ FPSection)*)? ')'_.
+FormalParameters:     '('_ FPSection ** (';'_) ')'_.
 ProcedureHeading:     'PROCEDURE'_ ident FormalParameters?.
 ProcedureBody:        declarations ('BEGIN'_ StatementSequence)? 'END'_.
 ProcedureDeclaration: ProcedureHeading ';'_ ProcedureBody ident.
