@@ -59,6 +59,6 @@ Basic things still to explain:
 Examples of where I've used it for more than examples:
   * [IDEAL](https://github.com/darius/unreal/blob/master/parser.py), a drawing language
   * [Linogram](https://github.com/darius/goobergram/blob/master/parser.py), also a drawing language
-  * [Pythological](https://github.com/darius/pythological), a MiniKanren with a vaguely Prologish frontend
-  * [tinyhiss](https://github.com/darius/tinyhiss) -- Smalltalkish
+  * [Pythological](https://github.com/darius/pythological/blob/master/parser.py), a MiniKanren with a vaguely Prologish frontend
+  * [tinyhiss](https://github.com/darius/tinyhiss/blob/master/parser.py) -- Smalltalkish
   * [Squee](https://github.com/darius/squee/blob/master/parse_sans_offsides.py), an experimental language not much like any others
