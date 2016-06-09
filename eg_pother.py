@@ -86,7 +86,7 @@ Vp         :  V+ :hug.
 V          :  Identifier
            |  Operator.
 
-Identifier :  /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)\b/.
+Identifier :  /(?!let\b|case\b|defer\b|bind\b)([A-Za-z_]\w*)/.
 Operator   :  /(<=|:=|[!+-.])/.
 
 Const      :  '.' V               :make_lit_sym
