@@ -80,7 +80,7 @@ F          :  Const              :make_const
            |  V                  :make_var
            |  '(' E ')'
            |  '{' F Fp '}'       :fold_send
-           |  '[' E ** (',') ']' :hug :make_list_expr.
+           |  '[' E ** ',' ']'   :hug :make_list_expr.
 
 Vp         :  V+ :hug.
 V          :  Identifier
