@@ -56,7 +56,9 @@ Basic things still to explain:
   * recursion with combinators
   * actions
 
-Examples of where I'm using it for more than examples:
-  * https://github.com/darius/tinyhiss -- Smalltalkish
-  * https://github.com/darius/pythological -- Prologish
-  * https://github.com/darius/squee -- More of my own thing
+Examples of where I've used it for more than examples:
+  * [IDEAL](https://github.com/darius/unreal/blob/master/parser.py), a drawing language
+  * [Linogram](https://github.com/darius/goobergram/blob/master/parser.py), also a drawing language
+  * [Pythological](https://github.com/darius/pythological), a MiniKanren with a vaguely Prologish frontend
+  * [tinyhiss](https://github.com/darius/tinyhiss) -- Smalltalkish
+  * [Squee](https://github.com/darius/squee/blob/master/parser.py), an experimental language not much like any others
