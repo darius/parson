@@ -185,3 +185,12 @@ def gsub(text, p, replacement):
     return ''.join(g.gsub(text))
 ## gsub('hi there WHEEWHEE to you WHEEEE', 'WHEE', 'GLARG')
 #. 'hi there GLARGGLARG to you GLARGEE'
+
+
+def catch_position(parse, string):
+    try: parse(string)
+    except Unparsable, e:
+        print e.position
+
+## catch_position(Grammar(r" 'x'* /$/ ")(), 'xxxhi')
+#. 3
