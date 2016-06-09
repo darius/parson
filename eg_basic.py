@@ -143,7 +143,10 @@ def return_():
 
 
 def nullify(fn):
-    return alter(lambda *args: (fn(*args), ())[1]) # XXX kinda ugh
+    def nullified(*args):
+        fn(*args)
+        return ()
+    return alter(nullified)
 
 basic = grammar(
     fetch    = env.__getitem__,
