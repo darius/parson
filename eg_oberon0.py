@@ -6,7 +6,7 @@ Wirth, _Compiler Construction_, Appendix A.
 from parson import Grammar
 
 grammar_source = r"""
-ident:                !keyword /([A-Za-z][A-Za-z0-9]*)\b/.
+ident:                !keyword /([A-Za-z][A-Za-z0-9]*)/.
 integer:              digit+ FNORD :join :int.
 selector:             ('.' ident | '[' expression ']')*.
 factor:               ident selector
