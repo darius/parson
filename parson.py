@@ -274,12 +274,7 @@ def _is_indexable(x):
 # Build pegs from a string representation of a grammar.
 
 class Grammar(object):
-    """XXX doc comment
-    Contrived example:
-    >>> g = Grammar(r"a = 'x'|b.   b = !:p /regex/.  # comment")(p=fail)
-    >>> g.a('x')
-    ()
-    """
+    """XXX doc comment"""
     def __init__(self, string):
         self.skeletons = _parse_grammar(string)
     def __call__(self, **subs):
@@ -291,7 +286,7 @@ class Grammar(object):
         rules = {name: delay(lambda: rules[name], name)
                  for (name,_,_) in self.skeletons if name is not None}
         for rule, fnord_rule_type, (_,f) in self.skeletons:
-            peg = f(rules, fnord_rule_type == '', subs)
+            peg = f(self, rules, fnord_rule_type == '', subs)
             if rule is None:
                 result = peg
             else:
@@ -301,6 +296,14 @@ class Grammar(object):
             result = _Struct()
         result.__dict__.update(rules)
         return result
+    def literal(self, string):
+        return literal(string)
+    def match(self, regex):
+        return match(regex)
+    def keyword(self, string):
+        return literal(string) + word_boundary
+
+word_boundary = match(r'\b')
 
 class _Struct(object): pass
 
@@ -341,33 +344,33 @@ def _make_grammar_grammar():
 
     def mk_rule_ref(name):
         return (set([name]),
-                lambda rules, af, subs: delay(lambda: rules[name], name))
+                lambda builder, rules, af, subs: delay(lambda: rules[name], name))
 
-    def constant(peg): return (set(), lambda rules, af, subs: peg)
+    def constant(peg): return (set(), lambda builder, rules, af, subs: peg)
 
     def lift(peg_op):
         return lambda *lifted: (
             set().union(*[refs for refs,_ in lifted]),
-            lambda rules, af, subs: peg_op(*[f(rules, af, subs) for _,f in lifted])
+            lambda builder, rules, af, subs: peg_op(*[f(builder, rules, af, subs)
+                                                      for _,f in lifted])
         )
 
     def mk_fnordly((refs, mk_peg)):
-        def mk_result(rules, allow_fnord, subs):
-            result = mk_peg(rules, allow_fnord, subs)
+        def mk_result(builder, rules, allow_fnord, subs):
+            result = mk_peg(builder, rules, allow_fnord, subs)
             if allow_fnord and 'FNORD' in rules:
                 # N.B. we don't add FNORD to refs; it won't matter.
                 result = chain(result, delay(lambda: rules['FNORD'], 'FNORD'))
             return result
         return (refs, mk_result)
 
-    unquote     = lambda name: (set(), lambda rules, af, subs: Peg(_lookup(subs, name)))
+    unquote     = lambda name: (set(), lambda _, rules, af, subs: Peg(_lookup(subs, name)))
 
-    mk_literal  = lambda string: constant(literal(string))
-    mk_keyword  = lambda string: constant(literal(string) + word_boundary)
     mk_push_lit = lambda string: constant(push(string))
-    mk_match    = lambda *cs: constant(match(''.join(cs)))
 
-    word_boundary  = match(r'\b')
+    def mk_literal(s): return (set(), lambda builder, _, __, ___: builder.literal(s))
+    def mk_keyword(s): return (set(), lambda builder, _, __, ___: builder.keyword(s))
+    def mk_match(s):   return (set(), lambda builder, _, __, ___: builder.match(s))
 
     whitespace     = match(r'(?:\s|#[^\n]*\n?)+')
     _              = whitespace.maybe()
@@ -404,7 +407,7 @@ def _make_grammar_grammar():
                    | '{' +_+ pe + '}' +_                >> lift(capture)
                    | seclude(qstring + mk_literal + fnordly)
                    | seclude(dqstring + mk_keyword + fnordly)
-                   | seclude('/' + regex_char.star() + '/' +_+ mk_match + fnordly)
+                   | seclude('/' + regex_char.star() + '/' +_+ join + mk_match + fnordly)
                    | ':' + ( word                       >> unquote
                            | qstring                    >> mk_push_lit)
                    | name                               >> mk_rule_ref)
