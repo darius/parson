@@ -378,7 +378,7 @@ def _make_grammar_grammar():
     word           = match(r'(\w+)') +_
 
     regex_char     = match(r'(\\.|[^/])')
-    quoted_char    = match(r'\\(.)') | match(r"([^'])")
+    quoted_char    = match(r'\\(.)') | match(r"([^'])") # XXX understand escapes like \n
     dquoted_char   = match(r'\\(.)') | match(r'([^"])')
 
     qstring        = "'" +  quoted_char.star() + "'" +_  >> join
