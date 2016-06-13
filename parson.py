@@ -83,6 +83,8 @@ class _Peg(object):
         "Parse a prefix of sequence and return a tuple of values or None."
         try: return self(sequence)
         except Unparsable: return None
+    def expecting_one_result(self):
+        return _OneResultPeg(self.face, self.run)
     def __add__(self, other):  return chain(self, Peg(other))
     def __radd__(self, other): return chain(Peg(other), self)
     def __or__(self, other):   return either(self, Peg(other))
@@ -94,6 +96,12 @@ class _Peg(object):
     maybe = maybe
     plus = plus
     star = star
+
+class _OneResultPeg(_Peg):
+    def __call__(self, sequence):
+        result = super(_OneResultPeg, self).__call__(sequence)
+        assert len(result) == 1, "One result expected: %r" % (result,)
+        return result[0]
 
 def _fn_name(fn):
     return fn.func_name if hasattr(fn, 'func_name') else repr(fn)
