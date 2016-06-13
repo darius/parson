@@ -30,8 +30,7 @@ sentence:  sum ('=' sum         :Equiv)?.
 sum:       term ( '|' sum       :Or
                 | '=>' term     :Implies )?.
 
-term:      factor ( term        :And
-                  | FNORD ).
+term:      factor (factor :And)* FNORD.
 
 factor  ~: '~'_ primary         :Not
          | primary.
