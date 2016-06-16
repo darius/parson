@@ -18,7 +18,7 @@ exp2   :  '(' exp0 ')'
 ident  :  /([A-Za-z]+)/.
 
 FNORD ~:  /\s*/.
-""")(assign=alter(lambda name, *exp: exp + (name, 'store')))
+""")(assign=alter(lambda name, *rpn: rpn + (name, 'store')))
 
 ## print ' '.join(g('v = 42 * (5+3) + 2*2; v = v + 1;'))
 #. 42 5 3 add mul 2 2 mul add v store v fetch 1 add v store
