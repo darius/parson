@@ -4,7 +4,7 @@ After http://www.vpri.org/pdf/rn2010001_programm.pdf
 
 from parson import Grammar
 
-def assign(v, exp): return exp(0) + ['sw r0, ' + v]
+def assign(v, exp):  return exp(0) + ['sw r0, ' + v]
 
 def ld_const(value): return lambda s: ['lc r%d, %d' % (s, value)]
 def ld_var(name):    return lambda s: ['lw r%d, %s' % (s, name)]
@@ -14,23 +14,24 @@ def add(exp1, exp2): return lambda s: (exp1(s) + exp2(s+1)
 def mul(exp1, exp2): return lambda s: (exp1(s) + exp2(s+1)
                                        + ['mul r%d, r%d, r%d' % (s, s+1, s)])
 
-g = Grammar(r"""
-top   :  _ stmt :end.
+g = Grammar(r"""  stmt :end.
 
-stmt  :  ident ':='_ exp0   :assign.
+stmt  :  ident ':=' exp0   :assign.
 
-exp0  :  exp1 ('+'_ exp1    :add)*.
-exp1  :  exp2 ('*'_ exp2    :mul)*.
+exp0  :  exp1 ('+' exp1    :add)*.
+exp1  :  exp2 ('*' exp2    :mul)*.
 
-exp2  :  '('_ exp0 ')'_
-      |  /(\d+)/_ :int      :ld_const
-      |  ident              :ld_var.
+exp2  :  '(' exp0 ')'
+      |  /(\d+)/ :int      :ld_const
+      |  ident             :ld_var.
 
-ident =  /([A-Za-z]+)/_.
-_     =  /\s*/.
-""")(**globals())
+ident :  /([A-Za-z]+)/.
 
-## for line in g.top('v := 42 * (5+3) + 2*2')[0]: print line
+FNORD~:  /\s*/.
+
+""")(**globals()).expecting_one_result()
+
+## for line in g('v := 42 * (5+3) + 2*2'): print line
 #. lc r0, 42
 #. lc r1, 5
 #. lc r2, 3
