@@ -51,8 +51,7 @@ fold_infix_app = lambda _left, _op, _right: \
 #                         [Param,operator,_,Param,  
 #                          lambda _left,_op,_right: [_op, _left, _right]]
 
-toy_grammar = Grammar(r"""
-main       :  '' E :end.
+toy_grammar = Grammar(r"""  E :end.
 
 E          :  Fp '`' V '`' E     :fold_infix_app
            |  Fp                 :fold_apps
@@ -96,42 +95,42 @@ Const      :  '.' V               :make_lit_sym
            |  '[' ']'            :'[]'.
 
 FNORD     ~:  /\s*/.
-""")(**globals())
+""")(**globals()).expecting_one_result()
 
-## toy_grammar.main('.+')
-#. ('(quote +)',)
-## toy_grammar.main('0 .+')
-#. ('(0 (quote +))',)
+## toy_grammar('.+')
+#. '(quote +)'
+## toy_grammar('0 .+')
+#. '(0 (quote +))'
 
-## print toy_grammar.main('0')
-#. ('0',)
-## print toy_grammar.main('x')
-#. ('x',)
-## print toy_grammar.main('let x=y; x')[0]
+## print toy_grammar('0')
+#. 0
+## print toy_grammar('x')
+#. x
+## print toy_grammar('let x=y; x')
 #. (let ((x) y) x)
-## print toy_grammar.main.attempt('')
+## print toy_grammar.attempt('')
 #. None
-## print toy_grammar.main('x x . y')[0]
+## print toy_grammar('x x . y')
 #. ((x x) (quote y))
-## print toy_grammar.main.attempt('(when (in the)')
+## print toy_grammar.attempt('(when (in the)')
 #. None
-## print toy_grammar.main('&M => (&f => M (f f)) (&f => M (f f))')[0]
+## print toy_grammar('&M => (&f => M (f f)) (&f => M (f f))')
 #. (lambda (M) ((lambda (f) (M (f f))) (lambda (f) (M (f f)))))
-## print toy_grammar.main('&a b c => a b')[0]
+## print toy_grammar('&a b c => a b')
 #. (lambda (a) (lambda (b) (lambda (c) (a b))))
 
-## toy_grammar.main('x')
-#. ('x',)
-## toy_grammar.main('let x=y; x')
-#. ('(let ((x) y) x)',)
-## toy_grammar.main.attempt('')
-## toy_grammar.main('x x . y')
-#. ('((x x) (quote y))',)
-## toy_grammar.main.attempt('(when (in the)')
-## toy_grammar.main('&M => (&f => M (f f)) (&f => M (f f))')
-#. ('(lambda (M) ((lambda (f) (M (f f))) (lambda (f) (M (f f)))))',)
-## toy_grammar.main('&a b c => a b')
-#. ('(lambda (a) (lambda (b) (lambda (c) (a b))))',)
+## toy_grammar('x')
+#. 'x'
+## toy_grammar('let x=y; x')
+#. '(let ((x) y) x)'
+## toy_grammar.attempt('')
+## toy_grammar('x x . y')
+#. '((x x) (quote y))'
+## toy_grammar.attempt('(when (in the)')
+## toy_grammar('&M => (&f => M (f f)) (&f => M (f f))')
+#. '(lambda (M) ((lambda (f) (M (f f))) (lambda (f) (M (f f)))))'
+## toy_grammar('&a b c => a b')
+#. '(lambda (a) (lambda (b) (lambda (c) (a b))))'
 
 mint = r"""
 let make_mint name =
@@ -168,13 +167,13 @@ let make_mint name =
 
 make_mint
 """
-#try: print toy_grammar.main(mint)
+#try: print toy_grammar(mint)
 #except Unparsable, e:
 #    print e.args[1][0]
 #    print 'XXX'
 #    print e.args[1][1]
-#print toy_grammar.main('let defer mint; mint')
-## print toy_grammar.main(mint)[0]
+#print toy_grammar('let defer mint; mint')
+## print toy_grammar(mint)
 #. (let ((make_mint name) (case (make_brand name) ((list sealer unsealer) (let (defer mint) ((real_mint name msg) (case msg ((quote __print_on) (lambda (out) ((out (quote print)) ((name (quote .)) "'s mint")))) ((quote make_purse) (lambda (initial_balance) (let ((_) (assert (is_int initial_balance))) ((_) (assert ((0 (quote <=)) initial_balance))) ((balance) (make_box initial_balance)) ((decr amount) (let ((_) (assert (is_int amount))) ((_) (assert ((((0 (quote <=)) amount) (quote and)) ((amount (quote <=)) balance)))) ((balance (quote :=)) (((balance (quote !)) (quote -)) amount)))) ((purse msg) (case msg ((quote __print_on) (lambda (out) ((out (quote print)) (((((('has ' (quote .)) (to_str balance)) (quote .)) name) (quote .)) ' bucks')))) ((quote balance) (balance (quote !))) ((quote sprout) ((mint (quote make_purse)) 0)) ((quote get_decr) ((sealer (quote seal)) decr)) ((quote deposit) (lambda (amount) (lambda (source) (let ((_) (((unsealer (quote unseal)) (source (quote get_decr))) amount)) ((balance (quote :=)) (((balance (quote !)) (quote +)) amount)))))))) purse))))) (bind mint real_mint) mint)))) make_mint)
 
 mintskel = r"""
@@ -187,7 +186,7 @@ let make_mint name =
 
 make_mint
 """
-## print toy_grammar.main(mintskel)[0]
+## print toy_grammar(mintskel)
 #. (let ((make_mint name) (case (make_brand name) ((list sealer unsealer) (let (defer mint) mint)))) make_mint)
 
 voting = r"""
@@ -212,5 +211,5 @@ let make_one_shot f =
 
 start_voting
 """
-## print toy_grammar.main(voting)[0]
+## print toy_grammar(voting)
 #. (let ((make_one_shot f) (let ((armed) (make_box True)) (lambda (x) (let ((_) (assert ((armed (quote !)) (quote not)))) ((_) ((armed (quote :=)) False)) (f x))))) ((start_voting voters choices timer) (let ((ballot_box) ((map (lambda (_) (make_box 0))) choices)) ((poll voter) (let ((make_checkbox pair) (case pair ((list choice tally) (list (((choice ,) make_one_shot) (lambda (_) ((tally (quote :=)) (((tally (quote !)) (quote +)) 1)))))))) ((ballot) ((map make_checkbox) ((zip choices) ballot_box))) (voter <- ballot))) ((_) ((for_each poll) voters)) (list ((close_polls ,) totals)))) start_voting)

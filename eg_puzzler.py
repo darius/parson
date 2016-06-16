@@ -44,12 +44,14 @@ _       ~: /[ \t]*/.    # Spaces within a line.
 FNORD   ~: /\s+|#.*/*.  # Spaces/comments that may span lines.
 """
 
-parse = Grammar(g)(Equiv   = dd.Equiv,
-                   Implies = dd.Implies,
-                   And     = operator.and_,
-                   Or      = operator.or_,
-                   Not     = operator.inv,
-                   Var     = mk_var)
+parse = Grammar(g)(
+    Equiv   = dd.Equiv,
+    Implies = dd.Implies,
+    And     = operator.and_,
+    Or      = operator.or_,
+    Not     = operator.inv,
+    Var     = mk_var
+).expecting_one_result()
 
 def solve(condition):
     if dd.is_valid(condition):
@@ -65,18 +67,18 @@ def show(opt_env):
             if k is not None:
                 print("%s%s" % ("" if v else "~", var_names[k]))
 
-## solve(parse(' hey (there | ~there), ~hey | ~there')[0])
+## solve(parse(' hey (there | ~there), ~hey | ~there'))
 #. hey
 #. ~there
-## solve(parse(' hey (there, ~there)')[0])
+## solve(parse(' hey (there, ~there)'))
 #. Unsatisfiable.
-## solve(parse('a=>b = ~b=>~a')[0])
+## solve(parse('a=>b = ~b=>~a'))
 #. Valid.
 
 
 def main(filename, text):
     try:
-        problem, = parse(text)
+        problem = parse(text)
     except Unparsable as e:
         syntax_error(e, filename)
         sys.exit(1)

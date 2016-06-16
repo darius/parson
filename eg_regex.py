@@ -11,7 +11,7 @@ from parson import Grammar, join
 
 def generate(regex, Ns):
     "Return the strings matching regex whose length is in Ns."
-    return sorted(parser.regex(regex)[0](Ns),
+    return sorted(parser(regex)(Ns),
                   key=lambda s: (len(s), s))
 
 def literal(s):   return lambda Ns: set([s]) if len(s) in Ns else null
@@ -39,8 +39,7 @@ def genseq(x, y, Ns):
     ymatches = y(Ns_y)
     return set(m1+m2 for m1 in xmatches for m2 in ymatches if len(m1+m2) in Ns)
 
-grammar = Grammar(r"""
-regex    :  exp :end.
+grammar = Grammar(r"""  exp :end.
 exp      :  term ('|' exp     :either)*
          |                    :empty.
 term     :  factor (term      :chain)*.
@@ -56,7 +55,7 @@ primary  :  '(' exp ')'
 char     :  /\\(.)/
          |  /([^\]])/.
 """)
-parser = grammar(**globals())
+parser = grammar(**globals()).expecting_one_result()
 
 ## generate('.+', range(5))
 #. ['?', '??', '???', '????']
@@ -65,4 +64,4 @@ parser = grammar(**globals())
 ## generate('(Chloe|Yvette), a( precocious)? (toddler|writer)', range(28))
 #. ['Chloe, a writer', 'Chloe, a toddler', 'Yvette, a writer', 'Yvette, a toddler', 'Chloe, a precocious writer', 'Chloe, a precocious toddler', 'Yvette, a precocious writer']
 
-## parser.regex.attempt('{"hi"](')
+## parser.attempt('{"hi"](')
