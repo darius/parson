@@ -219,7 +219,7 @@ def trace(message):
     def tracer(s, far, (i, vals)):
         print message, i, vals
         return [(i, vals)]
-    return P._Peg('trace', tracer)
+    return _Peg('trace', tracer)
 
 
 # Some often-useful actions for feed().
