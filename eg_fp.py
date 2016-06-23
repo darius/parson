@@ -45,7 +45,7 @@ primary : integer                :mk_aref
         | '~' integer            :mk_literal
         | string                 :mk_literal
         | name                   :mk_call
-        | /([<=>*+-])/~ !opchar FNORD
+        | /([<=>*+-])/~ !opchar ''
                                  :mk_op
         | '[' exp ** ',' ']'     :mk_list
         | '(' exp ')'.
