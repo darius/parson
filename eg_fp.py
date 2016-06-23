@@ -214,3 +214,20 @@ lines == [id, "\n"].
 #. <leaves> of grass
 #. flowers <of> evil
 #. leaves <of> grass
+
+
+# Prime numbers from 3 to ?
+# (adapted from an example from Andy Valencia's C implementation of FP)
+primes_program = r"""
+primes     == candidates ?isprime.
+isprime    == [id, [id, ~4] div candidates] distl ?divisible isempty.
+isempty    == [length, ~0] =.
+divisible  == [mod, ~0] =.
+candidates == iota @(double add1).
+double     == [~2, id] *.
+add1       == [id, ~1] +.
+"""
+## FP(primes_program)
+## primes, = defs('primes')
+## primes(20)
+#. [3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41]
