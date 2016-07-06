@@ -1,22 +1,24 @@
 """
-Systems of linear equations, reimplementing a hand-coded parser by Dave Long.
+Systems of linear equations over complex numbers, reimplementing a
+hand-coded parser by Dave Long.
 """
 
 from parson import Grammar
 
-grammar = r"""  _ equations :end.
+grammar = r"""  equations :end.
 
-equations: equation ** (';'_).
+equations: equation ** ';'.
 
-equation:  sum '='_ sum                 :hug.
-sum:       term ++ ('+'_)               :sum.
-term:      number ('*'_ variable | :'') :swap
-         | variable [:'1' :complex]     :hug.
-variable:  /([a-zA-Z]+)/ _.
+equation:  sum '=' sum                   :hug.
+sum:       term ++ '+'                   :sum.
+term:      number ('*' variable | :'')   :swap
+         | variable [:'1' :complex]      :hug.
+variable:  /([a-zA-Z]+)/ .
 number:    ( (real ',' :'+')? real {'j'}
-           | real ) _                   :join :complex.
-real:      { '-'? /\d+/ ('.' /\d*/)? }.
-_:         /\s*/.
+           | real )                      :join :complex.
+
+real  ~: { '-'? /\d+/ ('.' /\d*/)? } FNORD.
+FNORD ~: /\s*/.
 """
 parse = Grammar(grammar)(sum=lambda *terms: dict((('',0j),) + terms),
                          swap=lambda x,y: (y,x))
