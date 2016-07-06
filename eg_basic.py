@@ -234,7 +234,7 @@ if __name__ == '__main__':
 #. 10 let a = 10
 #. 20 if a < 0 then 60
 #. 30 print a
-#. 40 let a = a - 1
+#. 40 a = a - 1
 #. 50 goto 20
 #. 60 print "Blast off!"
 #. 70 end
