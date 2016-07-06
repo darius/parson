@@ -29,33 +29,33 @@ command   :  /(\d+)/ :int /(.*)/          /$/ :set_line
 stmt      :  "print"  printing            /$/        :next
           |  '?'      printing            /$/        :next
           |  "input"  id                  /$/ :input :next
-          |  "goto"   exp0                /$/        :goto
-          |  "if"     relexp "then" exp0  /$/        :if_goto
-          |  "gosub"  exp0                /$/        :gosub
+          |  "goto"   exp                 /$/        :goto
+          |  "if"     relexp "then" exp   /$/        :if_goto
+          |  "gosub"  exp                 /$/        :gosub
           |  "return"                     /$/        :return_
           |  "end"                        /$/        :end
           |  "list"                       /$/ :list  :next
           |  "rem"    /.*/                /$/        :next
-          |  "let"?   id '=' exp0         /$/ :store :next.
+          |  "let"?   id '=' exp          /$/ :store :next.
 
 printing  :  (display writes)?.
 writes    :  ';'        printing
           |  ',' :space printing
           |      :newline.
 
-display  ~:  exp0 :write
+display  ~:  exp :write
           |  '"' [qchar :write]* '"' FNORD.
 qchar    ~:  /"(")/
           |  /([^"])/.
 
-relexp    :  exp0 (  '<>' exp0 :ne
-                   | '<=' exp0 :le
-                   | '<'  exp0 :lt
-                   | '='  exp0 :eq
-                   | '>=' exp0 :ge
-                   | '>'  exp0 :gt
+relexp    :  exp  (  '<>' exp :ne
+                   | '<=' exp :le
+                   | '<'  exp :lt
+                   | '='  exp :eq
+                   | '>=' exp :ge
+                   | '>'  exp :gt
                   )?.
-exp0      :  exp1 (  '+' exp1 :add
+exp       :  exp1 (  '+' exp1 :add
                    | '-' exp1 :sub
                   )*.
 exp1      :  exp2 (  '*' exp2 :mul
@@ -66,7 +66,7 @@ exp2      :  primary ('^' exp2 :pow)?.
 primary   :  '-' exp1 :neg
           |  /(\d+)/  :int
           |  id       :fetch
-          |  '(' exp0 ')'.
+          |  '(' exp ')'.
 
 id        :  /([a-z])/.  # TODO: longer names, screening out reserved words
 
@@ -230,6 +230,15 @@ if __name__ == '__main__':
 #. ()
 ## basic.command('load countdown.bas')
 #. ()
+## basic.command('list')
+#. 10 let a = 10
+#. 20 if a < 0 then 60
+#. 30 print a
+#. 40 let a = a - 1
+#. 50 goto 20
+#. 60 print "Blast off!"
+#. 70 end
+#. (None,)
 ## basic.command('run')
 #. 10
 #. 9
