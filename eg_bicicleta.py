@@ -82,7 +82,6 @@ def mk_infix(left, operator, right):
     return mk_funcall(Call(left, operator), '()', (('arg1', right),))
 
 parse = Grammar(g).bind(globals()).expecting_one_result()
-# XXX .one_result()
 
 ## parse('5')
 #. 5
