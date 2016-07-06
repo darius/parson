@@ -34,7 +34,7 @@ def foldr(f, z, xs):
 from operator import *
 from parson import delay
 
-_    = delay(lambda: g._)
+_    = delay(lambda: g.FNORD)
 exp3 = delay(lambda: g.exp3)
 
 exp1 = PrececedenceParser(exp3, [
@@ -47,22 +47,22 @@ exps = PrececedenceParser(exp1, [
         ])
 
 g = Grammar(r"""
-top  = _ :exps :end.
+:exps :end.
 
-exp3 : '('_ :exps ')'_
-     | '-'_ :exp1 :neg
-     | /(\d+)/_ :int.
+exp3 : '(' :exps ')'
+     | '-' :exp1 :neg
+     | /(\d+)/ :int.
 
-_    = /\s*/.
+FNORD ~= /\s*/.
 """)(**globals())
 
-## g.top('42 *(5-3) + -2^2')
+## g('42 *(5-3) + -2^2')
 #. (80,)
-## g.top('2^3^2')
+## g('2^3^2')
 #. (512,)
-## g.top('5-3-1')
+## g('5-3-1')
 #. (1,)
-## g.top('3//2')
+## g('3//2')
 #. (1,)
-## g.top('3/2')
+## g('3/2')
 #. (1.5,)

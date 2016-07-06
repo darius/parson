@@ -9,36 +9,33 @@ literals = dict(true=True,
                 null=None)
 
 # Following http://www.json.org/
-json_grammar = Grammar(r"""
-start     :  _ value.
+json_parse = Grammar(r"""  value :end.
 
-object    :  '{'_ pair ** (','_) '}'_ :mk_object.
-pair      :  string ':'_ value        :hug.
+object    :  '{' pair ** ',' '}'      :mk_object.
+pair      :  string ':' value         :hug.
 
-array     :  '['_ value ** (','_) ']'_ :hug.
+array     :  '[' value ** ',' ']'     :hug.
 
 value     :  string | number
           |  object | array
-          |  /(true|false|null)\b/_   :mk_literal.
+          |  /(true|false|null)\b/    :mk_literal.
 
-string    :  '"' char* '"'_           :join.
-char      :  /([^\x00-\x1f"\\])/
+string   ~:  '"' char* '"' FNORD      :join.
+char     ~:  /([^\x00-\x1f"\\])/
           |  /\\(["\/\\])/
           |  /(\\[bfnrt])/            :escape
           |  /(\\u[0-9a-fA-F]{4})/    :escape.
 
-number    :  { '-'? int (frac exp? | exp)? } _ :float.
-int       :  '0' !/\d/
+number   ~:  { '-'? int (frac exp? | exp)? } FNORD :float.
+int      ~:  '0' !/\d/
           |  /[1-9]\d*/.
-frac      :  '.' /\d+/.
-exp       :  /[eE][+-]?\d+/.
+frac     ~:  '.' /\d+/.
+exp      ~:  /[eE][+-]?\d+/.
 
-_         :  /\s*/.
+FNORD    ~:  /\s*/.
 """)(mk_literal = literals.get,
      mk_object  = lambda *pairs: dict(pairs),
      escape     = lambda string: string.decode('unicode-escape'))
-
-json_parse = json_grammar.start
 
 # XXX The spec says "whitespace may be inserted between any pair of
 # tokens, but leaves open just what's a token. So is the '-' in '-1' a
