@@ -77,7 +77,7 @@ FNORD    ~:  /\s*/.
 lines = []         # A sorted array of (line_number, source_line) pairs.
 pc = None          # The program counter: an index into lines[], or None.
 return_stack = []  # A stack of line numbers of GOSUBs in progress.
-env = {}           # Curent variable values.
+env = {}           # Current variable values.
 
 def run():
     reset()
