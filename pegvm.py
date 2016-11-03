@@ -10,14 +10,14 @@ to do: bounce less often
 to do: compare:
   (Knuth 1971), Donald Knuth describes an abstract parsing machine. This
   machine runs programs in which the instructions either recognize and
-  con- sume a token from the input, or call a subroutine to recognize an
+  consume a token from the input, or call a subroutine to recognize an
   instance of a non-terminal. Each instruction has two continuations for
   success and failure, and part of the subroutine mechanism is that if a
   subroutine returns with failure, then the input pointer is reset to
-  where it was when the subrou- tine was called. A subroutine that
+  where it was when the subroutine was called. A subroutine that
   returns successfully, however, deletes the record of the old position
   of the input pointer. There is a natural translation of context-free
-  grammars into programs for this machine, which behave ex- actly like
+  grammars into programs for this machine, which behave exactly like
   combinator parsers based on Maybe.
 """
 
