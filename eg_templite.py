@@ -1,6 +1,7 @@
 """
 A template language, similar to templite by Ned Batchelder.
 https://github.com/aosabook/500lines/tree/master/template-engine
+(Still missing a few features.)
 """
 
 from parson import Grammar
@@ -11,10 +12,10 @@ grammar = r"""  block :end.
 block:     chunk* :hug :Block.
 
 chunk:     '{#' (!'#}' /./)* '#}'
-        |  '{{'_ expr '}}'                                                   :Expr
-        |  '{%'_ 'if'_ expr '%}'                block '{%'_ 'endif'_  '%}'   :If
-        |  '{%'_ 'for'_ ident _ 'in'_ expr '%}' block '{%'_ 'endfor'_ '%}'   :For
-        |  (!/{[#{%]/ /(.)/)+ :join                                          :Literal .
+        |  '{{'_ expr '}}'                                                  :Expr
+        |  '{%'_ 'if'_ expr '%}'                block '{%'_ 'endif'_  '%}'  :If
+        |  '{%'_ 'for'_ ident _ 'in'_ expr '%}' block '{%'_ 'endfor'_ '%}'  :For
+        |  (!/{[#{%]/ /(.)/)+ :join                                         :Literal.
 
 expr:      access ('|' function :Call)* _ .
 access:    ident :VarRef ('.' ident :Access)*.
@@ -26,44 +27,59 @@ _:         /\s*/.
 """
 
 class Block(Struct('chunks')):
+    def free_vars(self):
+        return set().union(*[chunk.free_vars() for chunk in self.chunks])
     def gen(self):
         return '\n'.join(chunk.gen() for chunk in self.chunks)
 
 class Literal(Struct('string')):
+    def free_vars(self):
+        return set()
     def gen(self):
         return '_append(%r)' % self.string
 
 class If(Struct('expr block')):
+    def free_vars(self):
+        return self.expr.free_vars() | self.block.free_vars()
     def gen(self):
         return ('if %s:\n    %s'
                 % (self.expr.gen(), indent(self.block.gen())))
 
 class For(Struct('variable expr block')):
+    def free_vars(self):
+        return (self.expr.free_vars() | self.block.free_vars()) - set([self.variable])
     def gen(self):
-        return ('for %s in %s:\n    %s'
+        return ('for v_%s in %s:\n    %s'
                 % (self.variable, self.expr.gen(), indent(self.block.gen())))
 
 class Expr(Struct('expr')):
+    def free_vars(self):
+        return self.expr.free_vars()
     def gen(self):
         return '_append(str(%s))' % self.expr.gen()
 
 class VarRef(Struct('variable')):
+    def free_vars(self):
+        return set([self.variable])
     def gen(self):
-        return '_context[%r]' % self.variable
+        return 'v_%s' % self.variable
 
 class Access(Struct('base attribute')):
+    def free_vars(self):
+        return self.base.free_vars()
     def gen(self):
         return '%s.%s' % (self.base.gen(), self.attribute)
 
 class Call(Struct('operand function')):
+    def free_vars(self):
+        return self.operand.free_vars()
     def gen(self):
         return '%s(%s)' % (self.function, self.operand.gen())
 
 parse = Grammar(grammar)(**globals()).expecting_one_result()
 
 def compile_template(text):
-    template = parse(text)
-    code = gen(template)
+    code = gen(parse(text))
     env = {}
     exec(code, env)
     return env['_expand']
@@ -74,8 +90,11 @@ def _expand(_context):
     _acc = []
     _append = _acc.append
     %s
+    %s
     return ''.join(_acc)"""
-    return t % indent(template.gen())
+    decls = '\n'.join('v_%s = _context[%r]' % (name, name)
+                      for name in template.free_vars())
+    return t % (indent(decls), indent(template.gen()))
 
 def indent(s):
     return s.replace('\n', '\n    ')
@@ -87,23 +106,26 @@ def indent(s):
 #. def _expand(_context):
 #.     _acc = []
 #.     _append = _acc.append
+#.     v_world = _context['world']
 #.     _append('hello ')
-#.     _append(str(_context['world']))
+#.     _append(str(v_world))
 #.     _append(' yay')
 #.     return ''.join(_acc)
 
 ## f = compile_template('hello {{world}} yay'); print f(dict(world="globe"))
 #. hello globe yay
 
-## print gen(parse('{% if foo %} {% for x in xs %} {{world}} {% endfor %} yay {% endif %}'))
+## print gen(parse('{% if foo %} {% for x in xs %} {{x}} {% endfor %} yay {% endif %}'))
 #. def _expand(_context):
 #.     _acc = []
 #.     _append = _acc.append
-#.     if _context['foo']:
+#.     v_xs = _context['xs']
+#.     v_foo = _context['foo']
+#.     if v_foo:
 #.         _append(' ')
-#.         for x in _context['xs']:
+#.         for v_x in v_xs:
 #.             _append(' ')
-#.             _append(str(_context['world']))
+#.             _append(str(v_x))
 #.             _append(' ')
 #.         _append(' yay ')
 #.     return ''.join(_acc)
