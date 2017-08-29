@@ -34,12 +34,12 @@ class Literal(Struct('string')):
         return '_append(%r)' % self.string
 
 class If(Struct('expr block')):
-    def gen(self, code):
+    def gen(self):
         return ('if %s:\n    %s'
                 % (self.expr.gen(), indent(self.block.gen())))
 
 class For(Struct('variable expr block')):
-    def gen(self, code):
+    def gen(self):
         return ('for %s in %s:\n    %s'
                 % (self.variable, self.expr.gen(), indent(self.block.gen())))
 
@@ -94,3 +94,16 @@ def indent(s):
 
 ## f = compile_template('hello {{world}} yay'); print f(dict(world="globe"))
 #. hello globe yay
+
+## print gen(parse('{% if foo %} {% for x in xs %} {{world}} {% endfor %} yay {% endif %}'))
+#. def _expand(_context):
+#.     _acc = []
+#.     _append = _acc.append
+#.     if _context['foo']:
+#.         _append(' ')
+#.         for x in _context['xs']:
+#.             _append(' ')
+#.             _append(str(_context['world']))
+#.             _append(' ')
+#.         _append(' yay ')
+#.     return ''.join(_acc)
