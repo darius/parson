@@ -115,15 +115,15 @@ def indent(s):
 ## f = compile_template('hello {{world}} yay'); print f(dict(world="globe"))
 #. hello globe yay
 
-## print gen(parse('{% if foo %} {% for x in xs %} {{x}} {% endfor %} yay {% endif %}'))
+## print gen(parse('{% if foo.bar %} {% for x in xs|ok %} {{x}} {% endfor %} yay {% endif %}'))
 #. def _expand(_context):
 #.     _acc = []
 #.     _append = _acc.append
 #.     v_xs = _context['xs']
 #.     v_foo = _context['foo']
-#.     if v_foo:
+#.     if v_foo.bar:
 #.         _append(' ')
-#.         for v_x in v_xs:
+#.         for v_x in ok(v_xs):
 #.             _append(' ')
 #.             _append(str(v_x))
 #.             _append(' ')
