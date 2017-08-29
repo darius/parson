@@ -47,7 +47,8 @@ class If(Struct('expr block')):
 
 class For(Struct('variable expr block')):
     def free_vars(self):
-        return (self.expr.free_vars() | self.block.free_vars()) - set([self.variable])
+        return ((self.expr.free_vars() | self.block.free_vars())
+                - set([self.variable]))
     def gen(self):
         return ('for v_%s in %s:\n    %s'
                 % (self.variable, self.expr.gen(), indent(self.block.gen())))
