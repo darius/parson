@@ -130,3 +130,9 @@ def indent(s):
 #.             _append(' ')
 #.         _append(' yay ')
 #.     return ''.join(_acc)
+
+## f = compile_template('hello {%for x in xs%} whee{{x}} {% endfor %} yay'); print f(dict(xs='abc'))
+#. hello  wheea  wheeb  wheec  yay
+
+## f = compile_template(' {%if x%} whee{{x}} {% endif %} yay {%if y%} ok{{y}} {% endif %}'); print f(dict(x='', y='42'))
+#.   yay  ok42 
