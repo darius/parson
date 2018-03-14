@@ -16,7 +16,7 @@ to fact(n: int): int {
     return p;
 }
 
-to asm_store_field(address: Address, L: int, R: int, cell: Cell): void {
+to asm_store_field(address: Address, L, R: int, cell: Cell): void {
     assert(address < memory_size);
     if VERBOSE {
         let temp: int[12];
