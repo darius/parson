@@ -27,12 +27,13 @@ class Array_decl(Struct('name type exps')):
         inits = '\n'.join(e.c() for e in self.exps)
         return '%s = {\n  %s\n};' % (self.type.c_decl(self.name), indent(inits))
 
-class Enum(Struct('name pairs')):
+class Enum(Struct('opt_name pairs')):
     def c(self):
         # XXX is this right when we mix explicit and implicit values?
         enums = '\n'.join('%s%s,' % (name, '' if opt_exp is None else ' = %s' % opt_exp.c())
                           for name, opt_exp in self.pairs)
-        return 'enum %s {\n  %s\n}' % (self.name, indent(enums))
+        return 'enum %s{\n  %s\n}' % (self.opt_name + ' ' if self.opt_name else '',
+                                      indent(enums))
 
 class To(Struct('name params opt_return_type body')):
     def c(self):

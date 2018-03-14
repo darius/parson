@@ -1,17 +1,16 @@
 # star_thompsonlike_lowlevel.py ported to C ported to itsy
 # TODO explicit clarity on signed vs. unsigned
 
-enum Constant {
-    loud = 0,
-    max_insns = 8192,
-    accept = 0,
-}
-
+enum { loud = 0 }
 to error(plaint: char@) {
     fprintf(stderr, "%s\n", plaint);
     exit(1);
 }
 
+enum {
+    max_insns = 8192,
+    accept = 0,
+}
 enum Opcode {
     op_accept, op_eat, op_fork, op_loop
 }

@@ -72,15 +72,18 @@ with open('itsy.examples') as f:
 with open('regex.itsy') as f:
     regex = f.read()
 ## for x in parse.top(regex): print x.c() + '\n'
-#. enum Constant {
+#. enum {
 #.   loud = 0,
-#.   max_insns = 8192,
-#.   accept = 0,
 #. }
 #. 
 #. void error(char (*plaint)) {
 #.   fprintf(stderr, "%s\n", plaint);
 #.   exit(1);
+#. }
+#. 
+#. enum {
+#.   max_insns = 8192,
+#.   accept = 0,
 #. }
 #. 
 #. enum Opcode {

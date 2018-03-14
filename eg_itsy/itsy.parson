@@ -29,10 +29,12 @@ decl
         .
 
 type_decl
-        : "typedef" id '=' type ';'                        :TBD
-        | "enum" id '{' [enumerator ** ',' :hug] ','? '}'  :Enum
-        | "struct" id '{' [param_decl* :hug] '}'           :TBD
-        | "union"  id '{' [param_decl* :hug] '}'           :TBD
+        : "typedef" id '=' type ';'              :TBD
+        | "enum" (id | :None) '{'
+              [enumerator ** ',' :hug] ','?
+          '}'                                    :Enum
+        | "struct" id '{' [param_decl* :hug] '}' :TBD
+        | "union"  id '{' [param_decl* :hug] '}' :TBD
         .
 
 enumerator
