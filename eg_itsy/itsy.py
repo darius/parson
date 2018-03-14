@@ -13,7 +13,7 @@ parse = grammar.bind(itsy_ast)
 program = parse.top('let a: int = 5; to f(x: int): int { return x * x; }')
 
 ## program
-#. (Let('a', Int(), Literal(5)), To('f', (('x', Int()),), Int(), Block((), (Return(Binary_exp(Variable('x'), '*', Variable('x'))),))))
+#. (Let(('a',), Int(), Literal(5)), To('f', (('x', Int()),), Int(), Block((), (Return(Binary_exp(Variable('x'), '*', Variable('x'))),))))
 ## program[0].c()
 #. 'int a = 5;'
 ## print program[1].c()
@@ -96,11 +96,9 @@ with open('regex.itsy') as f:
 #. int ninsns;
 #. 
 #. uint8 accepts[max_insns];
-#. 
 #. uint8 ops[max_insns];
 #. 
 #. int arg1[max_insns];
-#. 
 #. int arg2[max_insns];
 #. 
 #. char (*names)[4] = {
@@ -145,7 +143,6 @@ with open('regex.itsy') as f:
 #. }
 #. 
 #. int states0[max_insns];
-#. 
 #. int states1[max_insns];
 #. 
 #. int run(int start, char (*input)) {
@@ -190,7 +187,6 @@ with open('regex.itsy') as f:
 #. }
 #. 
 #. char (*pattern);
-#. 
 #. char (*pp);
 #. 
 #. int eat(char c) {

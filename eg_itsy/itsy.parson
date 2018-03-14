@@ -42,7 +42,7 @@ enumerator
         .
 
 var_decl
-        : "let" id ':' type ('=' expr | :None) ';'         :Let
+        : "let" [id++',' :hug] ':' type ('=' expr | :None) ';'     :Let
         | "array" id ':' type '=' '{' [cexpr ** ',' :hug] ','? '}' :Array_decl  # ugh?
         .
 

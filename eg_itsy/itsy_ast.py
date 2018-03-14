@@ -17,10 +17,14 @@ def opt_c(opt_x, if_none, if_some):
 
 # Declarations
 
-class Let(Struct('name type opt_exp')):
+class Let(Struct('names type opt_exp')):
     def c(self):
-        assign = '' if self.opt_exp is None else ' = %s' % self.opt_exp.c()
-        return '%s%s;' % (self.type.c_decl(self.name), assign)
+        assign = ''
+        if self.opt_exp is not None:
+            if len(self.names) != 1: raise Exception("yadda yadda")
+            assign = ' = %s' % self.opt_exp.c()
+        return '\n'.join('%s%s;' % (self.type.c_decl(name), assign)
+                         for name in self.names)
 
 class Array_decl(Struct('name type exps')):
     def c(self):

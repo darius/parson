@@ -12,10 +12,8 @@ enum { max_insns = 8192, accept = 0 }
 enum { op_accept, op_eat, op_fork, op_loop, }
 
 let ninsns: int;
-let accepts: uint8[max_insns];
-let ops: uint8[max_insns];
-let arg1: int[max_insns];
-let arg2: int[max_insns];
+let accepts, ops: uint8[max_insns];
+let arg1, arg2: int[max_insns];
 
 array names: char@[4] = {   # TODO leave out the 4
     "win", "eat", "fork", "loop",
@@ -56,12 +54,11 @@ to after(ch: char, start: int, end: int, next_states: int@@) {
     }
 }
 
-let states0: int[max_insns];
-let states1: int[max_insns];
+let states0, states1: int[max_insns];
 
 to run(start: int, input: char@): int {
-    let cur_start: int@;  let cur_end: int@;
-    let next_start: int@; let next_end: int@;
+    let cur_start,  cur_end,
+        next_start, next_end: int@;
 
     if accepts[start] {
         return 1;
@@ -102,8 +99,7 @@ to emit(op: uint8, r: int, s: int, accepting: uint8): int {
 }
 
 # start, current parsing position
-let pattern: char@;
-let pp: char@;
+let pattern, pp: char@;
 
 to eat(c: char): int {
     return if pattern < pp && pp[-1] == c {--pp, 1} else {0};
