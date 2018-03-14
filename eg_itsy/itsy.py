@@ -28,8 +28,10 @@ p1 = parse.top('let b: int[5];')[0]
 p2 = parse.top('let b: int[5]@;')[0]
 ## p2.c()
 #. 'int (*b)[5];'
-# should be:
-# int (*b)[5];
+
+p3 = parse.top('let b: int[8][1];')[0]
+## p3.c()
+#. 'int b[8][1];'
 
 ## parse.top('to f(): void {}')[0].c()
 #. 'void f(void) {\n  \n}'

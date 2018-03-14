@@ -62,7 +62,8 @@ class Array(Struct('type size', supertype=(Type,))):
     def c(self):
         return '%s[%s]' % (self.type.c(), self.size.c())
     def decl(self, e):
-        return self.type.decl('%s[%s]' % (e, self.size.c()))
+        a, b = self.type.decl(e)
+        return a, '%s[%s]' % (b, self.size.c())
 
 class Function(Struct('param_types return_type', supertype=(Type,))):
     def c(self):
