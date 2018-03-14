@@ -86,7 +86,7 @@ with open('regex.itsy') as f:
 #.   accept = 0,
 #. }
 #. 
-#. enum Opcode {
+#. enum {
 #.   op_accept,
 #.   op_eat,
 #.   op_fork,
