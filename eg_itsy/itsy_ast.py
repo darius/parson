@@ -19,6 +19,13 @@ class Let(Struct('name type opt_exp')):
         assign = '' if self.opt_exp is None else ' = %s' % self.opt_exp.c()
         return '%s%s;' % (self.type.c_decl(self.name), assign)
 
+class Enum(Struct('name pairs')):
+    def c(self):
+        # XXX is this right when we mix explicit and implicit values?
+        enums = '\n'.join('%s%s,' % (name, '' if opt_exp is None else ' = %s' % opt_exp.c())
+                          for name, opt_exp in self.pairs)
+        return 'enum %s {\n  %s\n}' % (self.name, indent(enums))
+
 class To(Struct('name params return_type body')):
     def c(self):
         params_c = ', '.join(type_.c_decl(name) for name, type_ in self.params)
@@ -39,6 +46,10 @@ class Type(object):
 class Int(Struct('', supertype=(Type,))):          # TODO size, signedness
     def c(self):
         return 'int'
+
+class Char(Struct('', supertype=(Type,))):          # TODO signedness
+    def c(self):
+        return 'char'
 
 class Void(Struct('', supertype=(Type,))):
     def c(self):

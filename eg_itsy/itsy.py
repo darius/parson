@@ -68,3 +68,15 @@ with open('itsy.examples') as f:
 #.   (memory[address] = set_field(cell, make_field_spec(L, R), memory[address]));
 #. }
 #. 
+
+with open('regex.itsy') as f:
+    regex = f.read()
+## for x in parse.top(regex): print x.c() + '\n'
+#. enum constant {
+#.   loud = 0,
+#. }
+#. 
+#. void error(char (*plaint)) {
+#.   
+#. }
+#. 

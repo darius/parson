@@ -29,19 +29,19 @@ decl
         .
 
 type_decl
-        : "typedef" (id '=' type) ** ',' ';'
-        | "enum" id '{' enumerator ** ',' ','? '}'
-        | "struct" id '{' param_decl* '}'
-        | "union" id '{' param_decl* '}'
+        : "typedef" id '=' type ';'                        :TBD
+        | "enum" id '{' [enumerator ** ',' :hug] ','? '}'  :Enum
+        | "struct" id '{' [param_decl* :hug] '}'           :TBD
+        | "union"  id '{' [param_decl* :hug] '}'           :TBD
         .
 
 enumerator
-        : id ('=' expr | :None)
+        : id ('=' expr | :None) :hug
         .
 
 var_decl
         : "let" id ':' type ('=' expr | :None) ';'  :Let
-        | "array" id ':' type '=' '{' expr ** ',' ','? '}'     # ugh?
+        | "array" id ':' type '=' '{' expr ** ',' ','? '}'   :TBD  # ugh?
         .
 
 
@@ -58,7 +58,7 @@ base_type
         : "void"   :Void
         | "float"  :'float'  :Float
         | "double" :'double' :Float
-        | "unsigned"? ("char" | ("short"|"long")? "int" :Int)   # TODO
+        | "unsigned"? ("char" :Char | ("short"|"long")? "int" :Int)   # TODO
         | id   :Type_name
         .
 
