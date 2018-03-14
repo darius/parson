@@ -1,7 +1,5 @@
 # Something like C but re-syntaxed.
 # TODO I think I'll be able to use x:y for module-relative names
-#      Just need to get rid of / re-syntax bitfields and labeled statements 
-#      Well, also figure out typed variable declarations, which might conflict
 
 top:    '' module :end.
 
