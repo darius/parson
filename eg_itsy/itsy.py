@@ -125,17 +125,21 @@ with open('regex.itsy') as f:
 #.         }
 #.         return;
 #.       }
+#.       break;
 #.       case op_fork: {
 #.         after(ch, r, end, next_states);
 #.         (start = s);
 #.       }
+#.       break;
 #.       case op_loop: {
 #.         after(ch, r, start, next_states);
 #.         (start = s);
 #.       }
+#.       break;
 #.       default: {
 #.         error("Can't happen");
 #.       }
+#.       break;
 #.     }
 #.   }
 #. }

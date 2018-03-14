@@ -151,11 +151,11 @@ class Switch(Struct('exp cases')):
 class Case(Struct('exps block')):
     def c(self):
         cases = '\n'.join('case %s:' % e.c() for e in self.exps)
-        return '%s %s' % (cases, self.block.c())
+        return '%s %s\nbreak;' % (cases, self.block.c())
 
 class Default(Struct('block')):
     def c(self):
-        return 'default: %s' % self.block.c()
+        return 'default: %s\nbreak;' % self.block.c()
 
 class Block(Struct('decls stmts')):
     def c(self):
