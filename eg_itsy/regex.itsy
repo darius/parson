@@ -6,15 +6,9 @@ enum constant {
     accept = 0,
 }
 
-to error(plaint: char@): void {
+to error(plaint: char@) {
     fprintf(stderr, "%s\n", plaint);
     exit(1);
-}
-
-to dump1(pc: int): void {
-    printf("%c %2u: %-4s ", if accepts[pc] {'*'} else {' '}, pc, names[ops[pc]]);
-    printf(if pc == accept {"\n"} else if ops[pc] == op_eat {"'%c' %d\n"} else {"%d %d\n"},
-           arg1[pc], arg2[pc]);
 }
 
 enum opcode {
@@ -29,5 +23,11 @@ let arg2: int[max_insns];
 
 array names: char@[4] = {   # TODO leave out the 4
     "win", "eat", "fork", "loop",
+}
+
+to dump1(pc: int) {
+    printf("%c %2u: %-4s ", if accepts[pc] {'*'} else {' '}, pc, names[ops[pc]]);
+    printf(if pc == accept {"\n"} else if ops[pc] == op_eat {"'%c' %d\n"} else {"%d %d\n"},
+           arg1[pc], arg2[pc]);
 }
 

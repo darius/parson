@@ -11,6 +11,9 @@ def TBD(*args):
 def indent(s):
     return s.replace('\n', '\n  ')
 
+def opt_c(opt_x, if_none, if_some):
+    return if_none if opt_x is None else if_some % opt_x.c()
+
 
 # Declarations
 
@@ -31,10 +34,11 @@ class Enum(Struct('name pairs')):
                           for name, opt_exp in self.pairs)
         return 'enum %s {\n  %s\n}' % (self.name, indent(enums))
 
-class To(Struct('name params return_type body')):
+class To(Struct('name params opt_return_type body')):
     def c(self):
+        return_type = opt_c(self.opt_return_type, 'void', '%s')
         params_c = ', '.join(type_.c_decl(name) for name, type_ in self.params)
-        return '%s %s(%s) %s' % (self.return_type.c(),
+        return '%s %s(%s) %s' % (return_type,
                                  self.name,
                                  params_c or 'void',
                                  self.body.c())
@@ -91,9 +95,6 @@ class Function(Struct('param_types return_type', supertype=(Type,))):
 
 
 # Statements
-
-def opt_c(opt_x, if_none, if_some):
-    return if_none if opt_x is None else if_some % opt_x.c()
 
 class Exp(Struct('opt_exp')):
     def c(self):

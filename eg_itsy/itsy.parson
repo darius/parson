@@ -16,7 +16,7 @@ external_declaration
 	.
 
 function_definition
-	: "to" id '(' [param_decl ** ',' :hug] ')' ':' type
+	: "to" id '(' [param_decl ** ',' :hug] ')' (':' type | :None)
           block  :To
         .
 
