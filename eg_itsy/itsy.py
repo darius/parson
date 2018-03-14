@@ -74,10 +74,41 @@ with open('regex.itsy') as f:
 ## for x in parse.top(regex): print x.c() + '\n'
 #. enum constant {
 #.   loud = 0,
+#.   max_insns = 8192,
+#.   accept = 0,
 #. }
 #. 
 #. void error(char (*plaint)) {
+#.   fprintf(stderr, "%s\n", plaint);
+#.   exit(1);
+#. }
+#. 
+#. void dump1(int pc) {
 #.   printf("%c %2u: %-4s ", (accepts[pc] ? '*' : ' '), pc, names[ops[pc]]);
 #.   printf(((pc == accept) ? "\n" : ((ops[pc] == op_eat) ? "'%c' %d\n" : "%d %d\n")), arg1[pc], arg2[pc]);
 #. }
+#. 
+#. enum opcode {
+#.   op_accept,
+#.   op_eat,
+#.   op_fork,
+#.   op_loop,
+#. }
+#. 
+#. int ninsns;
+#. 
+#. uint8 accepts[max_insns];
+#. 
+#. uint8 ops[max_insns];
+#. 
+#. int arg1[max_insns];
+#. 
+#. int arg2[max_insns];
+#. 
+#. char (*names)[4] = {
+#.   "win"
+#.   "eat"
+#.   "fork"
+#.   "loop"
+#. };
 #. 

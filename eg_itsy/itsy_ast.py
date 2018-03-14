@@ -19,6 +19,11 @@ class Let(Struct('name type opt_exp')):
         assign = '' if self.opt_exp is None else ' = %s' % self.opt_exp.c()
         return '%s%s;' % (self.type.c_decl(self.name), assign)
 
+class Array_decl(Struct('name type exps')):
+    def c(self):
+        inits = '\n'.join(e.c() for e in self.exps)
+        return '%s = {\n  %s\n};' % (self.type.c_decl(self.name), indent(inits))
+
 class Enum(Struct('name pairs')):
     def c(self):
         # XXX is this right when we mix explicit and implicit values?

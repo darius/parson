@@ -1,8 +1,9 @@
-# star_thompsonlike_lowlevel.py ported to C
+# star_thompsonlike_lowlevel.py ported to C ported to itsy
 
-# let loud: int = 0;    # TODO declare constant
 enum constant {
     loud = 0,
+    max_insns = 8192,
+    accept = 0,
 }
 
 to error(plaint: char@): void {
@@ -15,3 +16,18 @@ to dump1(pc: int): void {
     printf(if pc == accept {"\n"} else if ops[pc] == op_eat {"'%c' %d\n"} else {"%d %d\n"},
            arg1[pc], arg2[pc]);
 }
+
+enum opcode {
+    op_accept, op_eat, op_fork, op_loop
+}
+
+let ninsns: int;
+let accepts: uint8[max_insns];
+let ops: uint8[max_insns];
+let arg1: int[max_insns];
+let arg2: int[max_insns];
+
+array names: char@[4] = {   # TODO leave out the 4
+    "win", "eat", "fork", "loop",
+}
+
