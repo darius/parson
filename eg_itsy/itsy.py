@@ -141,3 +141,119 @@ with open('regex.itsy') as f:
 #.   }
 #. }
 #. 
+#. int states0[max_insns];
+#. 
+#. int states1[max_insns];
+#. 
+#. int run(int start, char (*input)) {
+#.   int (*cur_start);
+#.   int (*cur_end);
+#.   int (*next_start);
+#.   int (*next_end);
+#.   if (accepts[start]) {
+#.     return 1;
+#.   }
+#.   ((cur_start = states0), (cur_end = cur_start));
+#.   ((next_start = states1), (next_end = next_start));
+#.   ((*(cur_end)++) = start);
+#.   memset(occupied, 0, ninsns);
+#.   for(; (*input); ++(input)) {
+#.     int (*state);
+#.     for((state = cur_start); (state < cur_end); ++(state)) {
+#.       after((*input), (*state), accept, (&next_end));
+#.     }
+#.     for((state = next_start); (state < next_end); ++(state)) {
+#.       if (accepts[(*state)]) {
+#.         return 1;
+#.       }
+#.       (occupied[(*state)] = 0);
+#.     }
+#.     {
+#.       int (*t) = cur_start;
+#.       ((cur_start = next_start), (cur_end = next_end));
+#.       (next_start = (next_end = t));
+#.     }
+#.   }
+#.   return 0;
+#. }
+#. 
+#. int emit(uint8 op, int r, int s, uint8 accepting) {
+#.   if ((max_insns <= ninsns)) {
+#.     error("Pattern too long");
+#.   }
+#.   ((ops[ninsns] = op), ((arg1[ninsns] = r), (arg2[ninsns] = s)));
+#.   (accepts[ninsns] = accepting);
+#.   return (ninsns)++;
+#. }
+#. 
+#. char (*pattern);
+#. 
+#. char (*pp);
+#. 
+#. int eat(char c) {
+#.   return (((pattern < pp) && (pp[(-1)] == c)) ? (--(pp), 1) : 0);
+#. }
+#. 
+#. int parsing(int precedence, int state) {
+#.   int rhs;
+#.   if (((pattern == pp) || ((pp[(-1)] == '(') || (pp[(-1)] == '|')))) {
+#.     (rhs = state);
+#.   } else if (eat(')')) {
+#.     (rhs = parsing(0, state));
+#.     if ((!eat('('))) {
+#.       error("Mismatched ')'");
+#.     }
+#.   } else if (eat('*')) {
+#.     (rhs = emit(op_loop, 0, state, accepts[state]));
+#.     (arg1[rhs] = parsing(6, rhs));
+#.   } else {
+#.     (rhs = emit(op_eat, (*--(pp)), state, 0));
+#.   }
+#.   while (((pattern < pp) && (pp[(-1)] != '('))) {
+#.     int prec = ((pp[(-1)] == '|') ? 3 : 5);
+#.     if ((prec <= precedence)) {
+#.       break;
+#.     }
+#.     if (eat('|')) {
+#.       int rhs2 = parsing(prec, state);
+#.       (rhs = emit(op_fork, rhs, rhs2, (accepts[rhs] || accepts[rhs2])));
+#.     } else {
+#.       (rhs = parsing(prec, rhs));
+#.     }
+#.   }
+#.   return rhs;
+#. }
+#. 
+#. int parse(char (*string)) {
+#.   int state;
+#.   (pattern = string);
+#.   (pp = (pattern + strlen(pattern)));
+#.   (ninsns = 0);
+#.   (state = parsing(0, emit(op_accept, 0, 0, 1)));
+#.   if ((pattern != pp)) {
+#.     error("Bad pattern");
+#.   }
+#.   return state;
+#. }
+#. 
+#. int main(int argc, char (*(*argv))) {
+#.   char line[9999];
+#.   int matched = 0;
+#.   int start_state;
+#.   if ((argc != 2)) {
+#.     error("Usage: grep pattern");
+#.   }
+#.   (start_state = parse(argv[1]));
+#.   if (loud) {
+#.     printf("start: %u\n", start_state);
+#.     dump();
+#.   }
+#.   while (fgets(line, sizeof(line), stdin)) {
+#.     (line[(strlen(line) - 1)] = '\0');
+#.     if ((matched |= run(start_state, line))) {
+#.       puts(line);
+#.     }
+#.   }
+#.   return (matched ? 0 : 1);
+#. }
+#. 

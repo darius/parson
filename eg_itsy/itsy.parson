@@ -207,7 +207,7 @@ primary_expr
 	.
 
 STRING_LITERAL ~: /"([^"]*)"/ FNORD.   # TODO
-char_literal   ~: /'([^'\\])'/ FNORD.  # TODO
+char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
