@@ -10,15 +10,6 @@ with open('itsy.parson') as f:
 grammar = Grammar(grammar_source)
 parse = grammar.bind(itsy_ast)
 
-program = parse.top('let a: int = 5; to f(x: int): int { return x * x; }')
-
-## program[0].c()
-#. 'int a = 5;'
-## print program[1].c()
-#. int f(int x) {
-#.   return (x * x);
-#. }
-
 p1 = parse.top('let b: int[5];')[0]
 ## p1.c()
 #. 'int b[5];'
@@ -36,7 +27,6 @@ p3 = parse.top('let b: int[8][1];')[0]
 
 with open('itsy.examples') as f:
     examples = f.read()
-
 ## for x in parse.top(examples): print x.c() + '\n'
 #. int a = 5;
 #. 
