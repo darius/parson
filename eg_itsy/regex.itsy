@@ -1,0 +1,17 @@
+# star_thompsonlike_lowlevel.py ported to C
+
+# let loud: int = 0;    # TODO declare constant
+enum constant {
+    loud = 0,
+}
+
+to error(plaint: char@): void {
+    fprintf(stderr, "%s\n", plaint);
+    exit(1);
+}
+
+to dump1(pc: int): void {
+    printf("%c %2u: %-4s ", if accepts[pc] {'*'} else {' '}, pc, names[ops[pc]]);
+    printf(if pc == accept {"\n"} else if ops[pc] == op_eat {"'%c' %d\n"} else {"%d %d\n"},
+           arg1[pc], arg2[pc]);
+}
