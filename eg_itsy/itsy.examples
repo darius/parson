@@ -1,0 +1,27 @@
+let a: int = 5;
+
+to f(x: int): int {
+    return x * x;
+}
+
+to fib(n: int): int {
+    return if n < 2 { 1 } else { fib(n-1) + fib(n-2) };
+}
+
+to fact(n: int): int {
+    let p: int = 1;
+    for ; 0 < n; --n {
+        p *= n;
+    }
+    return p;
+}
+
+to asm_store_field(address: Address, L: int, R: int, cell: Cell): void {
+    assert(address < memory_size);
+    if VERBOSE {
+        let temp: int[12];
+        unparse_cell(temp, cell);
+        printf("%4o(%u,%u): %s\n", address, L, R, temp);
+    }
+    memory[address] = set_field(cell, make_field_spec(L, R), memory[address]);
+}

@@ -1,0 +1,213 @@
+# Something like C but re-syntaxed.
+# TODO I think I'll be able to use x:y for module-relative names
+#      Just need to get rid of / re-syntax bitfields and labeled statements 
+#      Well, also figure out typed variable declarations, which might conflict
+
+top:    '' module :end.
+
+# Declarations
+
+module
+	: external_declaration*.
+
+external_declaration
+	: function_definition
+	| decl
+	.
+
+function_definition
+	: "to" id '(' [param_decl ** ',' :hug] ')' ':' type
+          block  :To
+        .
+
+param_decl
+        : id ++ ',' ':' type  :hug
+        .
+
+decl
+        : type_decl | var_decl
+        .
+
+type_decl
+        : "typedef" (id '=' type) ** ',' ';'
+        | "enum" id '{' enumerator ** ',' ','? '}'
+        | "struct" id '{' param_decl* '}'
+        | "union" id '{' param_decl* '}'
+        .
+
+enumerator
+        : id ('=' expr | :None)
+        .
+
+var_decl
+        : "let" id ':' type ('=' expr | :None) ';'  :Let
+        | "array" id ':' type '=' '{' expr ** ',' ','? '}'     # ugh?
+        .
+
+
+# Types
+
+type
+        : base_type ( '@'                    :Pointer
+                    | '[' (expr | :None) ']' :Array
+                    )*
+        | "fun" '(' [type ** ',' :hug] ')' type     :Function
+        .
+
+base_type
+        : "void"   :Void
+        | "float"  :'float'  :Float
+        | "double" :'double' :Float
+        | "unsigned"? ("char" | ("short"|"long")? "int" :Int)   # TODO
+        | id   :Type_name
+        .
+
+
+# Statements
+
+block
+	: '{' decl* :hug [statement* :hug] '}' :Block               # TODO consider mixing them
+	.
+
+statement
+	: block
+	| "while" expr block                  :While
+	| "do" block "while" expr ';'         :Do
+	| "for" (expr | :None) ';' (expr | :None) ';' (expr | :None) block
+                                              :For
+	| "continue" ';'                      :Continue
+	| "break" ';'                         :Break
+	| "return" (expr | :None) ';'         :Return
+	| "if" expr block ("else if" expr block)* ("else" block | :None)
+                                              :hug :Ifs
+	| "switch" expr '{' [case* :hug] '}'  :Switch
+	| expr_statement
+	.
+
+case
+	: "case" expr ++ ',' :hug block  :Case
+	| "default"               block  :Default
+        .
+
+expr_statement
+	: (expr | :None) ';'   :Exp
+	.
+
+
+# Expressions
+# TODO what's an actually nice set of primitives?
+
+expr
+	: assignment_expr (',' expr :Seq)?                  # maybe change this syntax too
+	.
+
+assignment_expr
+	: unary_expr assignment_operator assignment_expr  :Assign
+	| conditional_expr
+	.
+
+assignment_operator
+	: '='   :None                                     # thinking of changing this
+	| '*='  :'*'
+	| '/='  :'/'
+	| '%='  :'%'
+	| '+='  :'+'
+	| '-='  :'-'
+	| '<<=' :'<<'
+	| '>>=' :'>>'
+	| '&='  :'&'
+	| '^='  :'^'
+	| '|='  :'|'
+	.
+
+conditional_expr
+	: "if" expr '{' expr '}' "else" '{' expr '}' :If_exp     # changed
+        | logical_or_expr
+	.
+
+logical_or_expr
+	: logical_and_expr ('||' logical_or_expr :Or)?
+	.
+
+logical_and_expr
+	: expr3 ('&&' logical_and_expr :And)?
+	.
+
+expr3
+        : expr4 ( '=='     :'==' expr4 :Binary_exp
+                | '!='     :'!=' expr4 :Binary_exp
+                | '<='     :'<=' expr4 :Binary_exp
+                | '>='     :'>=' expr4 :Binary_exp
+                | '<' !'=' :'<'  expr4 :Binary_exp
+                | '>' !'=' :'>'  expr4 :Binary_exp
+                )*
+        .
+
+expr4
+        : expr5 ( '+' !/[+=]/ :'+' expr5 :Binary_exp
+                | '-' !/[-=]/ :'-' expr5 :Binary_exp
+                | '|' !/[|=]/ :'|' expr5 :Binary_exp
+                | '^' !'='    :'^' expr5 :Binary_exp
+                )*
+        .
+
+expr5
+        : cast_expr ( '*'  !'='    :'*'  cast_expr :Binary_exp
+                    | '/'  !'='    :'/'  cast_expr :Binary_exp
+                    | '%'  !'='    :'%'  cast_expr :Binary_exp
+                    | '&'  !/[&=]/ :'&'  cast_expr :Binary_exp
+                    | '<<' !'='    :'<<' cast_expr :Binary_exp
+                    | '>>' !'='    :'>>' cast_expr :Binary_exp
+                    )*
+        .
+
+cast_expr
+        : "as" '(' type ')' expr                       # changed
+        | unary_expr
+	.
+
+unary_expr
+	: '++' unary_expr           :Pre_incr
+	| '--' unary_expr           :Pre_decr
+	| unary_operator cast_expr  :Unary_exp
+	| "sizeoftype" type         :Sizeof_type
+        | "sizeof" unary_expr       :Sizeof
+        | postfix_expr
+	.
+
+unary_operator                                              # changed: no '*'
+	: '&' !'&' :'&'
+	| '+' !'+' :TBD
+	| '-' !'-' :'-'
+	| '~'      :'~'
+	| '!'      :'!'
+	.
+
+postfix_expr
+	: primary_expr
+            ( '[' expr ']'                           :Index
+	    | '(' [assignment_expr ** ',' :hug] ')'  :Call
+	    | '.' id  :Dot
+	    | '@'     :Deref                                      # changed: deref, no '->'
+	    | '++'    :TBD
+	    | '--'    :TBD
+            )*
+	.
+
+primary_expr
+	: id             :Variable
+	| integer        :Literal
+	| STRING_LITERAL :String    # TODO chars as well
+	| '(' expr ')'
+	.
+
+STRING_LITERAL ~: /"([^"]*)"/ FNORD.   # TODO
+
+FNORD         ~:      whitespace*.
+whitespace    ~:      /\s+/ | comment.
+comment       ~:      /#.*/.
+keyword       ~:      /array|as|break|case|char|continue|default|do|double|else|enum|float|for|fun|if|int|let|long|return|short|sizeof|sizeoftype|struct|switch|to|typedef|union|unsigned|void|while/ /\b/.
+digit         ~:      /(\d)/.
+
+id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.
+integer:              digit+ FNORD :join :int.    # TODO negative too; and unsigned, etc.
