@@ -21,7 +21,7 @@ function_definition
         .
 
 param_decl
-        : id ++ ',' ':' type  :hug
+        : id ++ ',' :hug ':' type  :hug
         .
 
 decl

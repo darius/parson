@@ -27,7 +27,7 @@ to dump1(pc: int) {
 
 let occupied: uint8[max_insns];
 
-to after(ch: char, start: int, end: int, next_states: int@@) {
+to after(ch: char, start, end: int, next_states: int@@) {
     while start != end {
         let r: int = arg1[start];
         let s: int = arg2[start];
@@ -91,7 +91,7 @@ to run(start: int, input: char@): int {
     return 0;
 }
 
-to emit(op: uint8, r: int, s: int, accepting: uint8): int {
+to emit(op: uint8, r, s: int, accepting: uint8): int {
     if max_insns <= ninsns { error("Pattern too long"); }
     ops[ninsns] = op, arg1[ninsns] = r, arg2[ninsns] = s;
     accepts[ninsns] = accepting;
@@ -105,7 +105,7 @@ to eat(c: char): int {
     return if pattern < pp && pp[-1] == c {--pp, 1} else {0};
 }
 
-to parsing(precedence: int, state: int): int {
+to parsing(precedence, state: int): int {
     let rhs: int;
     if pattern == pp || pp[-1] == '(' || pp[-1] == '|' {
         rhs = state;

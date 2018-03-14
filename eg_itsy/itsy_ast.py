@@ -42,7 +42,9 @@ class Enum(Struct('opt_name pairs')):
 class To(Struct('name params opt_return_type body')):
     def c(self):
         return_type = opt_c(self.opt_return_type, 'void', '%s')
-        params_c = ', '.join(type_.c_decl(name) for name, type_ in self.params)
+        params_c = ', '.join(type_.c_decl(name)
+                             for names, type_ in self.params
+                             for name in names)
         return '%s %s(%s) %s' % (return_type,
                                  self.name,
                                  params_c or 'void',

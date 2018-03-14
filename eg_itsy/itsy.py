@@ -12,8 +12,6 @@ parse = grammar.bind(itsy_ast)
 
 program = parse.top('let a: int = 5; to f(x: int): int { return x * x; }')
 
-## program
-#. (Let(('a',), Int(), Literal(5)), To('f', (('x', Int()),), Int(), Block((), (Return(Binary_exp(Variable('x'), '*', Variable('x'))),))))
 ## program[0].c()
 #. 'int a = 5;'
 ## print program[1].c()
