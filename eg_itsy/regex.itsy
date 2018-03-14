@@ -1,6 +1,7 @@
 # star_thompsonlike_lowlevel.py ported to C ported to itsy
+# TODO explicit clarity on signed vs. unsigned
 
-enum constant {
+enum Constant {
     loud = 0,
     max_insns = 8192,
     accept = 0,
@@ -11,7 +12,7 @@ to error(plaint: char@) {
     exit(1);
 }
 
-enum opcode {
+enum Opcode {
     op_accept, op_eat, op_fork, op_loop
 }
 
@@ -31,3 +32,29 @@ to dump1(pc: int) {
            arg1[pc], arg2[pc]);
 }
 
+let occupied: uint8[max_insns];
+
+to after(ch: char, start: int, end: int, next_states: int@@) {
+    while start != end {
+        let r: int = arg1[start];
+        let s: int = arg2[start];
+        switch ops[start] {
+            case op_eat {
+                if r == ch && !occupied[s] {
+                    next_states@++@ = s;
+                    occupied[s] = 1;
+                }
+                return;
+            }
+            case op_fork {
+
+            }
+            case op_loop {
+
+            }
+            default {
+                error("Can't happen");
+            }
+        }
+    }
+}

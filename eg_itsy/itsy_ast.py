@@ -144,11 +144,11 @@ class Switch(Struct('exp cases')):
 class Case(Struct('exps block')):
     def c(self):
         cases = '\n'.join('case %s:' % e.c() for e in self.exps)
-        return '%s %s' % (cases, block.c())
+        return '%s %s' % (cases, self.block.c())
 
 class Default(Struct('block')):
     def c(self):
-        return 'default: %s' % block.c()
+        return 'default: %s' % self.block.c()
 
 class Block(Struct('decls stmts')):
     def c(self):
@@ -206,6 +206,14 @@ class Pre_decr(Struct('exp')):
     def c(self):
         return '--(%s)' % self.exp.c()
 
+class Post_incr(Struct('exp')):
+    def c(self):
+        return '(%s)++' % self.exp.c()
+
+class Post_decr(Struct('exp')):
+    def c(self):
+        return '(%s)--' % self.exp.c()
+
 def Ifs_exp(e1, e2, e3, *es):
     return If_exp(e1, e2, e3 if not es else Ifs_exp(e3, *es))
 
@@ -224,7 +232,7 @@ class Binary_exp(Struct('e1 binop e2')):
 
 class Unary_exp(Struct('unop e1')):
     def c(self):
-        return '(%s%s)' % (self.unop, self.exp.c())
+        return '(%s%s)' % (self.unop, self.e1.c())
 
 class Index(Struct('e1 e2')):
     def c(self):

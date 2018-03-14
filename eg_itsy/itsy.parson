@@ -193,8 +193,8 @@ postfix_expr
 	    | '(' [assignment_expr ** ',' :hug] ')'  :Call
 	    | '.' id  :Dot
 	    | '@'     :Deref                                      # changed: deref, no '->'
-	    | '++'    :TBD
-	    | '--'    :TBD
+	    | '++'    :Post_incr
+	    | '--'    :Post_decr
             )*
 	.
 
