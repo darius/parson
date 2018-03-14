@@ -141,7 +141,7 @@ class For(Struct('opt_e1 opt_e2 opt_e3 block')):
         e1 = opt_c(self.opt_e1, ';', '%s;')
         e2 = opt_c(self.opt_e2, ';', '%s;')
         e3 = opt_c(self.opt_e3, '', '%s')
-        return 'for(%s %s %s) %s' % (e1, e2, e3, self.block.c())
+        return 'for (%s %s %s) %s' % (e1, e2, e3, self.block.c())
 
 class Switch(Struct('exp cases')):
     def c(self):

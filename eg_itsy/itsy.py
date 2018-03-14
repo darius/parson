@@ -40,7 +40,7 @@ with open('itsy.examples') as f:
 #. 
 #. int fact(int n) {
 #.   int p = 1;
-#.   for(; (0 < n); --(n)) {
+#.   for (; (0 < n); --(n)) {
 #.     (p *= n);
 #.   }
 #.   return p;
@@ -149,12 +149,12 @@ with open('regex.itsy') as f:
 #.   ((next_start = states1), (next_end = next_start));
 #.   ((*(cur_end)++) = start);
 #.   memset(occupied, 0, ninsns);
-#.   for(; (*input); ++(input)) {
+#.   for (; (*input); ++(input)) {
 #.     int (*state);
-#.     for((state = cur_start); (state < cur_end); ++(state)) {
+#.     for ((state = cur_start); (state < cur_end); ++(state)) {
 #.       after((*input), (*state), accept, (&next_end));
 #.     }
-#.     for((state = next_start); (state < next_end); ++(state)) {
+#.     for ((state = next_start); (state < next_end); ++(state)) {
 #.       if (accepts[(*state)]) {
 #.         return 1;
 #.       }
