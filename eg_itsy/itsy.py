@@ -72,7 +72,7 @@ with open('itsy.examples') as f:
 with open('regex.itsy') as f:
     regex = f.read()
 ## for x in parse.top(regex): print x.c() + '\n'
-#. enum constant {
+#. enum Constant {
 #.   loud = 0,
 #.   max_insns = 8192,
 #.   accept = 0,
@@ -83,7 +83,7 @@ with open('regex.itsy') as f:
 #.   exit(1);
 #. }
 #. 
-#. enum opcode {
+#. enum Opcode {
 #.   op_accept,
 #.   op_eat,
 #.   op_fork,
@@ -110,5 +110,34 @@ with open('regex.itsy') as f:
 #. void dump1(int pc) {
 #.   printf("%c %2u: %-4s ", (accepts[pc] ? '*' : ' '), pc, names[ops[pc]]);
 #.   printf(((pc == accept) ? "\n" : ((ops[pc] == op_eat) ? "'%c' %d\n" : "%d %d\n")), arg1[pc], arg2[pc]);
+#. }
+#. 
+#. uint8 occupied[max_insns];
+#. 
+#. void after(char ch, int start, int end, int (*(*next_states))) {
+#.   while ((start != end)) {
+#.     int r = arg1[start];
+#.     int s = arg2[start];
+#.     switch (ops[start]) {
+#.       case op_eat: {
+#.         if (((r == ch) && (!occupied[s]))) {
+#.           ((*((*next_states))++) = s);
+#.           (occupied[s] = 1);
+#.         }
+#.         return;
+#.       }
+#.       case op_fork: {
+#.         after(ch, r, end, next_states);
+#.         (start = s);
+#.       }
+#.       case op_loop: {
+#.         after(ch, r, start, next_states);
+#.         (start = s);
+#.       }
+#.       default: {
+#.         error("Can't happen");
+#.       }
+#.     }
+#.   }
 #. }
 #. 

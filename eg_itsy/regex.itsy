@@ -47,14 +47,54 @@ to after(ch: char, start: int, end: int, next_states: int@@) {
                 return;
             }
             case op_fork {
-
+                after(ch, r, end, next_states);
+                start = s;
             }
             case op_loop {
-
+                after(ch, r, start, next_states);
+                start = s;
             }
             default {
                 error("Can't happen");
             }
         }
     }
+}
+
+let states0: int[max_insns];
+let states1: int[max_insns];
+
+to run(start: int, input: char@): int {
+    let cur_start: int@;  let cur_end: int@;
+    let next_start: int@; let next_end: int@;
+
+    if accepts[start] {
+        return 1;
+    }
+
+    cur_start = states0,  cur_end = cur_start;
+    next_start = states1, next_end = next_start;
+    cur_end++@ = start;
+    memset(occupied, 0, ninsns); # N.B. we could avoid this by always
+                                 # finishing the next_start..next_end
+                                 # loop below
+
+    for ; input@; ++input {
+        let state: int@;
+        for state = cur_start; state < cur_end; ++state {
+            after(input@, state@, accept, &next_end);
+        }
+        for state = next_start; state < next_end; ++state {
+            if (accepts[state@]) {
+                return 1;
+            }
+            occupied[state@] = 0;
+        }
+        {
+            let t: int@ = cur_start;
+            cur_start = next_start, cur_end = next_end;
+            next_start = next_end = t;
+        }
+    }
+    return 0;
 }
