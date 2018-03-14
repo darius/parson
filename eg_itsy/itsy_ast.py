@@ -200,6 +200,9 @@ class Pre_decr(Struct('exp')):
     def c(self):
         return '--(%s)' % self.exp.c()
 
+def Ifs_exp(e1, e2, e3, *es):
+    return If_exp(e1, e2, e3 if not es else Ifs_exp(e3, *es))
+
 class If_exp(Struct('e1 e2 e3')):
     def c(self):
         return '(%s ? %s : %s)' % (self.e1.c(), self.e2.c(), self.e3.c())

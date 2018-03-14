@@ -78,7 +78,7 @@ statement
 	| "continue" ';'                      :Continue
 	| "break" ';'                         :Break
 	| "return" (expr | :None) ';'         :Return
-	| "if" expr block ("else if" expr block)* ("else" block | :None)
+	| "if" expr block ("else" "if" expr block)* ("else" block | :None)
                                               :hug :Ifs
 	| "switch" expr '{' [case* :hug] '}'  :Switch
 	| expr_statement
@@ -121,9 +121,11 @@ assignment_operator
 	.
 
 conditional_expr
-	: "if" expr '{' expr '}' "else" '{' expr '}' :If_exp     # changed
+	: "if" expr branch ("else" "if" expr branch)* "else" branch :Ifs_exp     # changed
         | logical_or_expr
 	.
+
+branch  : '{' expr '}'.
 
 logical_or_expr
 	: logical_and_expr ('||' logical_or_expr :Or)?
