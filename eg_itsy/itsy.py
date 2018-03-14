@@ -77,6 +77,7 @@ with open('regex.itsy') as f:
 #. }
 #. 
 #. void error(char (*plaint)) {
-#.   
+#.   printf("%c %2u: %-4s ", (accepts[pc] ? '*' : ' '), pc, names[ops[pc]]);
+#.   printf(((pc == accept) ? "\n" : ((ops[pc] == op_eat) ? "'%c' %d\n" : "%d %d\n")), arg1[pc], arg2[pc]);
 #. }
 #. 

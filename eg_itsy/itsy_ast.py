@@ -160,6 +160,10 @@ class String(Struct('value')):
     def c(self):
         return '"%s"' % self.value       # XXX escaping as C
 
+class Char_literal(Struct('value')):
+    def c(self):
+        return "'%s'" % self.value    # XXX escaping
+
 class Variable(Struct('name')):
     def c(self):
         return self.name
