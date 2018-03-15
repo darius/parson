@@ -191,7 +191,7 @@ class Sizeof_type(Struct('type')):
 
 class Sizeof(Struct('exp')):
     def c(self):
-        return 'sizeof(%s)' % self.exp.c()
+        return '(sizeof %s)' % self.exp.c()
 
 class Deref(Struct('exp')):
     def c(self):
@@ -199,7 +199,7 @@ class Deref(Struct('exp')):
 
 class Cast(Struct('type exp')):
     def c(self):
-        return '(%s)(%s)' % (self.type.c(), self.exp.c())
+        return '((%s) %s)' % (self.type.c(), self.exp.c())
 
 class Seq(Struct('e1 e2')):
     def c(self):
@@ -207,19 +207,19 @@ class Seq(Struct('e1 e2')):
 
 class Pre_incr(Struct('exp')):
     def c(self):
-        return '++(%s)' % self.exp.c()
+        return '(++%s)' % self.exp.c()
 
 class Pre_decr(Struct('exp')):
     def c(self):
-        return '--(%s)' % self.exp.c()
+        return '(--%s)' % self.exp.c()
 
 class Post_incr(Struct('exp')):
     def c(self):
-        return '(%s)++' % self.exp.c()
+        return '(%s++)' % self.exp.c()
 
 class Post_decr(Struct('exp')):
     def c(self):
-        return '(%s)--' % self.exp.c()
+        return '(%s--)' % self.exp.c()
 
 def Ifs_exp(e1, e2, e3, *es):
     return If_exp(e1, e2, e3 if not es else Ifs_exp(e3, *es))

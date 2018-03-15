@@ -40,7 +40,7 @@ with open('itsy.examples') as f:
 #. 
 #. int fact(int n) {
 #.   int p = 1;
-#.   for (; (0 < n); --(n)) {
+#.   for (; (0 < n); (--n)) {
 #.     (p *= n);
 #.   }
 #.   return p;
@@ -110,7 +110,7 @@ with open('regex.itsy') as f:
 #.     switch (ops[start]) {
 #.       case op_eat: {
 #.         if (((r == ch) && (!occupied[s]))) {
-#.           ((*((*next_states))++) = s);
+#.           ((*((*next_states)++)) = s);
 #.           (occupied[s] = 1);
 #.         }
 #.         return;
@@ -147,14 +147,14 @@ with open('regex.itsy') as f:
 #.   }
 #.   ((cur_start = states0), (cur_end = cur_start));
 #.   ((next_start = states1), (next_end = next_start));
-#.   ((*(cur_end)++) = start);
+#.   ((*(cur_end++)) = start);
 #.   memset(occupied, 0, ninsns);
-#.   for (; (*input); ++(input)) {
+#.   for (; (*input); (++input)) {
 #.     int (*state);
-#.     for ((state = cur_start); (state < cur_end); ++(state)) {
+#.     for ((state = cur_start); (state < cur_end); (++state)) {
 #.       after((*input), (*state), accept, (&next_end));
 #.     }
-#.     for ((state = next_start); (state < next_end); ++(state)) {
+#.     for ((state = next_start); (state < next_end); (++state)) {
 #.       if (accepts[(*state)]) {
 #.         return 1;
 #.       }
@@ -175,14 +175,14 @@ with open('regex.itsy') as f:
 #.   }
 #.   ((ops[ninsns] = op), ((arg1[ninsns] = r), (arg2[ninsns] = s)));
 #.   (accepts[ninsns] = accepting);
-#.   return (ninsns)++;
+#.   return (ninsns++);
 #. }
 #. 
 #. char (*pattern);
 #. char (*pp);
 #. 
 #. int eat(char c) {
-#.   return (((pattern < pp) && (pp[(-1)] == c)) ? (--(pp), 1) : 0);
+#.   return (((pattern < pp) && (pp[(-1)] == c)) ? ((--pp), 1) : 0);
 #. }
 #. 
 #. int parsing(int precedence, int state) {
@@ -198,7 +198,7 @@ with open('regex.itsy') as f:
 #.     (rhs = emit(op_loop, 0, state, accepts[state]));
 #.     (arg1[rhs] = parsing(6, rhs));
 #.   } else {
-#.     (rhs = emit(op_eat, (*--(pp)), state, 0));
+#.     (rhs = emit(op_eat, (*(--pp)), state, 0));
 #.   }
 #.   while (((pattern < pp) && (pp[(-1)] != '('))) {
 #.     int prec = ((pp[(-1)] == '|') ? 3 : 5);
@@ -239,7 +239,7 @@ with open('regex.itsy') as f:
 #.     printf("start: %u\n", start_state);
 #.     dump();
 #.   }
-#.   while (fgets(line, sizeof(line), stdin)) {
+#.   while (fgets(line, (sizeof line), stdin)) {
 #.     (line[(strlen(line) - 1)] = '\0');
 #.     if ((matched |= run(start_state, line))) {
 #.       puts(line);
