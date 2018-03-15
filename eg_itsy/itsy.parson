@@ -99,7 +99,7 @@ expr_statement
 # TODO what's an actually nice set of primitives?
 
 expr
-	: assignment_expr (',' expr :Seq)?                  # maybe change this syntax too
+	: assignment_expr (',' assignment_expr :Seq)*       # maybe change this syntax too
 	.
 
 cexpr = assignment_expr.   # "no comma" expression. TODO better name
@@ -131,11 +131,11 @@ conditional_expr
 branch  : '{' expr '}'.
 
 logical_or_expr
-	: logical_and_expr ('||' logical_or_expr :Or)?
+	: logical_and_expr ('||' logical_or_expr :Or)*
 	.
 
 logical_and_expr
-	: expr3 ('&&' logical_and_expr :And)?
+	: expr3 ('&&' logical_and_expr :And)*
 	.
 
 expr3
