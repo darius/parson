@@ -3,12 +3,12 @@ Tie the modules together and try them out.
 """
 
 from parson import Grammar
-import itsy_ast
+import ast
 
 with open('itsy.parson') as f:
     grammar_source = f.read()
 grammar = Grammar(grammar_source)
-parse = grammar.bind(itsy_ast)
+parse = grammar.bind(ast)
 
 p1 = parse.top('let b: int[5];')[0]
 ## p1.c()
