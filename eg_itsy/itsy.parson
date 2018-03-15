@@ -46,12 +46,13 @@ var_decl
 
 
 # Types
+# TODO don't we need a production type: ... | '(' type ')' 
 
 type
         : base_type ( '@'                    :Pointer
                     | '[' (expr | :None) ']' :Array
                     )*
-        | "fun" '(' [type ** ',' :hug] ')' type     :Function
+        | "fun" '(' [type ** ',' :hug] ')' type     :Function   # (is this ever *not* enclosed in Pointer()?)
         .
 
 base_type

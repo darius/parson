@@ -138,10 +138,10 @@ class Ifs(Struct('parts')):
 
 class For(Struct('opt_e1 opt_e2 opt_e3 block')):
     def c(self):
-        e1 = opt_c(self.opt_e1, ';', '%s;')
-        e2 = opt_c(self.opt_e2, ';', '%s;')
+        e1 = opt_c(self.opt_e1, '', '%s')
+        e2 = opt_c(self.opt_e2, '', '%s')
         e3 = opt_c(self.opt_e3, '', '%s')
-        return 'for (%s %s %s) %s' % (e1, e2, e3, self.block.c())
+        return 'for (%s; %s; %s) %s' % (e1, e2, e3, self.block.c())
 
 class Switch(Struct('exp cases')):
     def c(self):
@@ -252,7 +252,10 @@ class Call(Struct('e1 args')):
 
 class Dot(Struct('e1 field')):
     def c(self):
-        return '%s.%s' % (self.e1.c(), self.field)
+        if isinstance(self.e1, Deref):
+            return '%s->%s' % (self.e1.exp.c(), self.field)
+        else:
+            return '%s.%s' % (self.e1.c(), self.field)
 
 class And(Struct('e1 e2')):
     def c(self):
