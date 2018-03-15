@@ -200,7 +200,7 @@ postfix_expr
 
 primary_expr
 	: id             :Variable
-	| integer        :Literal
+	| integer        :Literal    # TODO when we have hex, octal, etc., we need to preserve that distinction
 	| STRING_LITERAL :String    # TODO chars as well
         | char_literal   :Char_literal
 	| '(' expr ')'
