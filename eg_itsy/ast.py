@@ -23,10 +23,9 @@ def opt_c(opt_x, if_none, if_some):
 
 class Let(Struct('names type opt_exp')):
     def c(self):
-        assign = ''
-        if self.opt_exp is not None:
-            if len(self.names) != 1: raise Exception("yadda yadda")
-            assign = ' = %s' % self.opt_exp.c()
+        if self.opt_exp is not None and len(self.names) != 1:
+            raise Exception("yadda yadda")
+        assign = opt_c(self.opt_exp, '', ' = %s')
         return '\n'.join('%s%s;' % (self.type.c_decl(name), assign)
                          for name in self.names)
 
