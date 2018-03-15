@@ -1,5 +1,6 @@
 """
-Abstract syntax of itsy
+Abstract syntax of itsy.
+Emit C code.
 """
 
 from structs import Struct
