@@ -11,6 +11,9 @@ def TBD(*args):
 def indent(s):
     return s.replace('\n', '\n  ')
 
+def embrace(body):
+    return '{\n  %s\n}' % indent(body)
+
 def opt_c(opt_x, if_none, if_some):
     return if_none if opt_x is None else if_some % opt_x.c()
 
@@ -29,15 +32,15 @@ class Let(Struct('names type opt_exp')):
 class Array_decl(Struct('name type exps')):
     def c(self):
         inits = '\n'.join(e.c() for e in self.exps)
-        return '%s = {\n  %s\n};' % (self.type.c_decl(self.name), indent(inits))
+        return '%s = %s;' % (self.type.c_decl(self.name), embrace(inits))
 
 class Enum(Struct('opt_name pairs')):
     def c(self):
         # XXX is this right when we mix explicit and implicit values?
-        enums = '\n'.join('%s%s,' % (name, '' if opt_exp is None else ' = %s' % opt_exp.c())
+        enums = '\n'.join('%s%s,' % (name, opt_c(opt_exp, '', ' = %s'))
                           for name, opt_exp in self.pairs)
-        return 'enum %s{\n  %s\n}' % (self.opt_name + ' ' if self.opt_name else '',
-                                      indent(enums))
+        return 'enum %s%s' % (self.opt_name + ' ' if self.opt_name else '',
+                              embrace(enums))
 
 class To(Struct('name params opt_return_type body')):
     def c(self):
@@ -145,7 +148,7 @@ class For(Struct('opt_e1 opt_e2 opt_e3 block')):
 class Switch(Struct('exp cases')):
     def c(self):
         cases = '\n'.join(case_.c() for case_ in self.cases)
-        return 'switch (%s) {\n  %s\n}' % (self.exp.c(), indent(cases))
+        return 'switch (%s) %s' % (self.exp.c(), embrace(cases))
 
 class Case(Struct('exps block')):
     def c(self):
@@ -158,8 +161,7 @@ class Default(Struct('block')):
 
 class Block(Struct('decls stmts')):
     def c(self):
-        body = '\n'.join(x.c() for x in self.decls + self.stmts)
-        return '{\n  %s\n}' % indent(body)
+        return embrace('\n'.join(x.c() for x in self.decls + self.stmts))
 
 
 # Expressions
