@@ -133,8 +133,7 @@ class Ifs(Struct('parts')):
         else_block = self.parts[-1]
         ifs = ' else '.join('if (%s) %s' % (exp.c(), block.c())
                             for exp, block in clauses)
-        return (ifs if else_block is None
-                else '%s else %s' % (ifs, else_block.c()))
+        return ifs + opt_c(else_block, '', ' else %s')
 
 class For(Struct('opt_e1 opt_e2 opt_e3 block')):
     def c(self):
