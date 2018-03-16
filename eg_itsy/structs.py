@@ -1,5 +1,6 @@
 """
 Define a named-tuple-like type, but simpler.
+Also Visitor to dispatch on datatypes defined this way.
 """
 
 # TODO figure out how to use __slots__
@@ -45,3 +46,14 @@ def as_sexpr(obj):
         return tuple(map(as_sexpr, obj))
     else:
         return obj
+
+
+# Is there a nicer way to do this?
+
+class Visitor(object):
+    def __call__(self, subject, *args):
+        tag = subject.__class__.__name__
+        method = getattr(self, tag, None)
+        if method is None:
+            method = getattr(self, 'default')
+        return method(subject, *args)

@@ -10,39 +10,42 @@ with open('itsy.parson') as f:
 grammar = Grammar(grammar_source)
 parse = grammar.bind(ast)
 
+from emit_c import decl_emitter, c_stmt, c_exp
+cd = decl_emitter
+
 p1, = parse.top('let b: int[5];')
-## p1.c()
+## cd(p1)
 #. 'int b[5];'
 
 p2, = parse.top('let b: int[5]@;')
-## p2.c()
+## cd(p2)
 #. 'int (*b)[5];'
 
 p3, = parse.top('let b: int[8][1];')
-## p3.c()
+## cd(p3)
 #. 'int b[8][1];'
 
-## parse.top('to f(): void {}')[0].c()
+## cd(parse.top('to f(): void {}')[0])
 #. 'void f(void) {\n  \n}'
 
 p4, = parse.top('let a: int = (1, 2, 3);')
 p4, = parse.top('let a: int = 1, 2, 3;')   # XXX ugh this syntax
-## p4.c()
+## cd(p4)
 #. 'int a = (1, 2, 3);'
 
 p5, = parse.top('let a: int = a@++@;')
-## p5.c()
+## cd(p5)
 #. 'int a = *(*a)++;'
 
 # I guess this output without parens is actually correct, though confusing to read. TODO check
 # Maybe we should just always parenthesize a run of ',' operators...
 p6, = parse.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
-## p6.c()
+## c_stmt(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
 with open('itsy.examples') as f:
     examples = f.read()
-## for x in parse.top(examples): print x.c() + '\n'
+## for x in parse.top(examples): print cd(x) + '\n'
 #. int a = 5;
 #. 
 #. int f(int x) {
@@ -74,7 +77,7 @@ with open('itsy.examples') as f:
 
 with open('regex.itsy') as f:
     regex = f.read()
-## for x in parse.top(regex): print x.c() + '\n'
+## for x in parse.top(regex): print cd(x) + '\n'
 #. enum {
 #.   loud = 0,
 #. }
