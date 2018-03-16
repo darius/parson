@@ -4,7 +4,6 @@ Abstract syntax of itsy.
 
 from structs import Struct
 
-
 def TBD(*args):
     raise Exception("Not supported yet: %r" % args)
 
@@ -19,38 +18,34 @@ class To(        Struct('name params opt_return_type body')): pass
 
 # Types
 
-class Int(Struct('')):          # TODO size, signedness
-    pass
-
-class Char(Struct('')):          # TODO signedness
-    pass
-
-class Void(Struct('')): pass
-class Float(Struct('name')): pass
-class Type_name(Struct('name')): pass
-class Pointer(Struct('type')): pass
-class Array(Struct('type size')): pass
-class Function(Struct('param_types return_type')): pass
+class Int(       Struct('')): pass         # TODO size, signedness
+class Char(      Struct('')): pass         # TODO signedness
+class Void(      Struct('')): pass
+class Float(     Struct('name')): pass
+class Type_name( Struct('name')): pass
+class Pointer(   Struct('type')): pass
+class Array(     Struct('type size')): pass
+class Function(  Struct('param_types return_type')): pass
 
 # TODO rename fields like 'type' to 'base_type' or something
 
 
 # Statements
 
-class Block(   Struct('decls stmts')): pass
+class Block(     Struct('decls stmts')): pass
 
-class Exp(     Struct('opt_exp')): pass
-class Return(  Struct('opt_exp')): pass
-class Break(   Struct('')): pass
-class Continue(Struct('')): pass
-class While(   Struct('exp block')): pass
-class Do(      Struct('block exp')): pass
-class Ifs(     Struct('parts')): pass
-class For(     Struct('opt_e1 opt_e2 opt_e3 block')): pass
-class Switch(  Struct('exp cases')): pass
+class Exp(       Struct('opt_exp')): pass
+class Return(    Struct('opt_exp')): pass
+class Break(     Struct('')): pass
+class Continue(  Struct('')): pass
+class While(     Struct('exp block')): pass
+class Do(        Struct('block exp')): pass
+class Ifs(       Struct('parts')): pass
+class For(       Struct('opt_e1 opt_e2 opt_e3 block')): pass
+class Switch(    Struct('exp cases')): pass
 
-class Case(    Struct('exps block')): pass
-class Default( Struct('block')): pass
+class Case(      Struct('exps block')): pass
+class Default(   Struct('block')): pass
 
 
 # Expressions
