@@ -25,6 +25,13 @@ to dump1(pc: int) {
            arg1[pc], arg2[pc]);
 }
 
+to dump() {
+    let pc: int;
+    for pc = ninsns-1; 0 <= pc; --pc {
+        dump1(pc);
+    }
+}
+
 let occupied: uint8[max_insns];
 
 to after(ch: char, start, end: int, next_states: int@@) {
