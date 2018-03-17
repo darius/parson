@@ -63,14 +63,14 @@ class DeclPair(Visitor):
         return c_type(t), e
 
     def Pointer(self, t, e):
-        return self(t.type, '(*%s)' % e)
+        return self(t.type, '*%s' % e) # XXX need parens sometimes
 
     def Array(self, t, e):
         a, b = self(t.type, e)
         return a, '%s[%s]' % (b, c_exp(t.size, 0))
 
     def Function(self, t, e):
-        return self(t.type, '*%s(%s)' % (e, c_params(t)))
+        return self(t.type, '%s(%s)' % (e, c_params(t))) # XXX parens
 
 decl_pair = DeclPair()
 
@@ -79,17 +79,8 @@ def c_params(t):
 
 class CType(Visitor):
 
-    def Int(self, t):
-        return 'int'            # XXX...
-
-    def Char(self, t):
-        return 'char'
-
     def Void(self, t):
         return 'void'
-
-    def Float(self, t):
-        return t.name
 
     def Type_name(self, t):
         return t.name

@@ -46,7 +46,6 @@ var_decl
 
 
 # Types
-# TODO don't we need a production type: ... | '(' type ')' 
 
 type
         : base_type ( '@'                    :Pointer
@@ -57,10 +56,7 @@ type
 
 base_type
         : "void"   :Void
-        | "float"  :'float'  :Float
-        | "double" :'double' :Float
-        | "unsigned"? ("char" :Char | ("short"|"long")? "int" :Int)   # TODO
-        | id   :Type_name
+        | id       :Type_name
         .
 
 
@@ -213,7 +209,7 @@ char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /#.*/.
-keyword       ~:      /array|as|break|case|char|continue|default|do|double|else|enum|float|for|fun|if|int|let|long|return|short|sizeof|sizeoftype|struct|switch|to|typedef|union|unsigned|void|while/ /\b/.
+keyword       ~:      /array|as|break|case|continue|default|do|else|enum|for|fun|if|let|return|sizeof|sizeoftype|struct|switch|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.

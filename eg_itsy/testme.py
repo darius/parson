@@ -19,7 +19,7 @@ p1 = 'let b: int[5];'
 
 p2 = 'let b: int[5]@;'
 ## cdef(p2)
-#. 'int (*b)[5];'
+#. 'int *b[5];'
 
 p3 = 'let b: int[8][1];'
 ## cdef(p3)
@@ -80,7 +80,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     loud = 0,
 #. };
 #. 
-#. void error(char (*plaint)) {
+#. void error(char *plaint) {
 #.     fprintf(stderr, "%s\n", plaint);
 #.     exit(1);
 #. }
@@ -105,7 +105,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. int arg1[max_insns];
 #. int arg2[max_insns];
 #. 
-#. char (*names)[4] = {
+#. char *names[4] = {
 #.     "win",
 #.     "eat",
 #.     "fork",
@@ -126,7 +126,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. 
 #. uint8 occupied[max_insns];
 #. 
-#. void after(char ch, int start, int end, int (*(*next_states))) {
+#. void after(char ch, int start, int end, int **next_states) {
 #.     while (start != end) {
 #.         int r = arg1[start];
 #.         int s = arg2[start];
@@ -156,11 +156,11 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. int states0[max_insns];
 #. int states1[max_insns];
 #. 
-#. int run(int start, char (*input)) {
-#.     int (*cur_start);
-#.     int (*cur_end);
-#.     int (*next_start);
-#.     int (*next_end);
+#. int run(int start, char *input) {
+#.     int *cur_start;
+#.     int *cur_end;
+#.     int *next_start;
+#.     int *next_end;
 #.     if (accepts[start]) {
 #.         return 1;
 #.     }
@@ -169,7 +169,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     *cur_end++ = start;
 #.     memset(occupied, 0, ninsns);
 #.     for (; *input; ++input) {
-#.         int (*state);
+#.         int *state;
 #.         for (state = cur_start; state < cur_end; ++state) {
 #.             after(*input, *state, accept, &next_end);
 #.         }
@@ -180,7 +180,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.             occupied[*state] = 0;
 #.         }
 #.         {
-#.             int (*t) = cur_start;
+#.             int *t = cur_start;
 #.             cur_start = next_start, cur_end = next_end;
 #.             next_start = next_end = t;
 #.         }
@@ -197,8 +197,8 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     return ninsns++;
 #. }
 #. 
-#. char (*pattern);
-#. char (*pp);
+#. char *pattern;
+#. char *pp;
 #. 
 #. int eat(char c) {
 #.     return pattern < pp && pp[-1] == c ? --pp, 1 : 0;
@@ -234,7 +234,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     return rhs;
 #. }
 #. 
-#. int parse(char (*string)) {
+#. int parse(char *string) {
 #.     int state;
 #.     pattern = string;
 #.     pp = pattern + strlen(pattern);
@@ -246,7 +246,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     return state;
 #. }
 #. 
-#. int main(int argc, char (*(*argv))) {
+#. int main(int argc, char **argv) {
 #.     char line[9999];
 #.     int matched = 0;
 #.     int start_state;
@@ -260,7 +260,8 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     }
 #.     while (fgets(line, sizeof line, stdin)) {
 #.         line[strlen(line) - 1] = '\0';
-#.         if (matched |= run(start_state, line)) {
+#.         matched |= run(start_state, line);
+#.         if (matched) {
 #.             puts(line);
 #.         }
 #.     }
