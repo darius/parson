@@ -5,10 +5,10 @@ Emit C code from an AST.
 from structs import Visitor
 
 def indent(s):
-    return s.replace('\n', '\n  ')
+    return s.replace('\n', '\n    ')
 
 def embrace(lines):
-    return '{\n  %s\n}' % indent('\n'.join(lines))
+    return '{\n    %s\n}' % indent('\n'.join(lines))
 
 def opt_c_exp(opt_e, if_none, if_some, p=0):
     return if_none if opt_e is None else if_some % c_exp(opt_e, p)
