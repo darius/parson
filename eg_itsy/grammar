@@ -77,13 +77,13 @@ statement
 	| "return" (expr | :None) ';'         :Return
 	| "if" expr block ("else" "if" expr block)* ("else" block | :None)
                                               :hug :Ifs
-	| "switch" expr '{' [case* :hug] '}'  :Switch
+	| "match" expr '{' [case* :hug] '}'  :Switch
 	| expr_statement
 	.
 
 case
-	: "case" expr ++ ',' :hug block  :Case
-	| "default"               block  :Default
+	: "on" expr ++ ',' :hug block  :Case
+	| "else"                block  :Default
         .
 
 expr_statement
@@ -209,7 +209,7 @@ char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /#.*/.
-keyword       ~:      /array|as|break|case|continue|default|do|else|enum|for|fun|if|let|return|sizeof|sizeoftype|struct|switch|to|typedef|union|void|while/ /\b/.
+keyword       ~:      /array|as|break|continue|do|else|enum|for|fun|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.

@@ -260,11 +260,11 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     }
 #.     while (fgets(line, sizeof line, stdin)) {
 #.         line[strlen(line) - 1] = '\0';
-#.         matched |= run(start_state, line);
-#.         if (matched) {
+#.         if (run(start_state, line)) {
 #.             puts(line);
+#.             matched = 1;
 #.         }
 #.     }
-#.     return matched ? 0 : 1;
+#.     return !matched;
 #. }
 #. 

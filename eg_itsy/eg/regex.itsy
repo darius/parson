@@ -38,23 +38,23 @@ to after(ch: char, start, end: int, next_states: int@@) {
     while start != end {
         let r: int = arg1[start];
         let s: int = arg2[start];
-        switch ops[start] {
-            case op_eat {
+        match ops[start] {
+            on op_eat {
                 if r == ch && !occupied[s] {
                     next_states@++@ = s;
                     occupied[s] = 1;
                 }
                 return;
             }
-            case op_fork {
+            on op_fork {
                 after(ch, r, end, next_states);
                 start = s;
             }
-            case op_loop {
+            on op_loop {
                 after(ch, r, start, next_states);
                 start = s;
             }
-            default {
+            else {
                 error("Can't happen");
             }
         }
