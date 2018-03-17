@@ -148,10 +148,10 @@ class CStmt(Visitor):
 
     def Case(self, t):          # XXX not actually a stmt
         cases = '\n'.join('case %s:' % c_exp(e, 0) for e in t.exps)
-        return '%s %s\nbreak;' % (cases, c_stmt(t.block))
+        return '%s %s break;' % (cases, c_stmt(t.block))
 
     def Default(self, t):
-        return 'default: %s\nbreak;' % c_stmt(t.block)
+        return 'default: %s break;' % c_stmt(t.block)
 
     def Block(self, t):
         return embrace(map(decl_emitter, t.decls)
