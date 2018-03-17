@@ -38,7 +38,7 @@ from emit_c import decl_emitter
 ## c_stmt(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
-## with open('itsy.examples') as f: examples = f.read()
+## with open('eg/examples.itsy') as f: examples = f.read()
 ## for x in parse.top(examples): print cd(x) + '\n'
 #. int a = 5;
 #. 
@@ -69,7 +69,7 @@ from emit_c import decl_emitter
 #. }
 #. 
 
-## with open('regex.itsy') as f: regex = f.read()
+## with open('eg/regex.itsy') as f: regex = f.read()
 ## for x in parse.top(regex): print cd(x) + '\n'
 #. enum {
 #.   loud = 0,
