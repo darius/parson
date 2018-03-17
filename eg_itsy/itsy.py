@@ -7,8 +7,10 @@ import ast
 
 with open('grammar') as f:
     grammar_source = f.read()
-grammar = Grammar(grammar_source)
-parse = grammar.bind(ast)
+parse = Grammar(grammar_source).bind(ast)
+
+with open('itsy.h') as f:
+    c_prelude = f.read()
 
 from c_emitter import decl_emitter
 
@@ -26,7 +28,8 @@ def to_c_main(filename, out_filename=None):
 def c_from_itsy(source, filename=''):
     # TODO errors, error messages
     defs = parse.top(source)
-    return '#include "itsy.h"\n\n' + '\n\n'.join(map(decl_emitter, defs)) + '\n'
+    c_defs = map(decl_emitter, defs)
+    return c_prelude + '\n' + '\n\n'.join(c_defs) + '\n'
 
 if __name__ == '__main__':
     import sys
