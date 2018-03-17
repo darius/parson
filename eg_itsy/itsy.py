@@ -10,7 +10,7 @@ with open('grammar') as f:
 grammar = Grammar(grammar_source)
 parse = grammar.bind(ast)
 
-from emit_c import decl_emitter
+from c_emitter import decl_emitter
 
 def to_c_main(filename, out_filename=None):
     if out_filename is None:

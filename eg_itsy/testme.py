@@ -3,9 +3,9 @@ Halp tests.
 """
 
 from itsy import parse
-from emit_c import decl_emitter
+from c_emitter import decl_emitter
 
-## from emit_c import c_stmt, c_exp
+## from c_emitter import c_stmt, c_exp
 ## cd = decl_emitter
 
 ## p1, = parse.top('let b: int[5];')
