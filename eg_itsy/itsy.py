@@ -9,7 +9,7 @@ with open('grammar') as f:
     grammar_source = f.read()
 parse = Grammar(grammar_source).bind(ast)
 
-with open('itsy.h') as f:
+with open('c_prelude.h') as f:
     c_prelude = f.read()
 
 from c_emitter import decl_emitter
