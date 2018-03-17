@@ -1,5 +1,5 @@
 """
-Tie the modules together and try them out.
+Tie the modules together into a compiler. Also, Halp tests.
 """
 
 from parson import Grammar
@@ -10,41 +10,64 @@ with open('itsy.parson') as f:
 grammar = Grammar(grammar_source)
 parse = grammar.bind(ast)
 
-from emit_c import decl_emitter, c_stmt, c_exp
-cd = decl_emitter
+from emit_c import decl_emitter
 
-p1, = parse.top('let b: int[5];')
+def to_c_main(filename, out_filename=None):
+    if out_filename is None:
+        if not filename.endswith('.itsy'):
+            raise Exception("Missing output filename")
+        out_filename = filename[:-len('.itsy')] + '.c'
+    with open(filename) as f:
+        source = f.read()
+    c = c_from_itsy(source, filename)
+    with open(out_filename, 'w') as f:
+        f.write(c)
+
+def c_from_itsy(source, filename=''):
+    # TODO errors, error messages
+    defs = parse.top(source)
+    return '#include "itsy.h"\n\n' + '\n\n'.join(map(decl_emitter, defs)) + '\n'
+
+if __name__ == '__main__':
+    import sys
+    assert 2 <= len(sys.argv) <= 3, "usage: itsy.py source_file.itsy [output_c_file.c]"
+    to_c_main(*sys.argv[1:])
+
+
+## from emit_c import c_stmt, c_exp
+## cd = decl_emitter
+
+## p1, = parse.top('let b: int[5];')
 ## cd(p1)
 #. 'int b[5];'
 
-p2, = parse.top('let b: int[5]@;')
+## p2, = parse.top('let b: int[5]@;')
 ## cd(p2)
 #. 'int (*b)[5];'
 
-p3, = parse.top('let b: int[8][1];')
+## p3, = parse.top('let b: int[8][1];')
 ## cd(p3)
 #. 'int b[8][1];'
 
 ## cd(parse.top('to f(): void {}')[0])
 #. 'void f(void) {\n  \n}'
 
-p4, = parse.top('let a: int = (1, 2, 3);')
-p4, = parse.top('let a: int = 1, 2, 3;')   # XXX ugh this syntax
+## p4, = parse.top('let a: int = (1, 2, 3);')
+## p4, = parse.top('let a: int = 1, 2, 3;')   # XXX ugh this syntax
 ## cd(p4)
 #. 'int a = (1, 2, 3);'
 
-p5, = parse.top('let a: int = a@++@;')
+## p5, = parse.top('let a: int = a@++@;')
 ## cd(p5)
 #. 'int a = *(*a)++;'
 
 # I guess this output without parens is actually correct, though confusing to read. TODO check
 # Maybe we should just always parenthesize a run of ',' operators...
-p6, = parse.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
+## p6, = parse.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
 ## c_stmt(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
-with open('itsy.examples') as f:
-    examples = f.read()
+## with open('itsy.examples') as f: examples = f.read()
 ## for x in parse.top(examples): print cd(x) + '\n'
 #. int a = 5;
 #. 
@@ -75,8 +98,7 @@ with open('itsy.examples') as f:
 #. }
 #. 
 
-with open('regex.itsy') as f:
-    regex = f.read()
+## with open('regex.itsy') as f: regex = f.read()
 ## for x in parse.top(regex): print cd(x) + '\n'
 #. enum {
 #.   loud = 0,
