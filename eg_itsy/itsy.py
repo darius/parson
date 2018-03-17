@@ -5,7 +5,7 @@ Tie the modules together into a compiler.
 from parson import Grammar
 import ast
 
-with open('itsy.parson') as f:
+with open('grammar') as f:
     grammar_source = f.read()
 grammar = Grammar(grammar_source)
 parse = grammar.bind(ast)
