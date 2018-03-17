@@ -3,43 +3,48 @@ Halp tests.
 """
 
 from itsy import parser
-from c_emitter import decl_emitter
+from c_emitter import decl_emitter, c_stmt, c_exp
 
-## from c_emitter import c_stmt, c_exp
-## cd = decl_emitter
+def cdef(string):
+    t, = parser.top(string)
+    return decl_emitter(t)
 
-## p1, = parser.top('let b: int[5];')
-## cd(p1)
+def cdefs(string):
+    for x in parser.top(string):
+        print decl_emitter(x) + '\n'
+
+p1 = 'let b: int[5];'
+## cdef(p1)
 #. 'int b[5];'
 
-## p2, = parser.top('let b: int[5]@;')
-## cd(p2)
+p2 = 'let b: int[5]@;'
+## cdef(p2)
 #. 'int (*b)[5];'
 
-## p3, = parser.top('let b: int[8][1];')
-## cd(p3)
+p3 = 'let b: int[8][1];'
+## cdef(p3)
 #. 'int b[8][1];'
 
-## cd(parser.top('to f(): void {}')[0])
+## cdef('to f(): void {}')
 #. 'void f(void) {\n  \n}'
 
-## p4, = parser.top('let a: int = (1, 2, 3);')
-## p4, = parser.top('let a: int = 1, 2, 3;')   # XXX ugh this syntax
-## cd(p4)
+p4 = 'let a: int = (1, 2, 3);'
+p4 = 'let a: int = 1, 2, 3;'   # XXX ugh this syntax
+## cdef(p4)
 #. 'int a = (1, 2, 3);'
 
-## p5, = parser.top('let a: int = a@++@;')
-## cd(p5)
+p5 = 'let a: int = a@++@;'
+## cdef(p5)
 #. 'int a = *(*a)++;'
 
 # I guess this output without parens is actually correct, though confusing to read. TODO check
 # Maybe we should just always parenthesize a run of ',' operators...
-## p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
+p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
 ## c_stmt(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
-## with open('eg/examples.itsy') as f: examples = f.read()
-## for x in parser.top(examples): print cd(x) + '\n'
+with open('eg/examples.itsy') as f: examples = f.read()
+## cdefs(examples)
 #. int a = 5;
 #. 
 #. int f(int x) {
@@ -69,8 +74,8 @@ from c_emitter import decl_emitter
 #. }
 #. 
 
-## with open('eg/regex.itsy') as f: regex = f.read()
-## for x in parser.top(regex): print cd(x) + '\n'
+with open('eg/regex.itsy') as f: regex = f.read()
+## cdefs(regex)
 #. enum {
 #.   loud = 0,
 #. }
