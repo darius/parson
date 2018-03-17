@@ -163,8 +163,10 @@ to main(argc: int, argv: char@@): int {
     }
     while fgets(line, sizeof line, stdin) {
         line[strlen(line) - 1] = '\0';
-        matched |= run(start_state, line);
-        if matched { puts(line); }
+        if run(start_state, line) {
+            puts(line);
+            matched = 1;
+        }
     }
-    return if matched {0} else {1};
+    return !matched;
 }
