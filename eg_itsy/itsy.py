@@ -7,7 +7,7 @@ import ast
 
 with open('grammar') as f:
     grammar_source = f.read()
-parse = Grammar(grammar_source).bind(ast)
+parser = Grammar(grammar_source).bind(ast)
 
 with open('c_prelude.h') as f:
     c_prelude = f.read()
@@ -27,7 +27,7 @@ def to_c_main(filename, out_filename=None):
 
 def c_from_itsy(source, filename=''):
     # TODO errors, error messages
-    defs = parse.top(source)
+    defs = parser.top(source)
     c_defs = map(decl_emitter, defs)
     return c_prelude + '\n' + '\n\n'.join(c_defs) + '\n'
 
