@@ -28,14 +28,15 @@ class DeclEmitter(Visitor):
 
     def Array_decl(self, t):
         return '%s = %s;' % (c_decl(t.type, t.name),
-                             embrace(c_exp(e, list_context) for e in t.exps))
+                             embrace(c_exp(e, list_context) + ','
+                                     for e in t.exps))
 
     def Enum(self, t):
         # XXX is this right when we mix explicit and implicit values?
         enums = ['%s%s,' % (name, opt_c_exp(opt_exp, '', ' = %s'))
                  for name, opt_exp in t.pairs]
-        return 'enum %s%s' % (t.opt_name + ' ' if t.opt_name else '',
-                              embrace(enums))
+        return 'enum %s%s;' % (t.opt_name + ' ' if t.opt_name else '',
+                               embrace(enums))
 
     def To(self, t):
         return_type = ('void' if t.opt_return_type is None
