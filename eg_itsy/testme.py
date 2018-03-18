@@ -43,6 +43,11 @@ p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0}
 ## c_stmt(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
+p7, = parser.expr('a || b || c')
+## c_exp(p7, 0)
+#. 'a || (b || c)'
+# XXX misparenthesized
+
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)
 #. int a = 5;
