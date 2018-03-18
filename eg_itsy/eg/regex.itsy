@@ -13,7 +13,7 @@ enum { op_accept, op_eat, op_fork, op_loop, }
 
 let ninsns: int;
 let accepts, ops: uint8[max_insns];
-let arg1, arg2: int[max_insns];
+let arg1, arg2: int16[max_insns];
 
 array names: char^[4] = {   # TODO leave out the 4
     "win", "eat", "fork", "loop",
