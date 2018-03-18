@@ -106,8 +106,8 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. uint8 accepts[max_insns];
 #. uint8 ops[max_insns];
 #. 
-#. int arg1[max_insns];
-#. int arg2[max_insns];
+#. int16 arg1[max_insns];
+#. int16 arg2[max_insns];
 #. 
 #. char *names[4] = {
 #.     "win",
@@ -161,13 +161,13 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. int states1[max_insns];
 #. 
 #. int run(int start, char *input) {
+#.     if (accepts[start]) {
+#.         return 1;
+#.     }
 #.     int *cur_start;
 #.     int *cur_end;
 #.     int *next_start;
 #.     int *next_end;
-#.     if (accepts[start]) {
-#.         return 1;
-#.     }
 #.     cur_start = states0, cur_end = cur_start;
 #.     next_start = states1, next_end = next_start;
 #.     *cur_end++ = start;
