@@ -1,6 +1,7 @@
 """
 Define a named-tuple-like type, but simpler.
 Also Visitor to dispatch on datatypes defined this way.
+This module is only used for examples, at least currently.
 """
 
 # TODO figure out how to use __slots__

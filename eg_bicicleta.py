@@ -1,7 +1,5 @@
 """
 Ported from https://github.com/darius/bicicleta.py/blob/master/core.py
-Also uses https://github.com/darius/unreal/blob/master/structs.py
-which is not in this repo.
 """
 
 from structs import Struct
@@ -122,7 +120,7 @@ fac = make_fac(4)
 
 def test():
     import glob
-    for filename in glob.glob('*.bicicleta'):
+    for filename in sorted(glob.glob('*.bicicleta')):
         print filename
         with open(filename) as f:
             text = f.read()
