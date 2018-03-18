@@ -5,7 +5,7 @@ Tie the modules together into a compiler.
 import ast
 from parson import Grammar, Unparsable
 from parson_plaints import syntax_error
-from c_emitter import decl_emitter
+from c_emitter import c_emit
 import sys
 
 with open('grammar') as f:
@@ -34,7 +34,7 @@ def to_c_main(filename, out_filename=None):
 
 def c_from_itsy(source, filename=''):
     defs = parser.top(source)
-    c_defs = map(decl_emitter, defs)
+    c_defs = map(c_emit, defs)
     return c_prelude + '\n' + '\n\n'.join(c_defs) + '\n'
 
 

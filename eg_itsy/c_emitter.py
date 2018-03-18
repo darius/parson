@@ -14,10 +14,10 @@ def opt_c_exp(opt_e, if_none, if_some, p=0):
     return if_none if opt_e is None else if_some % c_exp(opt_e, p)
 
 
-# Declarations
-# TODO rename to avoid confusion with c_decl below
+# Declarations and statements (either can appear in a block)
+# TODO rename 'declaration' to avoid confusion with c_decl below
 
-class DeclEmitter(Visitor):
+class CEmitter(Visitor):
 
     def Let(self, t):
         if t.opt_exp is not None and len(t.names) != 1:
@@ -47,9 +47,55 @@ class DeclEmitter(Visitor):
         return '%s %s(%s) %s' % (return_type,
                                  t.name,
                                  params_c or 'void',
-                                 c_stmt(t.body))
+                                 c(t.body))
 
-decl_emitter = DeclEmitter()
+    def Exp(self, t):
+        return opt_c_exp(t.opt_exp, ';', '%s;')
+
+    def Return(self, t):
+        return opt_c_exp(t.opt_exp, 'return;', 'return %s;')
+
+    def Break(self, t):
+        return 'break;'
+
+    def Continue(self, t):
+        return 'continue;'
+
+    def While(self, t):
+        return 'while (%s) %s' % (c_exp(t.exp, 0), c(t.block))
+
+    def Do(self, t):
+        return 'do %s while(%s)' % (c(t.block), c_exp(t.exp, 0))
+
+    def Ifs(self, t):
+        clauses = zip(t.parts[0:-1:2], t.parts[1::2])
+        else_block = t.parts[-1]
+        ifs = ' else '.join('if (%s) %s' % (c_exp(exp, 0), c(block))
+                            for exp, block in clauses)
+        return ifs + ('' if else_block is None
+                      else ' else %s' % c(else_block))
+
+    def For(self, t):
+        e1 = opt_c_exp(t.opt_e1, '', '%s')
+        e2 = opt_c_exp(t.opt_e2, '', '%s')
+        e3 = opt_c_exp(t.opt_e3, '', '%s')
+        return 'for (%s; %s; %s) %s' % (e1, e2, e3, c(t.block))
+
+    def Switch(self, t):
+        return 'switch (%s) %s' % (c_exp(t.exp, 0),
+                                   embrace(map(c, t.cases)))
+
+    def Case(self, t):          # XXX not actually a stmt
+        cases = '\n'.join('case %s:' % c_exp(e, 0) for e in t.exps)
+        return '%s %s break;' % (cases, c(t.block))
+
+    def Default(self, t):
+        return 'default: %s break;' % c(t.block)
+
+    def Block(self, t):
+        return embrace(map(c, t.decls) + map(c, t.stmts))
+
+c = c_emit = CEmitter()
 
 
 # Types
@@ -95,60 +141,6 @@ class CType(Visitor):
         return '(%s)(%s)' % (c_type(t.return_type), c_params(t))
 
 c_type = CType()
-
-
-# Statements
-
-class CStmt(Visitor):
-
-    def Exp(self, t):
-        return opt_c_exp(t.opt_exp, ';', '%s;')
-
-    def Return(self, t):
-        return opt_c_exp(t.opt_exp, 'return;', 'return %s;')
-
-    def Break(self, t):
-        return 'break;'
-
-    def Continue(self, t):
-        return 'continue;'
-
-    def While(self, t):
-        return 'while (%s) %s' % (c_exp(t.exp, 0), c_stmt(t.block))
-
-    def Do(self, t):
-        return 'do %s while(%s)' % (c_stmt(t.block), c_exp(t.exp, 0))
-
-    def Ifs(self, t):
-        clauses = zip(t.parts[0:-1:2], t.parts[1::2])
-        else_block = t.parts[-1]
-        ifs = ' else '.join('if (%s) %s' % (c_exp(exp, 0), c_stmt(block))
-                            for exp, block in clauses)
-        return ifs + ('' if else_block is None
-                      else ' else %s' % c_stmt(else_block))
-
-    def For(self, t):
-        e1 = opt_c_exp(t.opt_e1, '', '%s')
-        e2 = opt_c_exp(t.opt_e2, '', '%s')
-        e3 = opt_c_exp(t.opt_e3, '', '%s')
-        return 'for (%s; %s; %s) %s' % (e1, e2, e3, c_stmt(t.block))
-
-    def Switch(self, t):
-        return 'switch (%s) %s' % (c_exp(t.exp, 0),
-                                   embrace(map(c_stmt, t.cases)))
-
-    def Case(self, t):          # XXX not actually a stmt
-        cases = '\n'.join('case %s:' % c_exp(e, 0) for e in t.exps)
-        return '%s %s break;' % (cases, c_stmt(t.block))
-
-    def Default(self, t):
-        return 'default: %s break;' % c_stmt(t.block)
-
-    def Block(self, t):
-        return embrace(map(decl_emitter, t.decls)
-                       + map(c_stmt, t.stmts))
-
-c_stmt = CStmt()
 
 
 # Expressions

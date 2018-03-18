@@ -3,15 +3,15 @@ Halp tests.
 """
 
 from itsy import parser
-from c_emitter import decl_emitter, c_stmt, c_exp
+from c_emitter import c_emit, c_exp
 
 def cdef(string):
     t, = parser.top(string)
-    return decl_emitter(t)
+    return c_emit(t)
 
 def cdefs(string):
     for x in parser.top(string):
-        print decl_emitter(x) + '\n'
+        print c_emit(x) + '\n'
 
 p1 = 'let b: int[5];'
 ## cdef(p1)
@@ -40,7 +40,7 @@ p5 = 'let a: int = a@++@;'
 # I guess this output without parens is actually correct, though confusing to read. TODO check
 # Maybe we should just always parenthesize a run of ',' operators...
 p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
-## c_stmt(p6)
+## c_emit(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
 p7, = parser.expr('a || b || c')
