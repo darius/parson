@@ -45,8 +45,7 @@ p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0}
 
 p7, = parser.expr('a || b || c')
 ## c_exp(p7, 0)
-#. 'a || (b || c)'
-# XXX misparenthesized
+#. 'a || b || c'
 
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)
@@ -211,7 +210,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. 
 #. int parsing(int precedence, int state) {
 #.     int rhs;
-#.     if (pattern == pp || (pp[-1] == '(' || pp[-1] == '|')) {
+#.     if (pattern == pp || pp[-1] == '(' || pp[-1] == '|') {
 #.         rhs = state;
 #.     } else if (eat(')')) {
 #.         rhs = parsing(0, state);

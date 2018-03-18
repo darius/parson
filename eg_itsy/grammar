@@ -127,7 +127,7 @@ conditional_expr
 branch  : '{' expr '}'.
 
 logical_or_expr
-	: logical_and_expr ('||' logical_or_expr :Or)*
+	: logical_and_expr ('||' logical_and_expr :Or)*
 	.
 
 logical_and_expr
