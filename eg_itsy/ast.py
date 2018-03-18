@@ -29,7 +29,7 @@ class Function(  Struct('param_types return_type')): pass
 
 # Statements
 
-class Block(     Struct('decls stmts')): pass
+class Block(     Struct('parts')): pass
 
 class Exp(       Struct('opt_exp')): pass
 class Return(    Struct('opt_exp')): pass

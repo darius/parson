@@ -89,11 +89,9 @@ to run(start: int, input: char@): int {
             }
             occupied[state@] = 0;
         }
-        {
-            let t: int@ = cur_start;
-            cur_start = next_start, cur_end = next_end;
-            next_start = next_end = t;
-        }
+        let t: int@ = cur_start;
+        cur_start = next_start, cur_end = next_end;
+        next_start = next_end = t;
     }
     return 0;
 }
@@ -143,28 +141,25 @@ to parsing(precedence, state: int): int {
 }
 
 to parse(string: char@): int {
-    let state: int;
     pattern = string; pp = pattern + strlen(pattern);
     ninsns = 0;
-    state = parsing(0, emit(op_accept, 0, 0, 1));
+    let state: int = parsing(0, emit(op_accept, 0, 0, 1));
     if pattern != pp { error("Bad pattern"); }
     return state;
 }
 
 to main(argc: int, argv: char@@): int {
-    let line: char[9999];
-    let matched: int = 0;
-    let start_state: int;
     if argc != 2 { error("Usage: grep pattern"); }
-    start_state = parse(argv[1]);
+    let start_state: int = parse(argv[1]);
     if loud {
         printf("start: %u\n", start_state);
         dump();
     }
+    let matched: int = 0;
+    let line: char[9999];
     while fgets(line, sizeof line, stdin) {
-        line[strlen(line) - 1] = '\0';
         if run(start_state, line) {
-            puts(line);
+            fputs(line, stdout);
             matched = 1;
         }
     }

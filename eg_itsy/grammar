@@ -63,7 +63,7 @@ base_type
 # Statements
 
 block
-	: '{' decl* :hug [statement* :hug] '}' :Block               # TODO consider mixing them
+	: '{' (decl | statement)* :hug '}' :Block
 	.
 
 statement

@@ -183,11 +183,9 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.             }
 #.             occupied[*state] = 0;
 #.         }
-#.         {
-#.             int *t = cur_start;
-#.             cur_start = next_start, cur_end = next_end;
-#.             next_start = next_end = t;
-#.         }
+#.         int *t = cur_start;
+#.         cur_start = next_start, cur_end = next_end;
+#.         next_start = next_end = t;
 #.     }
 #.     return 0;
 #. }
@@ -239,11 +237,10 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. }
 #. 
 #. int parse(char *string) {
-#.     int state;
 #.     pattern = string;
 #.     pp = pattern + strlen(pattern);
 #.     ninsns = 0;
-#.     state = parsing(0, emit(op_accept, 0, 0, 1));
+#.     int state = parsing(0, emit(op_accept, 0, 0, 1));
 #.     if (pattern != pp) {
 #.         error("Bad pattern");
 #.     }
@@ -251,21 +248,19 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. }
 #. 
 #. int main(int argc, char **argv) {
-#.     char line[9999];
-#.     int matched = 0;
-#.     int start_state;
 #.     if (argc != 2) {
 #.         error("Usage: grep pattern");
 #.     }
-#.     start_state = parse(argv[1]);
+#.     int start_state = parse(argv[1]);
 #.     if (loud) {
 #.         printf("start: %u\n", start_state);
 #.         dump();
 #.     }
+#.     int matched = 0;
+#.     char line[9999];
 #.     while (fgets(line, sizeof line, stdin)) {
-#.         line[strlen(line) - 1] = '\0';
 #.         if (run(start_state, line)) {
-#.             puts(line);
+#.             fputs(line, stdout);
 #.             matched = 1;
 #.         }
 #.     }

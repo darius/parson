@@ -32,7 +32,6 @@ class CEmitter(Visitor):
                                      for e in t.exps))
 
     def Enum(self, t):
-        # XXX is this right when we mix explicit and implicit values?
         enums = ['%s%s,' % (name, opt_c_exp(opt_exp, '', ' = %s'))
                  for name, opt_exp in t.pairs]
         return 'enum %s%s;' % (t.opt_name + ' ' if t.opt_name else '',
@@ -93,7 +92,7 @@ class CEmitter(Visitor):
         return 'default: %s break;' % c(t.block)
 
     def Block(self, t):
-        return embrace(map(c, t.decls) + map(c, t.stmts))
+        return embrace(map(c, t.parts));
 
 c = c_emit = CEmitter()
 
