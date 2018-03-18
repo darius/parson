@@ -13,15 +13,15 @@ def cdefs(string):
     for x in parser.top(string):
         print c_emit(x) + '\n'
 
-p1 = 'let b: int[5];'
+p1 = 'let b: [5]int;'
 ## cdef(p1)
 #. 'int b[5];'
 
-p2 = 'let b: int[5]^;'
+p2 = 'let b: [5]^int;'
 ## cdef(p2)
 #. 'int *b[5];'
 
-p3 = 'let b: int[8][1];'
+p3 = 'let b: [8][1]int;'
 ## cdef(p3)
 #. 'int b[8][1];'
 
@@ -46,6 +46,10 @@ p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0}
 p7, = parser.expr('a || b || c')
 ## c_exp(p7, 0)
 #. 'a || b || c'
+
+# XXX
+## cdef('let a: ^[3]^[5]int;')
+#. 'int **a[3][5];'
 
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)

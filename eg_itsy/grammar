@@ -48,15 +48,11 @@ var_decl
 # Types
 
 type
-        : base_type ( '^'                    :Pointer
-                    | '[' (expr | :None) ']' :Array
-                    )*
-        | "fun" '(' [type ** ',' :hug] ')' type     :Function   # (is this ever *not* enclosed in Pointer()?)
-        .
-
-base_type
-        : "void"   :Void
-        | id       :Type_name
+        : '^' type                               :Pointer
+        | '[' (expr | :None) ']' type            :Array
+        | "func" '(' [type ** ',' :hug] ')' type :Function   # (is this ever *not* enclosed in Pointer()?)
+        | "void"                                 :Void
+        | id                                     :Type_name
         .
 
 
@@ -209,7 +205,7 @@ char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /#.*/.
-keyword       ~:      /array|as|break|continue|do|else|enum|for|fun|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
+keyword       ~:      /array|as|break|continue|do|else|enum|for|func|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.

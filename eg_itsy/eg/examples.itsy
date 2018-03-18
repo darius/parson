@@ -19,7 +19,7 @@ to fact(n: int): int {
 to asm_store_field(address: Address, L, R: int, cell: Cell): void {
     assert(address < memory_size);
     if VERBOSE {
-        let temp: int[12];
+        let temp: [12]int;
         unparse_cell(temp, cell);
         printf("%4o(%u,%u): %s\n", address, L, R, temp);
     }

@@ -3,7 +3,7 @@
 
 enum { loud = 0 }
 
-to error(plaint: char^) {
+to error(plaint: ^char) {
     fprintf(stderr, "%s\n", plaint);
     exit(1);
 }
@@ -11,11 +11,11 @@ to error(plaint: char^) {
 enum { max_insns = 8192, accept = 0 }
 enum { op_accept, op_eat, op_fork, op_loop, }
 
-let ninsns: int;
-let accepts, ops: uint8[max_insns];
-let arg1, arg2: int16[max_insns];
+let ninsns:       int;
+let accepts, ops: [max_insns]uint8;
+let arg1, arg2:   [max_insns]int16;
 
-array names: char^[4] = {   # TODO leave out the 4
+array names: [4]^char = {   # TODO leave out the 4
     "win", "eat", "fork", "loop",
 }
 
@@ -32,9 +32,9 @@ to dump() {
     }
 }
 
-let occupied: uint8[max_insns];
+let occupied: [max_insns]uint8;
 
-to after(ch: char, start, end: int, next_states: int^^) {
+to after(ch: char, start, end: int, next_states: ^^int) {
     while start != end {
         let r: int = arg1[start];
         let s: int = arg2[start];
@@ -61,13 +61,13 @@ to after(ch: char, start, end: int, next_states: int^^) {
     }
 }
 
-let states0, states1: int[max_insns];
+let states0, states1: [max_insns]int;
 
-to run(start: int, input: char^): int {
+to run(start: int, input: ^char): int {
     if accepts[start] {
         return 1;
     }
-    let cur_start, cur_end, next_start, next_end: int^;
+    let cur_start, cur_end, next_start, next_end: ^int;
     cur_start = states0,  cur_end = cur_start;
     next_start = states1, next_end = next_start;
     cur_end++^ = start;
@@ -76,7 +76,7 @@ to run(start: int, input: char^): int {
                                  # loop below
 
     for ; input^; ++input {
-        let state: int^;
+        let state: ^int;
         for state = cur_start; state < cur_end; ++state {
             after(input^, state^, accept, &next_end);
         }
@@ -86,7 +86,7 @@ to run(start: int, input: char^): int {
             }
             occupied[state^] = 0;
         }
-        let t: int^ = cur_start;
+        let t: ^int = cur_start;
         cur_start = next_start, cur_end = next_end;
         next_start = next_end = t;
     }
@@ -101,7 +101,7 @@ to emit(op: uint8, r, s: int, accepting: uint8): int {
 }
 
 # start, current parsing position
-let pattern, pp: char^;
+let pattern, pp: ^char;
 
 to eat(c: char): int {
     return if pattern < pp && pp[-1] == c {--pp, 1} else {0};
@@ -137,7 +137,7 @@ to parsing(precedence, state: int): int {
     return rhs;
 }
 
-to parse(string: char^): int {
+to parse(string: ^char): int {
     pattern = string; pp = pattern + strlen(pattern);
     ninsns = 0;
     let state: int = parsing(0, emit(op_accept, 0, 0, 1));
@@ -145,7 +145,7 @@ to parse(string: char^): int {
     return state;
 }
 
-to main(argc: int, argv: char^^): int {
+to main(argc: int, argv: ^^char): int {
     if argc != 2 { error("Usage: grep pattern"); }
     let start_state: int = parse(argv[1]);
     if loud {
@@ -153,7 +153,7 @@ to main(argc: int, argv: char^^): int {
         dump();
     }
     let matched: int = 0;
-    let line: char[9999];
+    let line: [9999]char;
     while fgets(line, sizeof line, stdin) {
         if run(start_state, line) {
             fputs(line, stdout);

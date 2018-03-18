@@ -98,6 +98,7 @@ c = c_emit = CEmitter()
 
 
 # Types
+# XXX Function stuff untried, probably all wrong
 
 def c_decl(type_, name):
     return '%s %s' % decl_pair(type_, name)
@@ -111,8 +112,7 @@ class DeclPair(Visitor):
         return self(t.type, '*%s' % e) # XXX need parens sometimes
 
     def Array(self, t, e):
-        a, b = self(t.type, e)
-        return a, '%s[%s]' % (b, c_exp(t.size, 0))
+        return self(t.type, '%s[%s]' % (e, c_exp(t.size, 0)))
 
     def Function(self, t, e):
         return self(t.type, '%s(%s)' % (e, c_params(t))) # XXX parens
