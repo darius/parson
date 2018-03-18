@@ -88,7 +88,6 @@ expr_statement
 
 
 # Expressions
-# TODO what's an actually nice set of primitives?
 
 expr
 	: assignment_expr (',' assignment_expr :Seq)*       # maybe change this syntax too
