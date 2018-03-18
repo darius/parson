@@ -18,10 +18,7 @@ class To(        Struct('name params opt_return_type body')): pass
 
 # Types
 
-class Int(       Struct('')): pass         # TODO size, signedness
-class Char(      Struct('')): pass         # TODO signedness
 class Void(      Struct('')): pass
-class Float(     Struct('name')): pass
 class Type_name( Struct('name')): pass
 class Pointer(   Struct('type')): pass
 class Array(     Struct('type size')): pass
