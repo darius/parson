@@ -6,7 +6,7 @@ TODO something like this ought to come with Parson itself
 def syntax_error(exc, filename):
     line_no, prefix, suffix = where(exc)
     prefix, suffix = sanitize(prefix), sanitize(suffix)
-    return '\n'.join(["%s:%d:%d: Syntax error\n" % (filename, line_no, len(prefix)),
+    return '\n'.join(["%s:%d:%d: Syntax error" % (filename, line_no, len(prefix)),
                       '  ' + prefix + suffix,
                       '  ' + ' '*len(prefix) + '^'])
 
