@@ -203,7 +203,8 @@ class CExp(Visitor):
         return fmt2(p, (t.opt_binop or '') + '=', t.e1, t.e2) # TODO clumsy
 
     def Binary_exp(self, t, p):
-        return fmt2(p, t.binop, t.e1, t.e2)
+        op = '^' if t.binop == '@' else t.binop
+        return fmt2(p, op, t.e1, t.e2)
 
     def Index(self, t, p):
         return wrap(postfix_prec, p,

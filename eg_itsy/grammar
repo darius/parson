@@ -48,7 +48,7 @@ var_decl
 # Types
 
 type
-        : base_type ( '@'                    :Pointer
+        : base_type ( '^'                    :Pointer
                     | '[' (expr | :None) ']' :Array
                     )*
         | "fun" '(' [type ** ',' :hug] ')' type     :Function   # (is this ever *not* enclosed in Pointer()?)
@@ -115,7 +115,7 @@ assignment_operator
 	| '<<=' :'<<'
 	| '>>=' :'>>'
 	| '&='  :'&'
-	| '^='  :'^'
+	| '@='  :'@'
 	| '|='  :'|'
 	.
 
@@ -148,7 +148,7 @@ expr4
         : expr5 ( '+' !/[+=]/ :'+' expr5 :Binary_exp
                 | '-' !/[-=]/ :'-' expr5 :Binary_exp
                 | '|' !/[|=]/ :'|' expr5 :Binary_exp
-                | '^' !'='    :'^' expr5 :Binary_exp
+                | '@' !'='    :'@' expr5 :Binary_exp
                 )*
         .
 
@@ -189,7 +189,7 @@ postfix_expr
             ( '[' expr ']'                           :Index
 	    | '(' [assignment_expr ** ',' :hug] ')'  :Call
 	    | '.' id  :Dot
-	    | '@'     :Deref                                      # changed: deref, no '->'
+	    | '^'     :Deref                                      # changed: deref, no '->'
 	    | '++'    :Post_incr
 	    | '--'    :Post_decr
             )*

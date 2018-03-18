@@ -17,7 +17,7 @@ p1 = 'let b: int[5];'
 ## cdef(p1)
 #. 'int b[5];'
 
-p2 = 'let b: int[5]@;'
+p2 = 'let b: int[5]^;'
 ## cdef(p2)
 #. 'int *b[5];'
 
@@ -33,7 +33,7 @@ p4 = 'let a: int = 1, 2, 3;'   # XXX ugh this syntax
 ## cdef(p4)
 #. 'int a = (1, 2, 3);'
 
-p5 = 'let a: int = a@++@;'
+p5 = 'let a: int = a^++^;'
 ## cdef(p5)
 #. 'int a = *(*a)++;'
 
