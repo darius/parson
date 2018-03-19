@@ -14,7 +14,8 @@ appeared earlier in the SPECS alternative syntax for C++ (Ben Werther
 following the implications of a remark in Ritchie's "The Development
 of the C Language": "Sethi observed that many of the nested
 declarations and expressions would become simpler if the indirection
-operator had been taken as a postfix operator instead of prefix". For
-this he references R. Sethi, "Uniform Syntax for Type Expressions and
-Declarators." Softw., Pract. Exper. 11 (6): 623-628
-(1981). Unfortunately I can't find that paper online.
+operator had been taken as a postfix operator instead of prefix, but
+by then it was too late to change." For this he references R. Sethi,
+"Uniform Syntax for Type Expressions and Declarators." Softw.,
+Pract. Exper. 11 (6): 623-628 (1981). Unfortunately I can't find that
+paper online.
