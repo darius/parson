@@ -73,18 +73,14 @@ statement
 	| "return" (expr | :None) ';'         :Return
 	| "if" expr block ("else" "if" expr block)* ("else" block | :None)
                                               :hug :Ifs
-	| "match" expr '{' [case* :hug] '}'  :Switch
-	| expr_statement
+	| "match" expr '{' [case* :hug] '}'   :Switch
+	| (expr | :None) ';'                  :Exp
 	.
 
 case
 	: "on" expr ++ ',' :hug block  :Case
 	| "else"                block  :Default
         .
-
-expr_statement
-	: (expr | :None) ';'   :Exp
-	.
 
 
 # Expressions
