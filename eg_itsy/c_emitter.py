@@ -131,7 +131,7 @@ class CType(Visitor):
         return t.name
 
     def Pointer(self, t):
-        return '*%s' % self(t.type) # XXX right? also XXX parentheses sometimes, here and below
+        return '%s *' % self(t.type) # XXX right? also XXX parentheses sometimes, here and below
 
     def Array(self, t):
         return '%s[%s]' % (self(t.type), c_exp(t.size, 0))

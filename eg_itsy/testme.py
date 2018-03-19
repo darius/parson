@@ -47,20 +47,26 @@ p7, = parser.expr('a || b || c')
 ## c_exp(p7, 0)
 #. 'a || b || c'
 
-# XXX
-## cdef('let a: ^[3]^[5]int;')
-#. 'int **a[3][5];'
-
 ## cdef('let a: ^int;')
 #. 'int *a;'
 ## cdef('let a: ^^int;')
 #. 'int **a;'
 ## cdef('let f: ^func()int;')
 #. 'int *f();'
-## cdef('to f(): ^int {}')   # XXX
-#. '*int f(void) {\n    \n}'
-## cdef('let f: ^func()^int;')   # XXX
+## cdef('to f(): ^int {}')   # XXX should be 'int *f(void)...'
+#. 'int * f(void) {\n    \n}'
+## cdef('let f: ^func()^int;')   # XXX should be 'int *(*f)();'
 #. 'int **f();'
+## cdef('let f: ^func(^func()void)^func()void;')   # XXX should be void (*f(void (*)(void)))(void); I think
+#. 'void **f((void)() *)();'
+## cdef('let api: [10]^int;')
+#. 'int *api[10];'
+## cdef('let api: ^[10]int;')   # XXX should be 'int (*api)[10];'
+#. 'int *api[10];'
+
+# XXX
+## cdef('let a: ^[3]^[5]int;')
+#. 'int **a[3][5];'
 
 
 with open('eg/examples.itsy') as f: examples = f.read()
