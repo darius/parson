@@ -115,7 +115,7 @@ class DeclPair(Visitor):
         return self(t.type, '%s[%s]' % (e, c_exp(t.size, 0)))
 
     def Function(self, t, e):
-        return self(t.type, '%s(%s)' % (e, c_params(t))) # XXX parens
+        return self(t.return_type, '%s(%s)' % (e, c_params(t))) # XXX parens
 
 decl_pair = DeclPair()
 
