@@ -144,24 +144,20 @@ expr4
         .
 
 expr5
-        : cast_expr ( '*'  !'='    :'*'  cast_expr :Binary_exp
-                    | '/'  !'='    :'/'  cast_expr :Binary_exp
-                    | '%'  !'='    :'%'  cast_expr :Binary_exp
-                    | '&'  !/[&=]/ :'&'  cast_expr :Binary_exp
-                    | '<<' !'='    :'<<' cast_expr :Binary_exp
-                    | '>>' !'='    :'>>' cast_expr :Binary_exp
-                    )*
+        : unary_expr ( '*'  !'='    :'*'  unary_expr :Binary_exp
+                     | '/'  !'='    :'/'  unary_expr :Binary_exp
+                     | '%'  !'='    :'%'  unary_expr :Binary_exp
+                     | '&'  !/[&=]/ :'&'  unary_expr :Binary_exp
+                     | '<<' !'='    :'<<' unary_expr :Binary_exp
+                     | '>>' !'='    :'>>' unary_expr :Binary_exp
+                     )*
         .
 
-cast_expr
-        : "as" '(' type ')' expr
-        | unary_expr
-	.
-
 unary_expr
-	: '++' unary_expr           :Pre_incr
+        : "as" '(' type ')' expr    :TBD
+	| '++' unary_expr           :Pre_incr
 	| '--' unary_expr           :Pre_decr
-	| unary_operator cast_expr  :Unary_exp
+	| unary_operator unary_expr :Unary_exp
 	| "sizeoftype" type         :Sizeof_type
         | "sizeof" unary_expr       :Sizeof
         | postfix_expr
