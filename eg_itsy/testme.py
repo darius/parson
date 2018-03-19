@@ -61,8 +61,8 @@ p7, = parser.expr('a || b || c')
 #. 'void **f((void)(void) *)(void);'
 ## cdef('let api: [10]^int;')
 #. 'int *api[10];'
-## cdef('let api: ^[10]int;')   # XXX should be 'int (*api)[10];'
-#. 'int *api[10];'
+## cdef('let pai: ^[10]int;')   # XXX should be 'int (*pai)[10];'
+#. 'int *pai[10];'
 
 # XXX
 ## cdef('let a: ^[3]^[5]int;')
