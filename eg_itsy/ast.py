@@ -18,13 +18,13 @@ class To(        Struct('name params opt_return_type body')): pass
 
 # Types
 
-class Void(      Struct('')): pass
 class Type_name( Struct('name')): pass
 class Pointer(   Struct('type')): pass
 class Array(     Struct('size type')): pass
 class Function(  Struct('param_types return_type')): pass
-
 # TODO rename fields like 'type' to 'base_type' or something
+
+def Void(): return Type_name('void')  # for now, anyway
 
 
 # Statements

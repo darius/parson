@@ -105,8 +105,8 @@ def c_decl(type_, name):
 
 class DeclPair(Visitor):
 
-    def default(self, t, e):
-        return c_type(t), e
+    def Type_name(self, t, e):
+        return t.name, e
 
     def Pointer(self, t, e):
         return self(t.type, '*%s' % e) # XXX need parens sometimes
@@ -123,9 +123,6 @@ def c_params(t):
     return ', '.join(map(c_type, t.param_types)) if t.param_types else 'void'
 
 class CType(Visitor):
-
-    def Void(self, t):
-        return 'void'
 
     def Type_name(self, t):
         return t.name
