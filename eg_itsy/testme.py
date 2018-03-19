@@ -56,6 +56,11 @@ p7, = parser.expr('a || b || c')
 ## cdef('let a: ^^int;')
 #. 'int **a;'
 ## cdef('let f: ^func()int;')
+#. 'int *f();'
+## cdef('to f(): ^int {}')   # XXX
+#. '*int f(void) {\n    \n}'
+## cdef('let f: ^func()^int;')   # XXX
+#. 'int **f();'
 
 
 with open('eg/examples.itsy') as f: examples = f.read()
