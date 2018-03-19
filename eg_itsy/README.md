@@ -11,6 +11,10 @@ Not finished, and I dunno if it ever will be.
 The syntax for pointers and arrays (their declaration and use) has
 appeared earlier in the SPECS alternative syntax for C++ (Ben Werther
 & Damian Conway) and in Odin (...). I didn't get it from them but by
-following the implications of a remark long ago whose source I've
-forgotten, saying that C declaration syntax would've worked readably
-if only the prefix '*' operator had been postfix.
+following the implications of a remark in Ritchie's "The Development
+of the C Language": "Sethi observed that many of the nested
+declarations and expressions would become simpler if the indirection
+operator had been taken as a postfix operator instead of prefix". For
+this he references R. Sethi, "Uniform Syntax for Type Expressions and
+Declarators." Softw., Pract. Exper. 11 (6): 623-628
+(1981). Unfortunately I can't find that paper online.
