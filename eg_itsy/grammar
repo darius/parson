@@ -50,7 +50,7 @@ var_decl
 type
         : '^' type                               :Pointer
         | '[' (expr | :None) ']' type            :Array
-        | "func" '(' [type ** ',' :hug] ')' type :Function   # (is this ever *not* enclosed in Pointer()?)
+        | "func" '(' [type ** ',' :hug] ')' type :Function
         | "void"                                 :Void
         | id                                     :Type_name
         .
@@ -90,7 +90,7 @@ expr_statement
 # Expressions
 
 expr
-	: assignment_expr (',' assignment_expr :Seq)*       # maybe change this syntax too
+	: assignment_expr (',' assignment_expr :Seq)*
 	.
 
 cexpr = assignment_expr.   # "no comma" expression. TODO better name
@@ -101,7 +101,7 @@ assignment_expr
 	.
 
 assignment_operator
-	: '='   :None                                     # thinking of changing this
+	: '='   :None
 	| '*='  :'*'
 	| '/='  :'/'
 	| '%='  :'%'
@@ -115,7 +115,7 @@ assignment_operator
 	.
 
 conditional_expr
-	: "if" expr branch ("else" "if" expr branch)* "else" branch :Ifs_exp     # changed
+	: "if" expr branch ("else" "if" expr branch)* "else" branch :Ifs_exp
         | logical_or_expr
 	.
 
@@ -158,7 +158,7 @@ expr5
         .
 
 cast_expr
-        : "as" '(' type ')' expr                       # changed
+        : "as" '(' type ')' expr
         | unary_expr
 	.
 
@@ -171,7 +171,7 @@ unary_expr
         | postfix_expr
 	.
 
-unary_operator                                              # changed: no '*'
+unary_operator
 	: '&' !'&' :'&'
 	| '+' !'+' :TBD
 	| '-' !'-' :'-'
@@ -184,7 +184,7 @@ postfix_expr
             ( '[' expr ']'                           :Index
 	    | '(' [assignment_expr ** ',' :hug] ')'  :Call
 	    | '.' id  :Dot
-	    | '^'     :Deref                                      # changed: deref, no '->'
+	    | '^'     :Deref
 	    | '++'    :Post_incr
 	    | '--'    :Post_decr
             )*
@@ -193,12 +193,12 @@ postfix_expr
 primary_expr
 	: id             :Variable
 	| integer        :Literal    # TODO when we have hex, octal, etc., we need to preserve that distinction
-	| STRING_LITERAL :String    # TODO chars as well
+	| string_literal :String
         | char_literal   :Char_literal
 	| '(' expr ')'
 	.
 
-STRING_LITERAL ~: /"([^"]*)"/ FNORD.   # TODO
+string_literal ~: /"([^"]*)"/ FNORD.   # TODO
 char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 
 FNORD         ~:      whitespace*.
