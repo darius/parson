@@ -51,13 +51,13 @@ p7, = parser.expr('a || b || c')
 #. 'int *a;'
 ## cdef('let a: ^^int;')
 #. 'int **a;'
-## cdef('let f: ^func()int;')
+## cdef('let f: ^()int;')
 #. 'int *f(void);'
 ## cdef('to f(): ^int {}')   # XXX should be 'int *f(void)...'
 #. 'int * f(void) {\n    \n}'
-## cdef('let f: ^func()^int;')   # XXX should be 'int *(*f)(void);'
+## cdef('let f: ^()^int;')   # XXX should be 'int *(*f)(void);'
 #. 'int **f(void);'
-## cdef('let f: ^func(^func()void)^func()void;')   # XXX should be void (*f(void (*)(void)))(void); I think
+## cdef('let f: ^(^()void) ^()void;')   # XXX should be void (*f(void (*)(void)))(void); I think
 #. 'void **f((void)(void) *)(void);'
 ## cdef('let api: [10]^int;')
 #. 'int *api[10];'
