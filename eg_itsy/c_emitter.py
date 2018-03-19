@@ -120,7 +120,7 @@ class DeclPair(Visitor):
 decl_pair = DeclPair()
 
 def c_params(t):
-    return ', '.join(map(c_type, t.param_types))
+    return ', '.join(map(c_type, t.param_types)) if t.param_types else 'void'
 
 class CType(Visitor):
 
