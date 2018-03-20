@@ -2,6 +2,7 @@
 Emit C code from an AST.
 """
 
+from ast import Void
 from structs import Visitor
 
 def indent(s):
@@ -38,15 +39,7 @@ class CEmitter(Visitor):
                                embrace(enums))
 
     def To(self, t):
-        return_type = ('void' if t.opt_return_type is None
-                       else c_type(t.opt_return_type))
-        params_c = ', '.join(c_decl(type_, name)
-                             for names, type_ in t.params
-                             for name in names)
-        return '%s %s(%s) %s' % (return_type,
-                                 t.name,
-                                 params_c or 'void',
-                                 c(t.body))
+        return '%s %s' % (c_decl(t.signature, t.name), c(t.body))
 
     def Exp(self, t):
         return opt_c_exp(t.opt_exp, ';', '%s;')
@@ -98,10 +91,12 @@ c = c_emit = CEmitter()
 
 
 # Types
-# XXX Function stuff untried, probably all wrong
+
+def c_type(type_):
+    return c_decl(type_, '')
 
 def c_decl(type_, name):
-    return '%s %s' % decl_pair(type_, name)
+    return ('%s %s' % decl_pair(type_, name)).rstrip()
 
 class DeclPair(Visitor):
 
@@ -109,34 +104,30 @@ class DeclPair(Visitor):
         return t.name, e
 
     def Pointer(self, t, e):
-        return self(t.type, '*%s' % e) # XXX need parens sometimes
+        return self(t.type, '*%s' % hug(e))
 
     def Array(self, t, e):
-        return self(t.type, '%s[%s]' % (e, c_exp(t.size, 0)))
+        return self(t.type, '%s[%s]' % (hug(e), c_exp(t.size, 0)))
 
     def Function(self, t, e):
-        return self(t.return_type, '%s(%s)' % (e, c_params(t))) # XXX parens
+        params_c = ', '.join(map(c_type, t.param_types))
+        return self(t.return_type, '%s(%s)' % (hug(e), params_c or 'void'))
+
+    def Signature(self, t, e):
+        # A signature is like a Function type, but with names to the params.
+        return_type = t.opt_return_type or Void()
+        params_c = ', '.join(c_decl(type_, name)
+                             for names, type_ in t.params
+                             for name in names)
+        return self(return_type, '%s(%s)' % (hug(e), params_c or 'void'))
 
 decl_pair = DeclPair()
 
-def c_params(t):
-    return ', '.join(map(c_type, t.param_types)) if t.param_types else 'void'
-
-class CType(Visitor):
-
-    def Type_name(self, t):
-        return t.name
-
-    def Pointer(self, t):
-        return '%s *' % self(t.type) # XXX right? also XXX parentheses sometimes, here and below
-
-    def Array(self, t):
-        return '%s[%s]' % (self(t.type), c_exp(t.size, 0))
-
-    def Function(self, t):
-        return '(%s)(%s)' % (c_type(t.return_type), c_params(t))
-
-c_type = CType()
+def hug(s):
+    if (all(ch.isalnum() or ch == '_' for ch in s) # XXX temp hack till we handle precedence right
+        or (s.startswith('(') and s.endswith(')'))): # XXX an even wronger hack
+        return s
+    return '(%s)' % s
 
 
 # Expressions

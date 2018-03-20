@@ -14,8 +14,9 @@ external_declaration
 	.
 
 function_definition
-	: "to" id '(' [param_decl ** ',' :hug] ')' (':' type | :None)
-          block  :To
+	: "to" id 
+            ['(' [param_decl ** ',' :hug] ')' (':' type | :None)  :Signature]
+            block  :To
         .
 
 param_decl

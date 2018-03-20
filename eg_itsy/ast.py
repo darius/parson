@@ -13,7 +13,9 @@ def TBD(*args):
 class Let(       Struct('names type opt_exp')): pass
 class Array_decl(Struct('name type exps')): pass
 class Enum(      Struct('opt_name pairs')): pass
-class To(        Struct('name params opt_return_type body')): pass
+class To(        Struct('name signature body')): pass
+
+class Signature( Struct('params opt_return_type')): pass
 
 
 # Types
@@ -23,6 +25,8 @@ class Pointer(   Struct('type')): pass
 class Array(     Struct('size type')): pass
 class Function(  Struct('param_types return_type')): pass
 # TODO rename fields like 'type' to 'base_type' or something
+
+
 
 def Void(): return Type_name('void')  # for now, anyway
 

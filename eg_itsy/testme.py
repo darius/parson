@@ -19,11 +19,11 @@ p1 = 'let b: [5]int;'
 
 p2 = 'let b: [5]^int;'
 ## cdef(p2)
-#. 'int *b[5];'
+#. 'int *(b[5]);'
 
 p3 = 'let b: [8][1]int;'
 ## cdef(p3)
-#. 'int b[8][1];'
+#. 'int (b[8])[1];'
 
 ## cdef('to f(): void {}')
 #. 'void f(void) {\n    \n}'
@@ -50,23 +50,29 @@ p7, = parser.expr('a || b || c')
 ## cdef('let a: ^int;')
 #. 'int *a;'
 ## cdef('let a: ^^int;')
-#. 'int **a;'
+#. 'int *(*a);'
 ## cdef('let f: ^()int;')
-#. 'int *f(void);'
-## cdef('to f(): ^int {}')   # XXX should be 'int *f(void)...'
-#. 'int * f(void) {\n    \n}'
-## cdef('let f: ^()^int;')   # XXX should be 'int *(*f)(void);'
-#. 'int **f(void);'
-## cdef('let f: ^(^()void) ^()void;')   # XXX should be void (*f(void (*)(void)))(void); I think
-#. 'void **f((void)(void) *)(void);'
+#. 'int (*f)(void);'
+## cdef('to f(): ^int {}')
+#. 'int *(f(void)) {\n    \n}'
+## cdef('let f: ^()^int;')
+#. 'int *(*f)(void);'
+## cdef('let f: ^()void;')
+#. 'void (*f)(void);'
+## cdef('to g(): ^()void {return f;}')
+#. 'void (*(g(void)))(void) {\n    return f;\n}'
+## cdef('to f(h: ^()void): ^()void {}')
+#. 'void (*(f(void (*h)(void))))(void) {\n    \n}'
+## cdef('let f: ^(^()void) ^()void;')
+#. 'void (*(*f)(void (*)(void)))(void);'
 ## cdef('let api: [10]^int;')
-#. 'int *api[10];'
-## cdef('let pai: ^[10]int;')   # XXX should be 'int (*pai)[10];'
-#. 'int *pai[10];'
+#. 'int *(api[10]);'
+## cdef('let pai: ^[10]int;')
+#. 'int (*pai)[10];'
 
 # XXX
 ## cdef('let a: ^[3]^[5]int;')
-#. 'int **a[3][5];'
+#. 'int (*((*a)[3]))[5];'
 
 
 with open('eg/examples.itsy') as f: examples = f.read()
@@ -131,7 +137,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. int16 arg1[max_insns];
 #. int16 arg2[max_insns];
 #. 
-#. char *names[4] = {
+#. char *(names[4]) = {
 #.     "win",
 #.     "eat",
 #.     "fork",
@@ -152,7 +158,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #. 
 #. uint8 occupied[max_insns];
 #. 
-#. void after(char ch, int start, int end, int **next_states) {
+#. void after(char ch, int start, int end, int *(*next_states)) {
 #.     while (start != end) {
 #.         int r = arg1[start];
 #.         int s = arg2[start];
@@ -269,7 +275,7 @@ with open('eg/regex.itsy') as f: regex = f.read()
 #.     return state;
 #. }
 #. 
-#. int main(int argc, char **argv) {
+#. int main(int argc, char *(*argv)) {
 #.     if (argc != 2) {
 #.         error("Usage: grep pattern");
 #.     }
