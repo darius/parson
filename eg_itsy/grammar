@@ -41,7 +41,7 @@ enumerator
         .
 
 var_decl
-        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'     :Let
+        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'    :Let
         | "array" id ':' type '=' '{' [elem_exp ** ',' :hug] ','? '}' :Array_decl  # ugh?
         .
 
@@ -50,7 +50,7 @@ var_decl
 
 type
         : '^' type                                  :Pointer
-        | '[' (exp | :None) ']' type               :Array
+        | '[' (exp | :None) ']' type                :Array
         | '(' [type :'' :hug] ** ',' :hug ')' type  :Signature
         | "void"                                    :Void
         | id                                        :Type_name
@@ -65,22 +65,22 @@ block
 
 statement
 	: block
-	| "while" exp block                  :While
-	| "do" block "while" exp ';'         :Do
+	| "while" exp block                   :While
+	| "do" block "while" exp ';'          :Do
 	| "for" (exp | :None) ';' (exp | :None) ';' (exp | :None) block
                                               :For
 	| "continue" ';'                      :Continue
 	| "break" ';'                         :Break
-	| "return" (exp | :None) ';'         :Return
+	| "return" (exp | :None) ';'          :Return
 	| "if" exp block ("else" "if" exp block)* ("else" block | :None)
                                               :hug :Ifs
-	| "match" exp '{' [case* :hug] '}'   :Switch
-	| (exp | :None) ';'                  :Exp
+	| "match" exp '{' [case* :hug] '}'    :Switch
+	| (exp | :None) ';'                   :Exp
 	.
 
 case
 	: "on" elem_exp ++ ',' :hug block  :Case
-	| "else"                block  :Default
+	| "else"                    block  :Default
         .
 
 
@@ -128,37 +128,37 @@ logical_and_exp
 
 exp3
         : exp4 ( '=='     :'==' exp4 :Binary_exp
-                | '!='     :'!=' exp4 :Binary_exp
-                | '<='     :'<=' exp4 :Binary_exp
-                | '>='     :'>=' exp4 :Binary_exp
-                | '<' !'=' :'<'  exp4 :Binary_exp
-                | '>' !'=' :'>'  exp4 :Binary_exp
-                )*
+               | '!='     :'!=' exp4 :Binary_exp
+               | '<='     :'<=' exp4 :Binary_exp
+               | '>='     :'>=' exp4 :Binary_exp
+               | '<' !'=' :'<'  exp4 :Binary_exp
+               | '>' !'=' :'>'  exp4 :Binary_exp
+               )*
         .
 
 exp4
         : exp5 ( '+' !/[+=]/ :'+' exp5 :Binary_exp
-                | '-' !/[-=]/ :'-' exp5 :Binary_exp
-                | '|' !/[|=]/ :'|' exp5 :Binary_exp
-                | '@' !'='    :'@' exp5 :Binary_exp
-                )*
+               | '-' !/[-=]/ :'-' exp5 :Binary_exp
+               | '|' !/[|=]/ :'|' exp5 :Binary_exp
+               | '@' !'='    :'@' exp5 :Binary_exp
+               )*
         .
 
 exp5
         : unary_exp ( '*'  !'='    :'*'  unary_exp :Binary_exp
-                     | '/'  !'='    :'/'  unary_exp :Binary_exp
-                     | '%'  !'='    :'%'  unary_exp :Binary_exp
-                     | '&'  !/[&=]/ :'&'  unary_exp :Binary_exp
-                     | '<<' !'='    :'<<' unary_exp :Binary_exp
-                     | '>>' !'='    :'>>' unary_exp :Binary_exp
-                     )*
+                    | '/'  !'='    :'/'  unary_exp :Binary_exp
+                    | '%'  !'='    :'%'  unary_exp :Binary_exp
+                    | '&'  !/[&=]/ :'&'  unary_exp :Binary_exp
+                    | '<<' !'='    :'<<' unary_exp :Binary_exp
+                    | '>>' !'='    :'>>' unary_exp :Binary_exp
+                    )*
         .
 
 unary_exp
 	: '++' unary_exp           :Pre_incr
 	| '--' unary_exp           :Pre_decr
 	| unary_operator unary_exp :Unary_exp
-	| "sizeoftype" type         :Sizeof_type
+	| "sizeoftype" type        :Sizeof_type
         | "sizeof" unary_exp       :Sizeof
         | postfix_exp
 	.
@@ -175,10 +175,10 @@ postfix_exp
 	: primary_exp
             ( '[' exp ']'                           :Index
 	    | '(' [assignment_exp ** ',' :hug] ')'  :Call
-	    | '.' id  :Dot
-	    | '^'     :Deref
-	    | '++'    :Post_incr
-	    | '--'    :Post_decr
+	    | '.' id   :Dot
+	    | '^'      :Deref
+	    | '++'     :Post_incr
+	    | '--'     :Post_decr
             | ':' type :Cast    # TODO is this a good syntax?
             )*
 	.
