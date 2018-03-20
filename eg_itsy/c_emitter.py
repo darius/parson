@@ -30,7 +30,9 @@ class CEmitter(Visitor):
                          for name in t.names)
 
     def Array_decl(self, t):
-        return '%s = %s;' % (c_decl(t.type, t.name),
+        if len(t.names) != 1:
+            raise Exception("XXX yadda yadda")
+        return '%s = %s;' % (c_decl(t.type, t.names[0]),
                              embrace(c_exp(e, elem_prec) + ','
                                      for e in t.exps))
 

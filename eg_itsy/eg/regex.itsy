@@ -15,9 +15,9 @@ let ninsns:       int;
 let accepts, ops: [max_insns]uint8;
 let arg1, arg2:   [max_insns]int16;
 
-array names: [4]^char = {   # TODO leave out the 4
+let names: [4]^char = [   # TODO leave out the 4
     "win", "eat", "fork", "loop",
-}
+];
 
 to dump1(pc: int) {
     printf("%c %2u: %-4s ", if accepts[pc] {'*'} else {' '}, pc, names[ops[pc]]);

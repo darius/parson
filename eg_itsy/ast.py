@@ -12,7 +12,7 @@ def TBD(*args):
 
 class To(        Struct('name signature body')): pass
 class Let(       Struct('names type opt_exp')): pass
-class Array_decl(Struct('name type exps')): pass
+class Array_decl(Struct('names type exps')): pass   # TODO should really be just one name
 class Enum(      Struct('opt_name pairs')): pass
 
 

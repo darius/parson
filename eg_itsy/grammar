@@ -41,8 +41,10 @@ enumerator
         .
 
 var_decl
-        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'  :Let
-        | "array" id ':' type '=' '{' [elem_exp**',' :hug] ','? '}' :Array_decl  # ugh?
+        : "let" [id++',' :hug] ':' type ( '=' '[' [elem_exp**',' :hug] ','? ']' ';' :Array_decl  # till we have array literals in exps
+                                        | '=' elem_exp ';'  :Let
+                                        |     :None    ';'  :Let
+                                        )
         .
 
 
@@ -197,7 +199,7 @@ char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /#.*/.
-keyword       ~:      /array|as|break|continue|do|else|enum|for|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
+keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.
