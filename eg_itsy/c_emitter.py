@@ -114,9 +114,9 @@ class DeclPair(Visitor):
                     1)
 
     def Signature(self, t, e, p):
-        params_c = ', '.join(c_decl(type_, name) for type_, name in t.params)
+        c_params = ', '.join(c_decl(type_, name) for type_, name in t.params)
         return self(t.return_type,
-                    '%s(%s)' % (hug(e, p, 1), params_c or 'void'),
+                    '%s(%s)' % (hug(e, p, 1), c_params or 'void'),
                     1)
 
 decl_pair = DeclPair()
