@@ -12,7 +12,6 @@ def TBD(*args):
 
 class To(        Struct('name signature body')): pass
 class Let(       Struct('names type opt_exp')): pass
-class Array_decl(Struct('names type exps')): pass   # TODO should really be just one name
 class Enum(      Struct('opt_name pairs')): pass
 
 
@@ -80,3 +79,4 @@ class Call(        Struct('e1 args')): pass
 class Dot(         Struct('e1 field')): pass
 class And(         Struct('e1 e2')): pass
 class Or(          Struct('e1 e2')): pass
+class Compound_exp(Struct('exps')): pass

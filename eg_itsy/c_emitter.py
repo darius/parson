@@ -29,13 +29,6 @@ class CEmitter(Visitor):
         return '\n'.join('%s%s;' % (c_decl(t.type, name), assign)
                          for name in t.names)
 
-    def Array_decl(self, t):
-        if len(t.names) != 1:
-            raise Exception("XXX yadda yadda")
-        return '%s = %s;' % (c_decl(t.type, t.names[0]),
-                             embrace(c_exp(e, elem_prec) + ','
-                                     for e in t.exps))
-
     def Enum(self, t):
         enums = ['%s%s,' % (name, opt_c_exp(opt_exp, ' = '))
                  for name, opt_exp in t.pairs]
@@ -216,6 +209,11 @@ class CExpEmitter(Visitor):
 
     def Or(self, t, p):
         return fmt2(p, '||', t.e1, t.e2)
+
+    def Compound_exp(self, t, p):
+        # XXX I think C imposes restrictions on where this can appear?
+        # Also, the indentation might be awful without more work
+        return embrace(c_exp(e, elem_prec) + ',' for e in t.exps)
 
 c_exp_emitter = CExpEmitter()
 

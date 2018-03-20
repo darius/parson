@@ -41,10 +41,7 @@ enumerator
         .
 
 var_decl
-        : "let" [id++',' :hug] ':' type ( '=' '[' [elem_exp**',' :hug] ','? ']' ';' :Array_decl  # till we have array literals in exps
-                                        | '=' elem_exp ';'  :Let
-                                        |     :None    ';'  :Let
-                                        )
+        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'  :Let
         .
 
 
@@ -191,6 +188,7 @@ primary_exp
 	| string_literal :String
         | char_literal   :Char_literal
 	| '(' exp ')'
+        | '[' elem_exp**',' :hug ','? ']' :Compound_exp
 	.
 
 string_literal ~: /"([^"]*)"/ FNORD.   # TODO
