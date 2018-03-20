@@ -10,28 +10,10 @@ def TBD(*args):
 
 # Declarations
 
+class To(        Struct('name signature body')): pass
 class Let(       Struct('names type opt_exp')): pass
 class Array_decl(Struct('name type exps')): pass
 class Enum(      Struct('opt_name pairs')): pass
-class To(        Struct('name signature body')): pass
-
-
-# Types
-
-class Type_name( Struct('name')): pass
-class Pointer(   Struct('type')): pass
-class Array(     Struct('size type')): pass
-class Signature( Struct('params return_type')): pass  # params are (type, (name or '')) pairs
-
-# TODO rename fields like 'type' to 'base_type' or something
-
-def Void(): return Type_name('void')  # for now, anyway
-
-def spread_params(names, type_):
-    return tuple((type_, name) for name in names)
-
-def chain(*seqs):
-    return sum(seqs, ())
 
 
 # Statements
@@ -50,6 +32,24 @@ class Switch(    Struct('exp cases')): pass
 
 class Case(      Struct('exps block')): pass
 class Default(   Struct('block')): pass
+
+
+# Types
+
+class Type_name( Struct('name')): pass
+class Pointer(   Struct('type')): pass
+class Array(     Struct('size type')): pass
+class Signature( Struct('params return_type')): pass  # params are (type, (name or '')) pairs
+
+# TODO rename fields like 'type' to 'base_type' or something
+
+def Void(): return Type_name('void')  # for now, anyway
+
+def spread_params(names, type_):
+    return tuple((type_, name) for name in names)
+
+def chain(*seqs):
+    return sum(seqs, ())
 
 
 # Expressions

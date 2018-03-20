@@ -20,6 +20,9 @@ def opt_c_exp(opt_e, if_none, if_some, p=0):
 
 class CEmitter(Visitor):
 
+    def To(self, t):
+        return '%s %s' % (c_decl(t.signature, t.name), c(t.body))
+
     def Let(self, t):
         if t.opt_exp is not None and len(t.names) != 1:
             raise Exception("XXX yadda yadda")
@@ -38,8 +41,8 @@ class CEmitter(Visitor):
         return 'enum %s%s;' % (t.opt_name + ' ' if t.opt_name else '',
                                embrace(enums))
 
-    def To(self, t):
-        return '%s %s' % (c_decl(t.signature, t.name), c(t.body))
+    def Block(self, t):
+        return embrace(map(c, t.parts));
 
     def Exp(self, t):
         return opt_c_exp(t.opt_exp, ';', '%s;')
@@ -77,21 +80,17 @@ class CEmitter(Visitor):
         return 'switch (%s) %s' % (c_exp(t.exp, 0),
                                    embrace(map(c, t.cases)))
 
-    def Case(self, t):          # XXX not actually a stmt
+    def Case(self, t):
         cases = '\n'.join('case %s:' % c_exp(e, 0) for e in t.exps)
         return '%s %s break;' % (cases, c(t.block))
 
     def Default(self, t):
         return 'default: %s break;' % c(t.block)
 
-    def Block(self, t):
-        return embrace(map(c, t.parts));
-
 c = c_emit = CEmitter()
 
 
 # Types
-# TODO make Function be Signature with '' for names?
 
 def c_type(type_):
     return c_decl(type_, '')
