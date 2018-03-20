@@ -83,7 +83,7 @@ p7, = parser.exp('a || b || c')
 #.     int y;
 #. }
 
-ce, = parser.exp('([1,2]): []int')
+ce, = parser.exp('[1,2]: []int')
 ## print c_exp(ce)
 #. (int []) {
 #.     1,
