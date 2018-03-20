@@ -25,7 +25,8 @@ param_decl
         .
 
 decl
-        : type_decl | var_decl
+        : type_decl
+        | var_decl
         .
 
 type_decl
@@ -33,8 +34,12 @@ type_decl
         | "enum" (id | :None) '{'
               [enumerator**',' :hug] ','?
           '}'                                    :Enum
-        | "struct" id '{' [param_decl* :hug] '}' :TBD
-        | "union"  id '{' [param_decl* :hug] '}' :TBD
+        | "struct" :'struct' id '{' [field* :chain] '}'  :Record
+        | "union"  :'union'  id '{' [field* :chain] '}'  :Record
+        .
+
+field
+        : param_decl ';'   # TODO anonymous sub-unions, etc.
         .
 
 enumerator

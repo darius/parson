@@ -77,6 +77,12 @@ p7, = parser.exp('a || b || c')
 ## cdef('typedef VTable = [5]^()int;')
 #. 'typedef int (*VTable[5])(void);'
 
+## print cdef('struct A { x, y: int; }')
+#. struct A {
+#.     int x;
+#.     int y;
+#. }
+
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)
 #. int a = 5;

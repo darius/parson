@@ -13,6 +13,9 @@ def embrace(lines):
 def opt_c_exp(opt_e, if_some='', p=0):
     return '' if opt_e is None else if_some + c_exp(opt_e, p)
 
+def opt_space(opt_s):
+    return ' %s' % opt_s if opt_s else ''
+
 
 # Declarations and statements (either can appear in a block)
 # TODO rename 'declaration' to avoid confusion with c_decl below
@@ -35,8 +38,13 @@ class CEmitter(Visitor):
     def Enum(self, t):
         enums = ['%s%s,' % (name, opt_c_exp(opt_exp, ' = '))
                  for name, opt_exp in t.pairs]
-        return 'enum %s%s;' % (t.opt_name + ' ' if t.opt_name else '',
-                               embrace(enums))
+        return 'enum%s %s;' % (opt_space(t.opt_name), embrace(enums))
+
+    def Record(self, t):
+        return '%s%s %s' % (t.kind,
+                            opt_space(t.opt_name),
+                            embrace(c_decl(type_, name) + ';'
+                                    for type_, name in t.fields))
 
     def Block(self, t):
         return embrace(map(c, t.parts));
