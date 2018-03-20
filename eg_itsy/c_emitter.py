@@ -22,6 +22,9 @@ class CEmitter(Visitor):
     def To(self, t):
         return '%s %s' % (c_decl(t.signature, t.name), c(t.body))
 
+    def Typedef(self, t):
+        return 'typedef %s;' % c_decl(t.type, t.name)
+
     def Let(self, t):
         if t.opt_exp is not None and len(t.names) != 1:
             raise Exception("XXX yadda yadda")

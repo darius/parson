@@ -1,14 +1,15 @@
 # Something like C but re-syntaxed.
-# TODO I think I'll be able to use x:y for module-relative names
 
-top:    '' module :end.
+top
+        : '' module :end.
+
+module
+	: declaration*.
+
 
 # Declarations
 
-module
-	: external_declaration*.
-
-external_declaration
+declaration
 	: function_definition
 	| decl
 	.
@@ -28,7 +29,7 @@ decl
         .
 
 type_decl
-        : "typedef" id '=' type ';'              :TBD
+        : "typedef" id '=' type ';'              :Typedef
         | "enum" (id | :None) '{'
               [enumerator**',' :hug] ','?
           '}'                                    :Enum

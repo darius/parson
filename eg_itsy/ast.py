@@ -11,6 +11,7 @@ def TBD(*args):
 # Declarations
 
 class To(        Struct('name signature body')): pass
+class Typedef(   Struct('name type')): pass
 class Let(       Struct('names type opt_exp')): pass
 class Enum(      Struct('opt_name pairs')): pass
 

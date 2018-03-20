@@ -72,6 +72,11 @@ p7, = parser.exp('a || b || c')
 ## cdef('let a: ^[3]^[5]int;')
 #. 'int (*(*a)[3])[5];'
 
+## cdef('typedef a = ^b;')
+#. 'typedef b *a;'
+## cdef('typedef VTable = [5]^()int;')
+#. 'typedef int (*VTable[5])(void);'
+
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)
 #. int a = 5;
