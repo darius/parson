@@ -57,15 +57,15 @@ class CEmitter(Visitor):
         return 'continue;'
 
     def While(self, t):
-        return 'while (%s) %s' % (c_exp(t.exp, 0), c(t.block))
+        return 'while (%s) %s' % (c_exp(t.exp), c(t.block))
 
     def Do(self, t):
-        return 'do %s while(%s)' % (c(t.block), c_exp(t.exp, 0))
+        return 'do %s while(%s)' % (c(t.block), c_exp(t.exp))
 
     def Ifs(self, t):
         clauses = zip(t.parts[0:-1:2], t.parts[1::2])
         else_block = t.parts[-1]
-        branches = ['if (%s) %s' % (c_exp(exp, 0), c(block))
+        branches = ['if (%s) %s' % (c_exp(exp), c(block))
                     for exp, block in clauses]
         if else_block: branches.append(c(else_block))
         return ' else '.join(branches)
@@ -77,11 +77,11 @@ class CEmitter(Visitor):
                                         c(t.block))
 
     def Switch(self, t):
-        return 'switch (%s) %s' % (c_exp(t.exp, 0),
+        return 'switch (%s) %s' % (c_exp(t.exp),
                                    embrace(map(c, t.cases)))
 
     def Case(self, t):
-        cases = '\n'.join('case %s:' % c_exp(e, 0) for e in t.exps)
+        cases = '\n'.join('case %s:' % c_exp(e) for e in t.exps)
         return '%s %s break;' % (cases, c(t.block))
 
     def Default(self, t):
@@ -110,7 +110,7 @@ class DeclPair(Visitor):
 
     def Array(self, t, e, p):
         return self(t.type,
-                    '%s[%s]' % (hug(e, p, 1), c_exp(t.size, 0)),
+                    '%s[%s]' % (hug(e, p, 1), c_exp(t.size)),
                     1)
 
     def Signature(self, t, e, p):
@@ -127,7 +127,10 @@ def hug(s, outer, inner):
 
 # Expressions
 
-class CExp(Visitor):
+def c_exp(e, p=0):              # p: surrounding precedence
+    return c_exp_emitter(e, p)
+
+class CExpEmitter(Visitor):
 
     def Literal(self, t, p):
         return repr(t.value)
@@ -158,7 +161,7 @@ class CExp(Visitor):
 
     def Cast(self, t, p):
         return wrap(cast_prec, p, '(%s) %s' % (c_type(t.type),
-                                               c_exp(t.e1, cast_prec)))
+                                               self(t.e1, cast_prec)))
 
     def Seq(self, t, p):
         return fmt2(p, ',', t.e1, t.e2, fmt_str = '%s%s %s')
@@ -178,9 +181,9 @@ class CExp(Visitor):
     def If_exp(self, t, p):
         lp, rp = binaries['?:']
         return wrap(rp, p, # TODO recheck that rp is the right thing here in place of the usual lp
-                    '%s ? %s : %s' % (c_exp(t.e1, lp),
-                                      c_exp(t.e2, 0),
-                                      c_exp(t.e3, rp)))
+                    '%s ? %s : %s' % (self(t.e1, lp),
+                                      self(t.e2, 0),
+                                      self(t.e3, rp)))
 
     def Assign(self, t, p):
         return fmt2(p, (t.opt_binop or '') + '=', t.e1, t.e2) # TODO clumsy
@@ -191,20 +194,20 @@ class CExp(Visitor):
 
     def Index(self, t, p):
         return wrap(postfix_prec, p,
-                    '%s[%s]' % (c_exp(t.e1, postfix_prec),
-                                c_exp(t.e2, 0)))
+                    '%s[%s]' % (self(t.e1, postfix_prec),
+                                self(t.e2, 0)))
 
     def Call(self, t, p):
         return wrap(postfix_prec, p,
-                    '%s(%s)' % (c_exp(t.e1, postfix_prec),
-                                ', '.join(c_exp(e, elem_prec)
+                    '%s(%s)' % (self(t.e1, postfix_prec),
+                                ', '.join(self(e, elem_prec)
                                           for e in t.args)))
 
     def Dot(self, t, p):
         if isinstance(t.e1, Deref):
-            s = '%s->%s' % (c_exp(t.e1.exp, postfix_prec), t.field)
+            s = '%s->%s' % (self(t.e1.exp, postfix_prec), t.field)
         else:
-            s = '%s.%s' % (c_exp(t.e1, postfix_prec), t.field)
+            s = '%s.%s' % (self(t.e1, postfix_prec), t.field)
         return wrap(postfix_prec, p, s)
 
     def And(self, t, p):
@@ -213,7 +216,7 @@ class CExp(Visitor):
     def Or(self, t, p):
         return fmt2(p, '||', t.e1, t.e2)
 
-c_exp = CExp()
+c_exp_emitter = CExpEmitter()
 
 
 # Parenthesizing by precedence
