@@ -26,13 +26,13 @@ class CEmitter(Visitor):
     def Let(self, t):
         if t.opt_exp is not None and len(t.names) != 1:
             raise Exception("XXX yadda yadda")
-        assign = opt_c_exp(t.opt_exp, '', ' = %s', list_context)
+        assign = opt_c_exp(t.opt_exp, '', ' = %s', elem_prec)
         return '\n'.join('%s%s;' % (c_decl(t.type, name), assign)
                          for name in t.names)
 
     def Array_decl(self, t):
         return '%s = %s;' % (c_decl(t.type, t.name),
-                             embrace(c_exp(e, list_context) + ','
+                             embrace(c_exp(e, elem_prec) + ','
                                      for e in t.exps))
 
     def Enum(self, t):
@@ -197,7 +197,7 @@ class CExp(Visitor):
     def Call(self, t, p):
         return wrap(postfix_prec, p,
                     '%s(%s)' % (c_exp(t.e1, postfix_prec),
-                                ', '.join(c_exp(e, list_context)
+                                ', '.join(c_exp(e, elem_prec)
                                           for e in t.args)))
 
     def Dot(self, t, p):
@@ -243,8 +243,7 @@ cast_prec    = binaries['(cast)'][0]
 unary_prec   = binaries['(unary)'][0]
 postfix_prec = binaries['(postfix)'][0]
 
-list_context = binaries['='][0]  # The next precedence after ','
-
+elem_prec    = binaries['='][0]  # The next precedence after ','
 # Make the left precedence of the assignment operator be unary_expression, and right-associative:
 binaries['='] = (unary_prec, binaries['='][0])
 
