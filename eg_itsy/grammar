@@ -160,7 +160,7 @@ unary_exp
 	: '++' unary_exp           :Pre_incr
 	| '--' unary_exp           :Pre_decr
 	| unary_operator unary_exp :Unary_exp
-	| "sizeoftype" type        :Sizeof_type
+	| "sizeof" ':' type        :Sizeof_type
         | "sizeof" unary_exp       :Sizeof
         | postfix_exp
 	.
@@ -199,7 +199,7 @@ char_literal   ~: /'([^']*)'/ FNORD.  # TODO
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /#.*/.
-keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|sizeof|sizeoftype|struct|to|typedef|union|void|while/ /\b/.
+keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|sizeof|struct|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.
