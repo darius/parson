@@ -37,12 +37,12 @@ type_decl
         .
 
 enumerator
-        : id ('=' cexpr | :None) :hug
+        : id ('=' elem_expr | :None) :hug
         .
 
 var_decl
-        : "let" [id++',' :hug] ':' type ('=' expr | :None) ';'     :Let
-        | "array" id ':' type '=' '{' [cexpr ** ',' :hug] ','? '}' :Array_decl  # ugh?
+        : "let" [id++',' :hug] ':' type ('=' elem_expr | :None) ';'     :Let
+        | "array" id ':' type '=' '{' [elem_expr ** ',' :hug] ','? '}' :Array_decl  # ugh?
         .
 
 
@@ -90,7 +90,7 @@ expr
 	: assignment_expr (',' assignment_expr :Seq)*
 	.
 
-cexpr = assignment_expr.   # "no comma" expression. TODO better name
+elem_expr = assignment_expr.   # "no comma" expression.
 
 assignment_expr
 	: unary_expr assignment_operator assignment_expr  :Assign

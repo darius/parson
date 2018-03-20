@@ -29,7 +29,6 @@ p3 = 'let b: [8][1]int;'
 #. 'void f(void) {\n    \n}'
 
 p4 = 'let a: int = (1, 2, 3);'
-p4 = 'let a: int = 1, 2, 3;'   # XXX ugh this syntax
 ## cdef(p4)
 #. 'int a = (1, 2, 3);'
 
