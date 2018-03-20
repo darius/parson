@@ -58,9 +58,7 @@ def chain(*seqs):
 def Ifs_exp(e1, e2, e3, *es):
     return If_exp(e1, e2, e3 if not es else Ifs_exp(e3, *es))
 
-class Literal(     Struct('value')): pass
-class String(      Struct('value')): pass
-class Char_literal(Struct('value')): pass
+class Literal(     Struct('text kind')): pass
 class Variable(    Struct('name')): pass
 class Address_of(  Struct('e1')): pass
 class Sizeof_type( Struct('type')): pass

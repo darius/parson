@@ -190,15 +190,15 @@ postfix_exp
 
 primary_exp
 	: id             :Variable
-	| integer        :Literal    # TODO when we have hex, octal, etc., we need to preserve that distinction
-	| string_literal :String
-        | char_literal   :Char_literal
+	| integer        :'integer' :Literal
+	| string_literal :'string'  :Literal
+        | char_literal   :'char'    :Literal
 	| '(' exp ')'
         | '[' elem_exp**',' :hug ','? ']' :Compound_exp
 	.
 
-string_literal ~: /"([^"]*)"/ FNORD.   # TODO
-char_literal   ~: /'([^']*)'/ FNORD.  # TODO
+string_literal ~: /("[^"]*")/ FNORD.   # TODO
+char_literal   ~: /('[^']*')/ FNORD.  # TODO
 
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
@@ -207,4 +207,4 @@ keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|si
 digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.
-integer:              digit+ FNORD :join :int.    # TODO negative too; and unsigned, etc.
+integer:              digit+ FNORD :join.    # TODO negative too; and unsigned, etc.

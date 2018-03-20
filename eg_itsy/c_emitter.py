@@ -138,13 +138,7 @@ def c_exp(e, p=0):              # p: surrounding precedence
 class CExpEmitter(Visitor):
 
     def Literal(self, t, p):
-        return repr(t.value)
-
-    def String(self, t, p):
-        return '"%s"' % t.value       # XXX escaping as C
-
-    def Char_literal(self, t, p):
-        return "'%s'" % t.value    # XXX escaping
+        return t.text
 
     def Variable(self, t, p):
         return t.name
