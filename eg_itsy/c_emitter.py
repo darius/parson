@@ -2,7 +2,6 @@
 Emit C code from an AST.
 """
 
-from ast import Void
 from structs import Visitor
 
 def indent(s):
