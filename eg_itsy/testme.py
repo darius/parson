@@ -70,7 +70,6 @@ p7, = parser.expr('a || b || c')
 ## cdef('let pai: ^[10]int;')
 #. 'int (*pai)[10];'
 
-# XXX
 ## cdef('let a: ^[3]^[5]int;')
 #. 'int (*(*a)[3])[5];'
 

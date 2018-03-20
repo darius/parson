@@ -114,19 +114,9 @@ class DeclPair(Visitor):
                     '%s[%s]' % (hug(e, p, 1), c_exp(t.size, 0)),
                     1)
 
-    def Function(self, t, e, p):
-        params_c = ', '.join(map(c_type, t.param_types))
-        return self(t.return_type,
-                    '%s(%s)' % (hug(e, p, 1), params_c or 'void'),
-                    1)
-
     def Signature(self, t, e, p):
-        # A signature is like a Function type, but with named params.
-        return_type = t.opt_return_type or Void()
-        params_c = ', '.join(c_decl(type_, name)
-                             for names, type_ in t.params
-                             for name in names)
-        return self(return_type,
+        params_c = ', '.join(c_decl(type_, name) for type_, name in t.params)
+        return self(t.return_type,
                     '%s(%s)' % (hug(e, p, 1), params_c or 'void'),
                     1)
 
