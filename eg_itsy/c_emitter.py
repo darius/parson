@@ -11,8 +11,8 @@ def indent(s):
 def embrace(lines):
     return '{\n    %s\n}' % indent('\n'.join(lines))
 
-def opt_c_exp(opt_e, if_none, if_some, p=0):
-    return if_none if opt_e is None else if_some % c_exp(opt_e, p)
+def opt_c_exp(opt_e, if_some='', p=0):
+    return '' if opt_e is None else if_some + c_exp(opt_e, p)
 
 
 # Declarations and statements (either can appear in a block)
@@ -26,7 +26,7 @@ class CEmitter(Visitor):
     def Let(self, t):
         if t.opt_exp is not None and len(t.names) != 1:
             raise Exception("XXX yadda yadda")
-        assign = opt_c_exp(t.opt_exp, '', ' = %s', elem_prec)
+        assign = opt_c_exp(t.opt_exp, ' = ', elem_prec)
         return '\n'.join('%s%s;' % (c_decl(t.type, name), assign)
                          for name in t.names)
 
@@ -36,7 +36,7 @@ class CEmitter(Visitor):
                                      for e in t.exps))
 
     def Enum(self, t):
-        enums = ['%s%s,' % (name, opt_c_exp(opt_exp, '', ' = %s'))
+        enums = ['%s%s,' % (name, opt_c_exp(opt_exp, ' = '))
                  for name, opt_exp in t.pairs]
         return 'enum %s%s;' % (t.opt_name + ' ' if t.opt_name else '',
                                embrace(enums))
@@ -45,10 +45,10 @@ class CEmitter(Visitor):
         return embrace(map(c, t.parts));
 
     def Exp(self, t):
-        return opt_c_exp(t.opt_exp, ';', '%s;')
+        return opt_c_exp(t.opt_exp) + ';'
 
     def Return(self, t):
-        return opt_c_exp(t.opt_exp, 'return;', 'return %s;')
+        return 'return%s;' % opt_c_exp(t.opt_exp, ' ')
 
     def Break(self, t):
         return 'break;'
@@ -71,10 +71,10 @@ class CEmitter(Visitor):
         return ' else '.join(branches)
 
     def For(self, t):
-        e1 = opt_c_exp(t.opt_e1, '', '%s')
-        e2 = opt_c_exp(t.opt_e2, '', '%s')
-        e3 = opt_c_exp(t.opt_e3, '', '%s')
-        return 'for (%s; %s; %s) %s' % (e1, e2, e3, c(t.block))
+        return 'for (%s; %s; %s) %s' % (opt_c_exp(t.opt_e1),
+                                        opt_c_exp(t.opt_e2),
+                                        opt_c_exp(t.opt_e3),
+                                        c(t.block))
 
     def Switch(self, t):
         return 'switch (%s) %s' % (c_exp(t.exp, 0),
