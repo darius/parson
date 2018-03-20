@@ -159,7 +159,7 @@ class CExp(Visitor):
 
     def Cast(self, t, p):
         return wrap(cast_prec, p, '(%s) %s' % (c_type(t.type),
-                                               c_exp(t.exp, cast_prec)))
+                                               c_exp(t.e1, cast_prec)))
 
     def Seq(self, t, p):
         return fmt2(p, ',', t.e1, t.e2, fmt_str = '%s%s %s')

@@ -27,10 +27,6 @@ class Signature( Struct('params return_type')): pass  # params are (type, (name 
 
 def Void(): return Type_name('void')  # for now, anyway
 
-def Function(param_types, return_type):
-    return Signature(tuple((type_, '') for type_ in param_types),
-                     return_type)
-
 def spread_params(names, type_):
     return tuple((type_, name) for name in names)
 
@@ -70,7 +66,7 @@ class Sizeof_type( Struct('type')): pass
 class Sizeof(      Struct('e1')): pass
 class Deref(       Struct('e1')): pass
 class Unary_exp(   Struct('unop e1')): pass
-class Cast(        Struct('type exp')): pass
+class Cast(        Struct('type e1')): pass
 class Seq(         Struct('e1 e2')): pass
 class Pre_incr(    Struct('e1')): pass
 class Pre_decr(    Struct('e1')): pass
