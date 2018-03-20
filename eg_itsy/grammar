@@ -184,7 +184,7 @@ postfix_exp
 	    | '^'                           :Deref
 	    | '++'                          :Post_incr
 	    | '--'                          :Post_decr
-            | ':' type                      :Cast    # TODO is this a good syntax?
+            | ':' type                      :Cast
             )*
 	.
 
