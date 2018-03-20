@@ -66,7 +66,7 @@ class Sizeof_type( Struct('type')): pass
 class Sizeof(      Struct('e1')): pass
 class Deref(       Struct('e1')): pass
 class Unary_exp(   Struct('unop e1')): pass
-class Cast(        Struct('type e1')): pass
+class Cast(        Struct('e1 type')): pass
 class Seq(         Struct('e1 e2')): pass
 class Pre_incr(    Struct('e1')): pass
 class Pre_decr(    Struct('e1')): pass

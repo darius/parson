@@ -155,8 +155,7 @@ expr5
         .
 
 unary_expr
-        : "as" type unary_expr      :Cast    # TODO what's a good syntax?
-	| '++' unary_expr           :Pre_incr
+	: '++' unary_expr           :Pre_incr
 	| '--' unary_expr           :Pre_decr
 	| unary_operator unary_expr :Unary_exp
 	| "sizeoftype" type         :Sizeof_type
@@ -180,6 +179,7 @@ postfix_expr
 	    | '^'     :Deref
 	    | '++'    :Post_incr
 	    | '--'    :Post_decr
+            | ':' type :Cast    # TODO is this a good syntax?
             )*
 	.
 
