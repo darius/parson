@@ -31,11 +31,11 @@ def Function(param_types, return_type):
     return Signature(tuple((type_, '') for type_ in param_types),
                      return_type)
 
-def flatten_signature(param_groups, opt_return_type):
-    params = tuple((type_, name)
-                   for names, type_ in param_groups
-                   for name in names)
-    return Signature(params, opt_return_type or Void())
+def spread_params(names, type_):
+    return tuple((type_, name) for name in names)
+
+def chain(*seqs):
+    return sum(seqs, ())
 
 
 # Statements

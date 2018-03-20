@@ -15,12 +15,12 @@ external_declaration
 
 function_definition
 	: "to" id 
-            ['(' [param_decl ** ',' :hug] ')' (':' type | :None)  :flatten_signature]
+            ['(' [param_decl ** ',' :chain] ')' [':' type | :Void] :Signature]
             block  :To
         .
 
 param_decl
-        : id ++ ',' :hug ':' type  :hug
+        : id ++ ',' :hug ':' type  :spread_params
         .
 
 decl
@@ -49,11 +49,11 @@ var_decl
 # Types
 
 type
-        : '^' type                         :Pointer
-        | '[' (expr | :None) ']' type      :Array
-        | '(' [type ** ',' :hug] ')' type  :Function
-        | "void"                           :Void
-        | id                               :Type_name
+        : '^' type                                  :Pointer
+        | '[' (expr | :None) ']' type               :Array
+        | '(' [type :'' :hug] ** ',' :hug ')' type  :Signature
+        | "void"                                    :Void
+        | id                                        :Type_name
         .
 
 
