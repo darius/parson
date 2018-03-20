@@ -102,6 +102,10 @@ with open('eg/examples.itsy') as f: examples = f.read()
 #.     memory[address] = set_field(cell, make_field_spec(L, R), memory[address]);
 #. }
 #. 
+#. int make16(uint8 a, uint8 b) {
+#.     return (int) a + ((int) b << 8);
+#. }
+#. 
 
 with open('eg/regex.itsy') as f: regex = f.read()
 ## cdefs(regex)

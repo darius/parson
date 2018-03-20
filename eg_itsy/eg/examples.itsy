@@ -25,3 +25,7 @@ to asm_store_field(address: Address, L, R: int, cell: Cell): void {
     }
     memory[address] = set_field(cell, make_field_spec(L, R), memory[address]);
 }
+
+to make16(a, b: uint8): int {
+   return as int a + (as int b) << 8;   # Trial syntax -- we'll see how it goes.
+}
