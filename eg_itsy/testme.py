@@ -64,8 +64,8 @@ p7, = parser.exp('a || b || c')
 #. 'void (*f(void (*h)(void)))(void) {\n    \n}'
 ## cdef('let f: ^(^()void) ^()void;')
 #. 'void (*(*f)(void (*)(void)))(void);'
-## cdef('let api: [10]^int;')
-#. 'int *api[10];'
+## cdef('let api: []^int = [NULL];')
+#. 'int *api[] = {\n    NULL,\n};'
 ## cdef('let pai: ^[10]int;')
 #. 'int (*pai)[10];'
 
@@ -81,6 +81,13 @@ p7, = parser.exp('a || b || c')
 #. struct A {
 #.     int x;
 #.     int y;
+#. }
+
+ce, = parser.exp('([1,2]): []int')
+## print c_exp(ce)
+#. (int []) {
+#.     1,
+#.     2,
 #. }
 
 with open('eg/examples.itsy') as f: examples = f.read()

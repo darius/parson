@@ -115,7 +115,7 @@ class DeclPair(Visitor):
 
     def Array(self, t, e, p):
         return self(t.type,
-                    '%s[%s]' % (hug(e, p, 1), c_exp(t.size)),
+                    '%s[%s]' % (hug(e, p, 1), opt_c_exp(t.size)),
                     1)
 
     def Signature(self, t, e, p):
