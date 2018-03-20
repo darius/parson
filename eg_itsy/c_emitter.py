@@ -65,10 +65,10 @@ class CEmitter(Visitor):
     def Ifs(self, t):
         clauses = zip(t.parts[0:-1:2], t.parts[1::2])
         else_block = t.parts[-1]
-        ifs = ' else '.join('if (%s) %s' % (c_exp(exp, 0), c(block))
-                            for exp, block in clauses)
-        return ifs + ('' if else_block is None
-                      else ' else %s' % c(else_block))
+        branches = ['if (%s) %s' % (c_exp(exp, 0), c(block))
+                    for exp, block in clauses]
+        if else_block: branches.append(c(else_block))
+        return ' else '.join(branches)
 
     def For(self, t):
         e1 = opt_c_exp(t.opt_e1, '', '%s')
