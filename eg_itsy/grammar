@@ -37,12 +37,12 @@ type_decl
         .
 
 enumerator
-        : id ('=' elem_expr | :None) :hug
+        : id ('=' elem_exp | :None) :hug
         .
 
 var_decl
-        : "let" [id++',' :hug] ':' type ('=' elem_expr | :None) ';'     :Let
-        | "array" id ':' type '=' '{' [elem_expr ** ',' :hug] ','? '}' :Array_decl  # ugh?
+        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'     :Let
+        | "array" id ':' type '=' '{' [elem_exp ** ',' :hug] ','? '}' :Array_decl  # ugh?
         .
 
 
@@ -50,7 +50,7 @@ var_decl
 
 type
         : '^' type                                  :Pointer
-        | '[' (expr | :None) ']' type               :Array
+        | '[' (exp | :None) ']' type               :Array
         | '(' [type :'' :hug] ** ',' :hug ')' type  :Signature
         | "void"                                    :Void
         | id                                        :Type_name
@@ -65,36 +65,36 @@ block
 
 statement
 	: block
-	| "while" expr block                  :While
-	| "do" block "while" expr ';'         :Do
-	| "for" (expr | :None) ';' (expr | :None) ';' (expr | :None) block
+	| "while" exp block                  :While
+	| "do" block "while" exp ';'         :Do
+	| "for" (exp | :None) ';' (exp | :None) ';' (exp | :None) block
                                               :For
 	| "continue" ';'                      :Continue
 	| "break" ';'                         :Break
-	| "return" (expr | :None) ';'         :Return
-	| "if" expr block ("else" "if" expr block)* ("else" block | :None)
+	| "return" (exp | :None) ';'         :Return
+	| "if" exp block ("else" "if" exp block)* ("else" block | :None)
                                               :hug :Ifs
-	| "match" expr '{' [case* :hug] '}'   :Switch
-	| (expr | :None) ';'                  :Exp
+	| "match" exp '{' [case* :hug] '}'   :Switch
+	| (exp | :None) ';'                  :Exp
 	.
 
 case
-	: "on" expr ++ ',' :hug block  :Case
+	: "on" elem_exp ++ ',' :hug block  :Case
 	| "else"                block  :Default
         .
 
 
 # Expressions
 
-expr
-	: assignment_expr (',' assignment_expr :Seq)*
+exp
+	: assignment_exp (',' assignment_exp :Seq)*
 	.
 
-elem_expr = assignment_expr.   # "no comma" expression.
+elem_exp = assignment_exp.   # "no comma" expression.
 
-assignment_expr
-	: unary_expr assignment_operator assignment_expr  :Assign
-	| conditional_expr
+assignment_exp
+	: unary_exp assignment_operator assignment_exp  :Assign
+	| conditional_exp
 	.
 
 assignment_operator
@@ -111,56 +111,56 @@ assignment_operator
 	| '|='  :'|'
 	.
 
-conditional_expr
-	: "if" expr branch ("else" "if" expr branch)* "else" branch :Ifs_exp
-        | logical_or_expr
+conditional_exp
+	: "if" exp branch ("else" "if" exp branch)* "else" branch :Ifs_exp
+        | logical_or_exp
 	.
 
-branch  : '{' expr '}'.
+branch  : '{' exp '}'.
 
-logical_or_expr
-	: logical_and_expr ('||' logical_and_expr :Or)*
+logical_or_exp
+	: logical_and_exp ('||' logical_and_exp :Or)*
 	.
 
-logical_and_expr
-	: expr3 ('&&' logical_and_expr :And)*
+logical_and_exp
+	: exp3 ('&&' logical_and_exp :And)*
 	.
 
-expr3
-        : expr4 ( '=='     :'==' expr4 :Binary_exp
-                | '!='     :'!=' expr4 :Binary_exp
-                | '<='     :'<=' expr4 :Binary_exp
-                | '>='     :'>=' expr4 :Binary_exp
-                | '<' !'=' :'<'  expr4 :Binary_exp
-                | '>' !'=' :'>'  expr4 :Binary_exp
+exp3
+        : exp4 ( '=='     :'==' exp4 :Binary_exp
+                | '!='     :'!=' exp4 :Binary_exp
+                | '<='     :'<=' exp4 :Binary_exp
+                | '>='     :'>=' exp4 :Binary_exp
+                | '<' !'=' :'<'  exp4 :Binary_exp
+                | '>' !'=' :'>'  exp4 :Binary_exp
                 )*
         .
 
-expr4
-        : expr5 ( '+' !/[+=]/ :'+' expr5 :Binary_exp
-                | '-' !/[-=]/ :'-' expr5 :Binary_exp
-                | '|' !/[|=]/ :'|' expr5 :Binary_exp
-                | '@' !'='    :'@' expr5 :Binary_exp
+exp4
+        : exp5 ( '+' !/[+=]/ :'+' exp5 :Binary_exp
+                | '-' !/[-=]/ :'-' exp5 :Binary_exp
+                | '|' !/[|=]/ :'|' exp5 :Binary_exp
+                | '@' !'='    :'@' exp5 :Binary_exp
                 )*
         .
 
-expr5
-        : unary_expr ( '*'  !'='    :'*'  unary_expr :Binary_exp
-                     | '/'  !'='    :'/'  unary_expr :Binary_exp
-                     | '%'  !'='    :'%'  unary_expr :Binary_exp
-                     | '&'  !/[&=]/ :'&'  unary_expr :Binary_exp
-                     | '<<' !'='    :'<<' unary_expr :Binary_exp
-                     | '>>' !'='    :'>>' unary_expr :Binary_exp
+exp5
+        : unary_exp ( '*'  !'='    :'*'  unary_exp :Binary_exp
+                     | '/'  !'='    :'/'  unary_exp :Binary_exp
+                     | '%'  !'='    :'%'  unary_exp :Binary_exp
+                     | '&'  !/[&=]/ :'&'  unary_exp :Binary_exp
+                     | '<<' !'='    :'<<' unary_exp :Binary_exp
+                     | '>>' !'='    :'>>' unary_exp :Binary_exp
                      )*
         .
 
-unary_expr
-	: '++' unary_expr           :Pre_incr
-	| '--' unary_expr           :Pre_decr
-	| unary_operator unary_expr :Unary_exp
+unary_exp
+	: '++' unary_exp           :Pre_incr
+	| '--' unary_exp           :Pre_decr
+	| unary_operator unary_exp :Unary_exp
 	| "sizeoftype" type         :Sizeof_type
-        | "sizeof" unary_expr       :Sizeof
-        | postfix_expr
+        | "sizeof" unary_exp       :Sizeof
+        | postfix_exp
 	.
 
 unary_operator
@@ -171,10 +171,10 @@ unary_operator
 	| '!'      :'!'
 	.
 
-postfix_expr
-	: primary_expr
-            ( '[' expr ']'                           :Index
-	    | '(' [assignment_expr ** ',' :hug] ')'  :Call
+postfix_exp
+	: primary_exp
+            ( '[' exp ']'                           :Index
+	    | '(' [assignment_exp ** ',' :hug] ')'  :Call
 	    | '.' id  :Dot
 	    | '^'     :Deref
 	    | '++'    :Post_incr
@@ -183,12 +183,12 @@ postfix_expr
             )*
 	.
 
-primary_expr
+primary_exp
 	: id             :Variable
 	| integer        :Literal    # TODO when we have hex, octal, etc., we need to preserve that distinction
 	| string_literal :String
         | char_literal   :Char_literal
-	| '(' expr ')'
+	| '(' exp ')'
 	.
 
 string_literal ~: /"([^"]*)"/ FNORD.   # TODO

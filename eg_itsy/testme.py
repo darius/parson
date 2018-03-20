@@ -42,7 +42,7 @@ p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0}
 ## c_emit(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 
-p7, = parser.expr('a || b || c')
+p7, = parser.exp('a || b || c')
 ## c_exp(p7, 0)
 #. 'a || b || c'
 
