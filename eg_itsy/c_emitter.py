@@ -91,43 +91,49 @@ c = c_emit = CEmitter()
 
 
 # Types
+# TODO make Function be Signature with '' for names?
 
 def c_type(type_):
     return c_decl(type_, '')
 
 def c_decl(type_, name):
-    return ('%s %s' % decl_pair(type_, name)).rstrip()
+    return ('%s %s' % decl_pair(type_, name, 0)).rstrip()
 
 class DeclPair(Visitor):
 
-    def Type_name(self, t, e):
+    def Type_name(self, t, e, p): # e: expression-like C fragment, p: surrounding precedence
         return t.name, e
 
-    def Pointer(self, t, e):
-        return self(t.type, '*%s' % hug(e))
+    def Pointer(self, t, e, p):
+        return self(t.type,
+                    '*%s' % hug(e, p, 2),
+                    2)
 
-    def Array(self, t, e):
-        return self(t.type, '%s[%s]' % (hug(e), c_exp(t.size, 0)))
+    def Array(self, t, e, p):
+        return self(t.type,
+                    '%s[%s]' % (hug(e, p, 1), c_exp(t.size, 0)),
+                    1)
 
-    def Function(self, t, e):
+    def Function(self, t, e, p):
         params_c = ', '.join(map(c_type, t.param_types))
-        return self(t.return_type, '%s(%s)' % (hug(e), params_c or 'void'))
+        return self(t.return_type,
+                    '%s(%s)' % (hug(e, p, 1), params_c or 'void'),
+                    1)
 
-    def Signature(self, t, e):
-        # A signature is like a Function type, but with names to the params.
+    def Signature(self, t, e, p):
+        # A signature is like a Function type, but with named params.
         return_type = t.opt_return_type or Void()
         params_c = ', '.join(c_decl(type_, name)
                              for names, type_ in t.params
                              for name in names)
-        return self(return_type, '%s(%s)' % (hug(e), params_c or 'void'))
+        return self(return_type,
+                    '%s(%s)' % (hug(e, p, 1), params_c or 'void'),
+                    1)
 
 decl_pair = DeclPair()
 
-def hug(s):
-    if (all(ch.isalnum() or ch == '_' for ch in s) # XXX temp hack till we handle precedence right
-        or (s.startswith('(') and s.endswith(')'))): # XXX an even wronger hack
-        return s
-    return '(%s)' % s
+def hug(s, outer, inner):
+    return s if outer <= inner else '(%s)' % s # XXX is '<=' quite right? instead of '<'?
 
 
 # Expressions
