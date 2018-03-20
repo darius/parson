@@ -175,13 +175,13 @@ unary_operator
 
 postfix_exp
 	: primary_exp
-            ( '[' exp ']'                     :Index
+            ( '[' exp ']'                   :Index
 	    | '(' [elem_exp**',' :hug] ')'  :Call
-	    | '.' id   :Dot
-	    | '^'      :Deref
-	    | '++'     :Post_incr
-	    | '--'     :Post_decr
-            | ':' type :Cast    # TODO is this a good syntax?
+	    | '.' id                        :Dot
+	    | '^'                           :Deref
+	    | '++'                          :Post_incr
+	    | '--'                          :Post_decr
+            | ':' type                      :Cast    # TODO is this a good syntax?
             )*
 	.
 
