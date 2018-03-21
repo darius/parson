@@ -1,0 +1,28 @@
+# Sieve of Eratosthenes benchmark.
+
+enum { SIZE = 8190 }
+
+let flags: [SIZE] bool;
+
+to main(): int {
+    printf("10 iterations\n");
+    let count: int;
+    let iter: int;
+    for iter = 1; iter <= 10; ++iter {
+        count = 0;
+        let i: int;
+        for i = 0; i <= SIZE; ++i { flags[i] = true; }
+        for i = 0; i <= SIZE; ++i {
+            if flags[i] {
+                let prime: int = i + i + 3;
+                let k: int;
+                for k = i + prime; k <= SIZE; k += prime {
+                    flags[k] = false;
+                }
+                ++count;
+            }
+        }
+    }
+    printf("%d primes\n", count);
+    return 0;
+}
