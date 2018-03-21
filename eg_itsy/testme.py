@@ -82,7 +82,7 @@ p7, = parser.exp('a || b || c')
 #. struct A {
 #.     int x;
 #.     int y;
-#. }
+#. };
 
 ce, = parser.exp('[1,2]: []int')
 ## print c_exp(ce)

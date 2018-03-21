@@ -45,10 +45,10 @@ class CEmitter(Visitor):
         lines = []
         if t.opt_name:
             lines.append('typedef struct %s %s;' % (t.opt_name, t.opt_name))
-        c_defn = '%s%s %s' % (t.kind,
-                              opt_space(t.opt_name),
-                              embrace(c_decl(type_, name) + ';'
-                                      for type_, name in t.fields))
+        c_defn = '%s%s %s;' % (t.kind,
+                               opt_space(t.opt_name),
+                               embrace(c_decl(type_, name) + ';'
+                                       for type_, name in t.fields))
         lines.append(c_defn)
         return '\n'.join(lines)
 
