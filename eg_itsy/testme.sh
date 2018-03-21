@@ -22,10 +22,10 @@ for f in eg/*.itsy; do
 done
 
 echo
-echo 'Halping testme'
-python -m coverage run --source=. -a pyhalp.py <testme.py 
-# So testme didn't get noticed by coverage.py because it was Halp that ran it.
+echo 'Halping halpme'
+python -m coverage run --source=. -a pyhalp.py <halpme.py 
+# So halpme didn't get noticed by coverage.py because it was Halp that ran it.
 # Just screen it out of the coverage report below.
 
 echo
-python -m coverage report -m | egrep -v 'pyhalp|structs|testme'
+python -m coverage report -m --omit='halpme.py,pyhalp.py,structs.py'
