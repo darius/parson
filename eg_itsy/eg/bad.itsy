@@ -1,0 +1,6 @@
+# Not actual Itsy code; for testing compiler error handling.
+
+to main(argc: int, argv: ^^char): int {
+    gooble blarg printf("Hello, sailor!\n");
+    return 0;
+}

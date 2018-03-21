@@ -1,0 +1,7 @@
+# Not actual Itsy code; for testing compiler error handling.
+
+to main(argc: int, argv: ^^char): int {
+    printf("Hello, sailor!\n");
+    let a, b: int = [1, 2];     # Illegal
+    return 0;
+}
