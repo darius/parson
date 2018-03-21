@@ -3,6 +3,7 @@ Emit C code from an AST.
 """
 
 from structs import Visitor
+import ast
 
 def indent(s):
     return s.replace('\n', '\n    ')
@@ -208,8 +209,8 @@ class CExpEmitter(Visitor):
                                           for e in t.args)))
 
     def Dot(self, t, p):
-        if isinstance(t.e1, Deref):
-            s = '%s->%s' % (self(t.e1.exp, postfix_prec), t.field)
+        if isinstance(t.e1, ast.Deref):
+            s = '%s->%s' % (self(t.e1.e1, postfix_prec), t.field)
         else:
             s = '%s.%s' % (self(t.e1, postfix_prec), t.field)
         return wrap(postfix_prec, p, s)
