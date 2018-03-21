@@ -41,10 +41,15 @@ class CEmitter(Visitor):
         return 'enum%s %s;' % (opt_space(t.opt_name), embrace(enums))
 
     def Record(self, t):
-        return '%s%s %s' % (t.kind,
-                            opt_space(t.opt_name),
-                            embrace(c_decl(type_, name) + ';'
-                                    for type_, name in t.fields))
+        lines = []
+        if t.opt_name:
+            lines.append('typedef struct %s %s;' % (t.opt_name, t.opt_name))
+        c_defn = '%s%s %s' % (t.kind,
+                              opt_space(t.opt_name),
+                              embrace(c_decl(type_, name) + ';'
+                                      for type_, name in t.fields))
+        lines.append(c_defn)
+        return '\n'.join(lines)
 
     def Block(self, t):
         return embrace(map(c, t.parts));

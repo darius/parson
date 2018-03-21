@@ -78,6 +78,7 @@ p7, = parser.exp('a || b || c')
 #. 'typedef int (*VTable[5])(void);'
 
 ## print cdef('struct A { x, y: int; }')
+#. typedef struct A A;
 #. struct A {
 #.     int x;
 #.     int y;
