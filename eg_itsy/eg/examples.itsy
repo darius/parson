@@ -29,3 +29,10 @@ to asm_store_field(address: Address, L, R: int, cell: Cell): void {
 to make16(a, b: uint8): int {
    return a:int + b:int << 8;
 }
+
+to foo() {
+    do {
+        if a { continue; }
+        else if b { break; }
+    } while x;
+}

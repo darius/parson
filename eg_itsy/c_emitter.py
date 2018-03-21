@@ -75,7 +75,7 @@ class CEmitter(Visitor):
         return 'while (%s) %s' % (c_exp(t.exp), c(t.block))
 
     def Do(self, t):
-        return 'do %s while(%s)' % (c(t.block), c_exp(t.exp))
+        return 'do %s while (%s);' % (c(t.block), c_exp(t.exp))
 
     def Ifs(self, t):
         clauses = zip(t.parts[0:-1:2], t.parts[1::2])
