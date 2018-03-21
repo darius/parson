@@ -39,12 +39,16 @@ class CEmitter(Visitor):
     def Enum(self, t):
         enums = ['%s%s,' % (name, opt_c_exp(opt_exp, ' = '))
                  for name, opt_exp in t.pairs]
-        return 'enum%s %s;' % (opt_space(t.opt_name), embrace(enums))
+        lines = []
+        if t.opt_name:
+            lines.append('typedef enum %s %s;' % (t.opt_name, t.opt_name))
+        lines.append('enum%s %s;' % (opt_space(t.opt_name), embrace(enums)))
+        return '\n'.join(lines)
 
     def Record(self, t):
         lines = []
         if t.opt_name:
-            lines.append('typedef struct %s %s;' % (t.opt_name, t.opt_name))
+            lines.append('typedef %s %s %s;' % (t.kind, t.opt_name, t.opt_name))
         c_defn = '%s%s %s;' % (t.kind,
                                opt_space(t.opt_name),
                                embrace(c_decl(type_, name) + ';'
