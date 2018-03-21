@@ -155,6 +155,7 @@ exp5
 unary_exp
 	: '++' unary_exp           :Pre_incr
 	| '--' unary_exp           :Pre_decr
+        | '&' !'&' unary_exp       :Address_of
 	| unary_operator unary_exp :Unary_exp
 	| "sizeof" ':' type        :Sizeof_type
         | "sizeof" unary_exp       :Sizeof
@@ -162,8 +163,7 @@ unary_exp
 	.
 
 unary_operator
-	: '&' !'&' :'&'
-	| '-' !'-' :'-'
+	: '-' !'-' :'-'
 	| '~'      :'~'
 	| '!'      :'!'
 	.
