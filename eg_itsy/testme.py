@@ -91,6 +91,10 @@ ce, = parser.exp('[1,2]: []int')
 #.     2,
 #. }
 
+e1, = parser.exp('0 + if 1 {2} else {3} * 4')
+## print c_exp(e1)
+#. 0 + (1 ? 2 : 3) * 4
+
 with open('eg/examples.itsy') as f: examples = f.read()
 ## cdefs(examples)
 #. int a = 5;

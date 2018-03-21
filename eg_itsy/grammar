@@ -99,7 +99,7 @@ elem_exp = assignment_exp.   # "no comma" expression.
 
 assignment_exp
 	: unary_exp assignment_operator assignment_exp  :Assign
-	| conditional_exp
+	| logical_or_exp
 	.
 
 assignment_operator
@@ -115,13 +115,6 @@ assignment_operator
 	| '@='  :'@'
 	| '|='  :'|'
 	.
-
-conditional_exp
-	: "if" exp branch ("else" "if" exp branch)* "else" branch :Ifs_exp
-        | logical_or_exp
-	.
-
-branch  : '{' exp '}'.
 
 logical_or_exp
 	: logical_and_exp ('||' logical_and_exp :Or)*
@@ -193,9 +186,12 @@ primary_exp
 	| integer        :'integer' :Literal
 	| string_literal :'string'  :Literal
         | char_literal   :'char'    :Literal
+	| "if" exp branch ("else" "if" exp branch)* "else" branch :Ifs_exp
 	| '(' exp ')'
         | '[' elem_exp**',' :hug ','? ']' :Compound_exp
 	.
+
+branch  : '{' exp '}'.
 
 string_literal ~: /("[^"]*")/ FNORD.   # TODO
 char_literal   ~: /('[^']*')/ FNORD.  # TODO
