@@ -129,6 +129,16 @@ with open('eg/examples.itsy') as f: examples = f.read()
 #.     return (int) a + ((int) b << 8);
 #. }
 #. 
+#. void foo(void) {
+#.     do {
+#.         if (a == sizeof(int)) {
+#.             continue;
+#.         } else if (b) {
+#.             break;
+#.         }
+#.     } while (x-- > 0);
+#. }
+#. 
 
 with open('eg/regex.itsy') as f: regex = f.read()
 ## cdefs(regex)
