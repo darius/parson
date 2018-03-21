@@ -32,7 +32,7 @@ to make16(a, b: uint8): int {
 
 to foo() {
     do {
-        if a { continue; }
+        if a == sizeof:int { continue; }
         else if b { break; }
-    } while x;
+    } while x-->0;
 }
