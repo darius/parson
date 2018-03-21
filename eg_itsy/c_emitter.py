@@ -210,10 +210,10 @@ class CExpEmitter(Visitor):
 
     def Dot(self, t, p):
         if isinstance(t.e1, ast.Deref):
-            s = '%s->%s' % (self(t.e1.e1, postfix_prec), t.field)
+            lhs, op = t.e1.e1, '->'
         else:
-            s = '%s.%s' % (self(t.e1, postfix_prec), t.field)
-        return wrap(postfix_prec, p, s)
+            lhs, op = t.e1, '.'
+        return wrap(postfix_prec, p, self(lhs, postfix_prec) + op + t.field)
 
     def And(self, t, p):
         return fmt2(p, '&&', t.e1, t.e2)
