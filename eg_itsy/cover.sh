@@ -1,14 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 python -m coverage erase
 
-python -m coverage run -a itsy.py goober
-python -m coverage run -a itsy.py eg/bad.itsy 
-python -m coverage run -a itsy.py eg/bad2.itsy 
+for f in goober error_tests/bad*.itsy; do
+    echo "Should fail:" ${f}
+    python -m coverage run -a itsy.py ${f}
+done
 
-python -m coverage run -a itsy.py eg/examples.itsy 
-python -m coverage run -a itsy.py eg/ion.itsy 
-python -m coverage run -a itsy.py eg/regex.itsy 
-python -m coverage run -a itsy.py eg/superopt.itsy
+for f in eg/*.itsy; do
+    echo "To C:" ${f}
+    python -m coverage run -a itsy.py ${f}
+done
 
 python -m coverage report -m | grep -v /parson
