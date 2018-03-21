@@ -4,9 +4,6 @@ Abstract syntax of itsy.
 
 from structs import Struct
 
-def TBD(*args):
-    raise Exception("Not supported yet: %r" % args)
-
 
 # Declarations
 
