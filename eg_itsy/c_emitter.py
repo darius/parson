@@ -264,9 +264,9 @@ binaries['?:'] = (binaries['?:'][0], binaries['?:'][0])
 def fmt1(outer, inner, fmt_str, e1):
     return wrap(outer, inner, fmt_str % c_exp(e1, inner))
 
+def wrap(outer, inner, s):
+    return '(%s)' % s if inner < outer else s
+
 def fmt2(p, op, e1, e2, fmt_str='%s %s %s'):
     lp, rp = binaries['=' if op.endswith('=') else op]
     return wrap(p, lp, fmt_str % (c_exp(e1, lp), op, c_exp(e2, rp)))
-
-def wrap(outer, inner, s):
-    return '(%s)' % s if inner < outer else s
