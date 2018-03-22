@@ -1,10 +1,7 @@
 # Something like C but re-syntaxed.
 
 top
-        : '' module :end.
-
-module
-	: declaration*.
+        : '' declaration* :end.
 
 
 # Declarations
