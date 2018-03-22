@@ -7,15 +7,15 @@ top
 # Declarations
 
 declaration
-	: function_definition
-	| decl
-	.
-
-function_definition
-	: "to" id 
-            ['(' [param_decl**',' :chain] ')' [':' type | :Void] :Signature]
-            block  :To
+        : function_definition
+        | decl
         .
+
+function_definition: :position (
+          "to" id 
+            [:position '(' [param_decl**',' :chain] ')' [':' type | :position :Void] :Signature]
+            block  :To
+        ).
 
 param_decl
         : id++',' :hug ':' type  :spread_params
@@ -26,100 +26,103 @@ decl
         | var_decl
         .
 
-type_decl
-        : "typedef" id '=' type ';'              :Typedef
+type_decl: :position (
+          "typedef" id '=' type ';'              :Typedef
         | "enum" (id | :None) '{'
               [enumerator**',' :hug] ','?
           '}'                                    :Enum
         | "struct" :'struct' id '{' [field* :chain] '}'  :Record
         | "union"  :'union'  id '{' [field* :chain] '}'  :Record
-        .
+        ).
 
 field
-        : param_decl ';'   # TODO anonymous sub-unions, etc.
+        : param_decl ';'
         .
 
 enumerator
         : id ('=' elem_exp | :None) :hug
         .
 
-var_decl
-        : "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'  :Let
-        .
+var_decl: :position (
+          "let" [id++',' :hug] ':' type ('=' elem_exp | :None) ';'  :Let
+        ).
 
 
 # Types
 
-type
-        : '^' type                                  :Pointer
+type:   :position (
+          '^' type                                  :Pointer
         | '[' (exp | :None) ']' type                :Array
-        | '(' [type :'' :hug]**',' :hug ')' type    :Signature
+        | '(' [[type :'' :hug]**',' :hug] ')' type  :Signature
         | "void"                                    :Void
         | id                                        :Type_name
-        .
+        ).
 
 
 # Statements
 
-block
-	: '{' (decl | statement)* :hug '}' :Block
-	.
+block:  :position (
+          '{' [(decl | statement)* :hug] '}'  :Block
+        ).
 
 statement
-	: block
-	| "while" exp block                   :While
-	| "do" block "while" exp ';'          :Do
-	| "for" (exp | :None) ';' (exp | :None) ';' (exp | :None) block
-                                              :For
-	| "continue" ';'                      :Continue
-	| "break" ';'                         :Break
-	| "return" (exp | :None) ';'          :Return
-	| "if" exp block ("else" "if" exp block)* ("else" block | :None)
-                                              :hug :Ifs
-	| "match" exp '{' [case* :hug] '}'    :Switch
-	| (exp | :None) ';'                   :Exp
-	.
-
-case
-	: "on" elem_exp++',' :hug block  :Case
-	| "else"                  block  :Default
+        : block
+        | :position (
+            "while" exp block                       :While
+          | "do" block "while" exp ';'              :Do
+          | "for" opt_exp ';' opt_exp ';' opt_exp block
+                                                    :For
+          | "continue" ';'                          :Continue
+          | "break" ';'                             :Break
+          | "return" opt_exp ';'                    :Return
+          | ["if" exp block ("else" "if" exp block)* ("else" block | :None) :hug]
+                                                    :Ifs
+          | "match" exp '{' [case* :hug] '}'        :Switch
+          | opt_exp ';'                             :Exp
+          )
         .
+opt_exp : exp | :None.
+
+case:   :position (
+          "on" [elem_exp++',' :hug] block  :Case
+        | "else"                    block  :Default
+        ).
 
 
 # Expressions
 
 exp
-	: assignment_exp (',' assignment_exp :Seq)*
-	.
+        : assignment_exp (',' assignment_exp :Seq)*
+        .
 
 elem_exp = assignment_exp.   # "no comma" expression.
 
 assignment_exp
-	: unary_exp assignment_operator assignment_exp  :Assign
-	| logical_or_exp
-	.
+        : unary_exp assignment_operator assignment_exp  :Assign
+        | logical_or_exp
+        .
 
 assignment_operator
-	: '='   :None
-	| '*='  :'*'
-	| '/='  :'/'
-	| '%='  :'%'
-	| '+='  :'+'
-	| '-='  :'-'
-	| '<<=' :'<<'
-	| '>>=' :'>>'
-	| '&='  :'&'
-	| '@='  :'@'
-	| '|='  :'|'
-	.
+        : '='   :None
+        | '*='  :'*'
+        | '/='  :'/'
+        | '%='  :'%'
+        | '+='  :'+'
+        | '-='  :'-'
+        | '<<=' :'<<'
+        | '>>=' :'>>'
+        | '&='  :'&'
+        | '@='  :'@'
+        | '|='  :'|'
+        .
 
 logical_or_exp
-	: logical_and_exp ('||' logical_and_exp :Or)*
-	.
+        : logical_and_exp ('||' logical_and_exp :Or)*
+        .
 
 logical_and_exp
-	: exp3 ('&&' logical_and_exp :And)*
-	.
+        : exp3 ('&&' logical_and_exp :And)*
+        .
 
 exp3
         : exp4 ( '=='     :'==' exp4 :Binary_exp
@@ -150,42 +153,46 @@ exp5
         .
 
 unary_exp
-	: '++' unary_exp     :'++' :Pre_incr
-	| '--' unary_exp     :'--' :Pre_incr
-        | '&' !/[&=]/ unary_exp    :Address_of
-	| unary_operator unary_exp :Unary_exp
-	| "sizeof" ':' type        :Sizeof_type
-        | "sizeof" unary_exp       :Sizeof
+        : :position (
+            '++' unary_exp     :'++' :Pre_incr
+          | '--' unary_exp     :'--' :Pre_incr
+          | '&' !/[&=]/ unary_exp    :Address_of
+          | unary_operator unary_exp :Unary_exp
+          | "sizeof" ':' type        :Sizeof_type
+          | "sizeof" unary_exp       :Sizeof
+          )
         | postfix_exp
-	.
+        .
 
 unary_operator
-	: '-' !'-' :'-'
-	| '~'      :'~'
-	| '!' !'=' :'!'
-	.
+        : '-' !'-' :'-'
+        | '~'      :'~'
+        | '!' !'=' :'!'
+        .
 
 postfix_exp
-	: primary_exp
+        : primary_exp
             ( '[' exp ']'                   :Index
-	    | '(' [elem_exp**',' :hug] ')'  :Call
-	    | '.' id                        :Dot
-	    | '^'                           :Deref
-	    | '++'                    :'++' :Post_incr
-	    | '--'                    :'--' :Post_incr
+            | '(' [elem_exp**',' :hug] ')'  :Call
+            | '.' id                        :Dot
+            | '^'                           :Deref
+            | '++'                    :'++' :Post_incr
+            | '--'                    :'--' :Post_incr
             | ':' type                      :Cast
             )*
-	.
+        .
 
 primary_exp
-	: id             :Variable
-	| integer        :'integer' :Literal
-	| string_literal :'string'  :Literal
-        | char_literal   :'char'    :Literal
-	| "if" exp branch ("else" "if" exp branch)* "else" branch :Ifs_exp
-	| '(' exp ')'
-        | '[' elem_exp**',' :hug ','? ']' :Compound_exp
-	.
+        : '(' exp ')'
+        | :position (
+             id             :Variable
+           | integer        :'integer' :Literal
+           | string_literal :'string'  :Literal
+           | char_literal   :'char'    :Literal
+           | "if" exp branch ("else" :position "if" exp branch)* "else" branch :Ifs_exp
+           | '[' [elem_exp**',' :hug] ','? ']' :Compound_exp
+           )
+        .
 
 branch  : '{' exp '}'.
 
