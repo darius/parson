@@ -169,7 +169,7 @@ class CExpEmitter(Visitor):
         return fmt1(p, unary_prec, t.unop + '%s', t.e1)
 
     def Cast(self, t, p):
-        return wrap(cast_prec, p, '(%s) %s' % (c_type(t.type),
+        return wrap(p, cast_prec, '(%s) %s' % (c_type(t.type),
                                                self(t.e1, cast_prec)))
 
     def Seq(self, t, p):
@@ -183,7 +183,7 @@ class CExpEmitter(Visitor):
 
     def If_exp(self, t, p):
         lp, rp = binaries['?:']
-        return wrap(rp, p, # TODO recheck that rp is the right thing here in place of the usual lp
+        return wrap(p, rp, # TODO recheck that rp is the right thing here in place of the usual lp
                     '%s ? %s : %s' % (self(t.e1, lp),
                                       self(t.e2, 0),
                                       self(t.e3, rp)))
@@ -196,12 +196,12 @@ class CExpEmitter(Visitor):
         return fmt2(p, op, t.e1, t.e2)
 
     def Index(self, t, p):
-        return wrap(postfix_prec, p,
+        return wrap(p, postfix_prec,
                     '%s[%s]' % (self(t.e1, postfix_prec),
                                 self(t.e2, 0)))
 
     def Call(self, t, p):
-        return wrap(postfix_prec, p,
+        return wrap(p, postfix_prec,
                     '%s(%s)' % (self(t.e1, postfix_prec),
                                 ', '.join(self(e, elem_prec)
                                           for e in t.args)))
@@ -211,7 +211,7 @@ class CExpEmitter(Visitor):
             lhs, op = t.e1.e1, '->'
         else:
             lhs, op = t.e1, '.'
-        return wrap(postfix_prec, p, self(lhs, postfix_prec) + op + t.field)
+        return wrap(p, postfix_prec, self(lhs, postfix_prec) + op + t.field)
 
     def And(self, t, p):
         return fmt2(p, '&&', t.e1, t.e2)
@@ -262,11 +262,11 @@ binaries['='] = (unary_prec, binaries['='][0])
 binaries['?:'] = (binaries['?:'][0], binaries['?:'][0])
 
 def fmt1(outer, inner, fmt_str, e1):
-    return wrap(inner, outer, fmt_str % c_exp(e1, inner))
+    return wrap(outer, inner, fmt_str % c_exp(e1, inner))
 
 def fmt2(p, op, e1, e2, fmt_str='%s %s %s'):
     lp, rp = binaries['=' if op.endswith('=') else op]
-    return wrap(lp, p, fmt_str % (c_exp(e1, lp), op, c_exp(e2, rp)))
+    return wrap(p, lp, fmt_str % (c_exp(e1, lp), op, c_exp(e2, rp)))
 
-def wrap(inner, outer, s):
+def wrap(outer, inner, s):
     return '(%s)' % s if inner < outer else s
