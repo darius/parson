@@ -64,10 +64,8 @@ class Deref(       Struct('e1')): pass
 class Unary_exp(   Struct('unop e1')): pass
 class Cast(        Struct('e1 type')): pass
 class Seq(         Struct('e1 e2')): pass
-class Pre_incr(    Struct('e1')): pass
-class Pre_decr(    Struct('e1')): pass
-class Post_incr(   Struct('e1')): pass
-class Post_decr(   Struct('e1')): pass
+class Pre_incr(    Struct('e1 op')): pass
+class Post_incr(   Struct('e1 op')): pass
 class If_exp(      Struct('e1 e2 e3')): pass
 class Assign(      Struct('e1 opt_binop e2')): pass
 class Binary_exp(  Struct('e1 binop e2')): pass

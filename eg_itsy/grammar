@@ -153,8 +153,8 @@ exp5
         .
 
 unary_exp
-	: '++' unary_exp           :Pre_incr
-	| '--' unary_exp           :Pre_decr
+	: '++' unary_exp     :'++' :Pre_incr
+	| '--' unary_exp     :'--' :Pre_incr
         | '&' !'&' unary_exp       :Address_of
 	| unary_operator unary_exp :Unary_exp
 	| "sizeof" ':' type        :Sizeof_type
@@ -174,8 +174,8 @@ postfix_exp
 	    | '(' [elem_exp**',' :hug] ')'  :Call
 	    | '.' id                        :Dot
 	    | '^'                           :Deref
-	    | '++'                          :Post_incr
-	    | '--'                          :Post_decr
+	    | '++'                    :'++' :Post_incr
+	    | '--'                    :'--' :Post_incr
             | ':' type                      :Cast
             )*
 	.

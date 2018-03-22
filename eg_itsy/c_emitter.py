@@ -176,16 +176,10 @@ class CExpEmitter(Visitor):
         return fmt2(p, ',', t.e1, t.e2, fmt_str = '%s%s %s')
 
     def Pre_incr(self, t, p):
-        return fmt1(p, unary_prec, '++%s', t.e1)
-
-    def Pre_decr(self, t, p):
-        return fmt1(p, unary_prec, '--%s', t.e1)
+        return fmt1(p, unary_prec, t.op+'%s', t.e1)
 
     def Post_incr(self, t, p):
-        return fmt1(p, postfix_prec, '%s++', t.e1)
-
-    def Post_decr(self, t, p):
-        return fmt1(p, postfix_prec, '%s--', t.e1)
+        return fmt1(p, postfix_prec, '%s'+t.op, t.e1)
 
     def If_exp(self, t, p):
         lp, rp = binaries['?:']
