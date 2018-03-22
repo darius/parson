@@ -20,11 +20,6 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
             te.extend(name, t.type)
         opt_exp_typecheck(t.opt_exp, te, t.type)
 
-    def Array_decl(self, t, te):
-        te.extend(t.name, t.type)
-        for e in t.exps:
-            e.typecheck(te, t.type)
-
     def Enum(self, t, te):
         type_ = Int()  # TODO or a new 'Enum_type' type?
         if t.opt_name is not None:
