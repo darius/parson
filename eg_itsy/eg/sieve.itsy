@@ -1,4 +1,4 @@
-# Sieve of Eratosthenes benchmark.
+// Sieve of Eratosthenes benchmark.
 
 enum { SIZE = 8190 }
 

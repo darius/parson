@@ -144,7 +144,7 @@ exp4
 
 exp5
         : unary_exp ( '*'  !'='    :'*'  unary_exp :Binary_exp
-                    | '/'  !'='    :'/'  unary_exp :Binary_exp
+                    | '/' !/[=\/]/ :'/'  unary_exp :Binary_exp
                     | '%'  !'='    :'%'  unary_exp :Binary_exp
                     | '&'  !/[&=]/ :'&'  unary_exp :Binary_exp
                     | '<<' !'='    :'<<' unary_exp :Binary_exp
@@ -197,7 +197,7 @@ char_literal   ~: /('[^']*')/ FNORD.  # TODO
 
 FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
-comment       ~:      /#.*/.
+comment       ~:      /\/\/.*/.
 keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|sizeof|struct|to|typedef|union|void|while/ /\b/.
 digit         ~:      /(\d)/.
 

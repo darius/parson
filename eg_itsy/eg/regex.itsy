@@ -1,5 +1,5 @@
-# star_thompsonlike_lowlevel.py ported to C ported to itsy
-# TODO explicit clarity on signed vs. unsigned
+// star_thompsonlike_lowlevel.py ported to C ported to itsy
+// TODO explicit clarity on signed vs. unsigned
 
 enum { loud = 0 }
 
@@ -15,7 +15,7 @@ let ninsns:       int;
 let accepts, ops: [max_insns]uint8;
 let arg1, arg2:   [max_insns]int16;
 
-let names: [4]^char = [   # TODO leave out the 4
+let names: [4]^char = [   // TODO leave out the 4
     "win", "eat", "fork", "loop",
 ];
 
@@ -71,9 +71,9 @@ to run(start: int, input: ^char): int {
     cur_start = states0,  cur_end = cur_start;
     next_start = states1, next_end = next_start;
     cur_end++^ = start;
-    memset(occupied, 0, ninsns); # N.B. we could avoid this by always
-                                 # finishing the next_start..next_end
-                                 # loop below
+    memset(occupied, 0, ninsns); // N.B. we could avoid this by always
+                                 // finishing the next_start..next_end
+                                 // loop below
 
     for ; input^; ++input {
         let state: ^int;
@@ -100,7 +100,7 @@ to emit(op: uint8, r, s: int, accepting: uint8): int {
     return ninsns++;
 }
 
-# start, current parsing position
+// start, current parsing position
 let pattern, pp: ^char;
 
 to eat(c: char): int {
@@ -117,8 +117,8 @@ to parsing(precedence, state: int): int {
         if !eat('(') { error("Mismatched ')'"); }
     }
     else if eat('*') {
-        rhs = emit(op_loop, 0, state, accepts[state]); # (0 is a placeholder...
-        arg1[rhs] = parsing(6, rhs);                   # ...filled in here.)
+        rhs = emit(op_loop, 0, state, accepts[state]); // (0 is a placeholder...
+        arg1[rhs] = parsing(6, rhs);                   // ...filled in here.)
     }
     else {
         rhs = emit(op_eat, (--pp)^, state, 0);
