@@ -79,8 +79,13 @@ grammar = builder(IDENT   = literal_kind('#IDENT'),
 ## builder.literals
 #. set(['#', '<=', '>=', '&', ')', '(', '+', '*', '-', ',', '.', ':=', ':', '=', ';', '[', '>', ']', '<', '~'])
 
-a_literal = '|'.join(map(re.escape, builder.literals))
-a_keyword = '|'.join(map(re.escape, builder.keywords))
+def one_of(strings):
+    # Sort longest first because re's '|' matches left-to-right, not greedily:
+    alts = sorted(strings, key=len, reverse=True) 
+    return '|'.join(map(re.escape, alts))
+                        
+a_literal = one_of(builder.literals)
+a_keyword = one_of(builder.keywords)
 
 lex_grammar_source = r"""  token* :end.
 token      :  whitespace | :keyword :Token | :punct :Token | ident | integer.
