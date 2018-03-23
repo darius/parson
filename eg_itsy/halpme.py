@@ -4,6 +4,7 @@ Halp tests.
 
 from itsy import parser
 from c_emitter import c_emit, c_exp
+import typecheck
 
 def cdef(string):
     t, = parser.top(string)
@@ -41,6 +42,8 @@ p5 = 'let a: int = a^++^;'
 p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
 ## c_emit(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
+## p6
+#. Return(0, If_exp(7, And(Binary_exp(Variable(10, 'pattern'), '<', Variable(20, 'pp')), Binary_exp(Index(Variable(26, 'pp'), Unary_exp(29, '-', Literal(30, '1', 'integer'))), '==', Variable(36, 'c'))), Seq(Pre_incr(39, Variable(41, 'pp'), '--'), Literal(45, '1', 'integer')), Literal(54, '0', 'integer')))
 
 p7, = parser.exp('a || b || c')
 ## c_exp(p7, 0)

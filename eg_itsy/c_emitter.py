@@ -30,8 +30,7 @@ class CEmitter(Visitor):
         return 'typedef %s;' % c_decl(t.type, t.name)
 
     def Let(self, t):
-        if t.opt_exp is not None and len(t.names) != 1:
-            raise Exception("XXX yadda yadda")
+        assert t.opt_exp is None or len(t.names) == 1
         assign = opt_c_exp(t.opt_exp, ' = ', elem_prec)
         return '\n'.join('%s%s;' % (c_decl(t.type, name), assign)
                          for name in t.names)

@@ -6,6 +6,7 @@ import ast
 from parson import Grammar, Unparsable
 from parson_plaints import syntax_error
 from c_emitter import c_emit
+import typecheck
 import sys
 
 with open('grammar') as f:
@@ -28,17 +29,20 @@ def to_c_main(filename, out_filename=None):
     with open(filename) as f:
         source = f.read()
     try:
-        c = c_from_itsy(source)
+        opt_c = c_from_itsy(source)
     except Unparsable as exc:
         sys.stderr.write(syntax_error(exc, filename) + '\n')
         return 1
-    # TODO catch semantic errors too
+    if opt_c is None:
+        return 1
     with open(out_filename, 'w') as f:
-        f.write(c)
+        f.write(opt_c)
     return 0
 
 def c_from_itsy(source):
     defs = parser.top(source)
+    if typecheck.status_error <= typecheck.check(defs):
+        return None
     c_defs = map(c_emit, defs)
     return c_prelude + '\n' + '\n\n'.join(c_defs) + '\n'
 
