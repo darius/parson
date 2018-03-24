@@ -3,7 +3,7 @@
 
 python -m coverage erase
 
-for f in goober error_tests/bad*.itsy; do
+for f in error_tests/bad*.itsy; do
     echo
     echo "Should fail:" ${f}
     if python -m coverage run --source=. -a itsy.py ${f}; then
