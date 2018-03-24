@@ -4,14 +4,21 @@
 python -m coverage erase
 
 for f in goober error_tests/bad*.itsy; do
+    echo
     echo "Should fail:" ${f}
-    python -m coverage run --source=. -a itsy.py ${f}
+    if python -m coverage run --source=. -a itsy.py ${f}; then
+        echo "Didn't fail!"
+    fi
 done
 
 for f in eg/*.itsy; do
     echo
     echo "To C:" ${f}
-    python -m coverage run --source=. -a itsy.py ${f}
+    if python -m coverage run --source=. -a itsy.py ${f}; then
+        echo -n    # Expected success (btw what's a no-op in bash?)
+    else
+        echo "Failed!"
+    fi
     fc=${f%.*}.c
     if test -f ${fc}.ref; then
         diff -u ${fc}.ref ${fc}
