@@ -40,7 +40,7 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
 
     def Let(self, t, sc):    # sc = scope
         if t.opt_exp is not None and len(t.names) != 1:
-            sc.err("Initializer doesn't match the number of variables.", t)
+            sc.err("Initializer doesn't match the number of variables", t)
         for name in t.names:
             sc.def_var(name, t.type)
         tc_opt_exp(t.opt_exp, sc, t.type)
@@ -124,11 +124,123 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
 
 tc_def = TCDef()
 
+class TCType(Visitor):
+    pass
+
 def tc_type(type_, sc):
     pass                        # XXX
 
 def tc_decl(type_, name, sc):
     pass                        # XXX
 
-def tc_exp(exp, sc, type_):
-    pass                        # XXX
+class TCExp(Visitor):
+
+    def Literal(self, t, sc, ctx):
+        return None             # XXX
+
+    def Variable(self, t, sc, ctx):
+        return None                    # XXX
+
+    def Address_of(self, t, sc, ctx):
+        return self(t.e1, sc, None) # XXX
+
+    def Sizeof_type(self, t, sc, ctx):
+        tc_type(t.type, sc)     # XXX
+
+    def Sizeof(self, t, sc, ctx):
+        return self(t.e1, sc, None) # XXX
+
+    def Deref(self, t, sc, ctx):
+        return self(t.e1, sc, None) # XXX
+
+    def Unary_exp(self, t, sc, ctx):
+        return self(t.e1, sc, None) # XXX
+
+    def Cast(self, t, sc, ctx):
+        tc_type(t.type, sc)     # XXX
+        return self(t.e1, sc, None) # XXX
+
+    def Seq(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        return self(t.e2, sc, None) # XXX
+
+    def Pre_incr(self, t, sc, ctx):
+        insist_lvalue(t.e1, sc)
+        return self(t.e1, sc, None) # XXX
+
+    def Post_incr(self, t, sc, ctx):
+        insist_lvalue(t.e1, sc)
+        return self(t.e1, sc, None) # XXX
+
+    def If_exp(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        self(t.e2, sc, None) # XXX
+        self(t.e3, sc, None) # XXX
+
+    def Assign(self, t, sc, ctx):
+        insist_lvalue(t.e1, sc)
+        self(t.e1, sc, None) # XXX
+        return self(t.e2, sc, None) # XXX
+
+    def Binary_exp(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        self(t.e2, sc, None) # XXX
+
+    def Index(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        self(t.e2, sc, None) # XXX
+
+    def Call(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        for e in t.args:
+            self(e, sc, None) # XXX
+
+    def Dot(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+
+    def And(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        self(t.e2, sc, None) # XXX
+
+    def Or(self, t, sc, ctx):
+        self(t.e1, sc, None) # XXX
+        self(t.e2, sc, None) # XXX
+
+    def Compound_exp(self, t, sc, ctx):
+        for e in t.exps:
+            self(e, sc, None) # XXX
+
+tc_exp = TCExp()
+
+def insist_lvalue(t, sc):
+    if not is_lvalue(t, sc):
+        sc.err("Not an lvalue", t)
+
+# TODO check the C definition of lvalue
+class IsLValue(Visitor):
+
+    def Variable(self, t, sc):
+        return True             # XXX need to check
+
+    def Deref(self, t, sc):
+        return True    # unless t.e1 is const...
+
+    def Index(self, t, sc):
+        return True    # unless t.e1 is const...
+
+    def Dot(self, t, sc):
+        return True    # unless t.e1 is const...
+
+    def Pre_incr(self, t, sc):
+        return False            # TODO maybe this could be true sometimes?
+
+    def Post_incr(self, t, sc):
+        return False            # TODO maybe this could be true sometimes?
+
+    def If_exp(self, t, sc):
+        return False   # Could be made to work, but it's not in C
+
+    def default(self, t, sc):
+        return False
+
+is_lvalue = IsLValue()
