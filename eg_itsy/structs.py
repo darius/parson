@@ -55,5 +55,8 @@ class Visitor(object):
         tag = subject.__class__.__name__
         method = getattr(self, tag, None)
         if method is None:
-            method = getattr(self, 'default')
+            try:
+                method = getattr(self, 'default')
+            except AttributeError:
+                raise AttributeError("%r has no method for %r argument %r" % (self, tag, subject))
         return method(subject, *args)

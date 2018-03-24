@@ -24,8 +24,8 @@ class Break(     Struct('pos ')): pass
 class Continue(  Struct('pos ')): pass
 class While(     Struct('pos exp block')): pass
 class Do(        Struct('pos block exp')): pass
-class Ifs(       Struct('pos parts')): pass
 class For(       Struct('pos opt_e1 opt_e2 opt_e3 block')): pass
+class If_stmt(   Struct('pos exp then_ opt_else')): pass
 class Switch(    Struct('pos exp cases')): pass
 
 class Case(      Struct('pos exps block')): pass
@@ -51,10 +51,6 @@ def chain(*seqs):
 
 
 # Expressions
-
-def Ifs_exp(pos, e1, e2, arg, *rest):
-    else_ = arg if not rest else Ifs_exp(arg, *rest)
-    return If_exp(pos, e1, e2, else_)
 
 class Seq(         Struct('e1 e2')): pass
 class Assign(      Struct('e1 opt_binop e2')): pass

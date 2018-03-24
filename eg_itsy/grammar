@@ -67,6 +67,7 @@ block:  :position (
 
 statement
         : block
+        | if_stmt
         | :position (
             "while" exp block                       :While
           | "do" block "while" exp ';'              :Do
@@ -75,13 +76,16 @@ statement
           | "continue" ';'                          :Continue
           | "break" ';'                             :Break
           | "return" opt_exp ';'                    :Return
-          | ["if" exp block ("else" "if" exp block)* ("else" block | :None) :hug]
-                                                    :Ifs
           | "match" exp '{' [case* :hug] '}'        :Switch
           | opt_exp ';'                             :Exp
           )
         .
 opt_exp : exp | :None.
+
+if_stmt : :position (
+            "if" exp block ( "else" (if_stmt | block)
+                           | :None                   ) :If_stmt
+        ).
 
 case:   :position (
           "on" [elem_exp++',' :hug] block  :Case
@@ -184,16 +188,17 @@ postfix_exp
 
 primary_exp
         : '(' exp ')'
+	| if_exp
         | :position (
              id             :Variable
            | integer        :'integer' :Literal
            | string_literal :'string'  :Literal
            | char_literal   :'char'    :Literal
-           | "if" exp branch ("else" :position "if" exp branch)* "else" branch :Ifs_exp
            | '[' [elem_exp**',' :hug] ','? ']' :Compound_exp
            )
         .
 
+if_exp  : :position "if" exp branch "else" (if_exp | branch) :If_exp.
 branch  : '{' exp '}'.
 
 string_literal ~: /("[^"]*")/ FNORD.   # TODO

@@ -76,12 +76,13 @@ class CEmitter(Visitor):
     def Do(self, t):
         return 'do %s while (%s);' % (c(t.block), c_exp(t.exp))
 
-    def Ifs(self, t):
-        clauses = zip(t.parts[0:-1:2], t.parts[1::2])
-        else_block = t.parts[-1]
-        branches = ['if (%s) %s' % (c_exp(exp), c(block))
-                    for exp, block in clauses]
-        if else_block: branches.append(c(else_block))
+    def If_stmt(self, t):
+        branches = []
+        while isinstance(t, ast.If_stmt):
+            branches.append('if (%s) %s' % (c_exp(t.exp), c(t.then_)))
+            t = t.opt_else
+        if t is not None:
+            branches.append(c(t))
         return ' else '.join(branches)
 
     def For(self, t):

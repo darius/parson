@@ -88,6 +88,7 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
 
     def Break(self, t, sc):
         # TODO check that we're in a loop
+        print 'yo'
         pass
 
     def Continue(self, t, sc):
@@ -102,7 +103,7 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
         self(t.block, sc)
         tc_exp(t.exp, sc, None)
 
-    def Ifs(self, t, sc):
+    def If_stmt(self, t, sc):
         pass  # XXX
 
     def For(self, t, sc):
