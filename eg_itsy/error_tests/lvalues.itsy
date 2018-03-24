@@ -1,0 +1,4 @@
+to f() {
+    let a: ^int = NULL;
+    (a + a) = 42;
+}
