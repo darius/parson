@@ -35,7 +35,8 @@ def Struct(field_names, name=None, supertype=(object,)):
                 supertype,
                 dict(__init__=__init__,
                      __repr__=__repr__,
-                     as_sexpr=my_as_sexpr))
+                     as_sexpr=my_as_sexpr,
+                     _meta_fields=field_names))
 
 def as_sexpr(obj):
     if hasattr(obj, 'as_sexpr'):

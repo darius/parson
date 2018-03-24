@@ -1,6 +1,8 @@
 """
 Format parse errors with a vaguely-friendly display of the position.
 TODO Parson itself ought to help with something like this
+TODO Position info needs to be a range, not a single coordinate.
+     Or at least point to the '+' in 'a+a' instead of to the 'a'.
 """
 
 from structs import Struct

@@ -32,7 +32,9 @@ class Scope(object):
         self.complainer.semantic_error(plaint, where(t))
 
 def where(t):
-    return t.pos # XXX
+    if hasattr(t, 'pos'):
+        return t.pos
+    return where(getattr(t, t._meta_fields[0]))
 
 void_type = Void(None)
 
