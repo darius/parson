@@ -4,7 +4,7 @@ Tie the modules together into a compiler.
 
 import ast
 from parson import Grammar, Unparsable
-from parson_plaints import syntax_error
+from complainer import Complainer
 from c_emitter import c_emit
 import typecheck
 import sys
@@ -27,21 +27,23 @@ def to_c_main(filename, out_filename=None):
             raise Exception("Missing output filename")
         out_filename = filename[:-len('.itsy')] + '.c'
     with open(filename) as f:
-        source = f.read()
-    try:
-        opt_c = c_from_itsy(source)
-    except Unparsable as exc:
-        sys.stderr.write(syntax_error(exc, filename) + '\n')
-        return 1
+        text = f.read()
+    complainer = Complainer(text, filename)
+    opt_c = c_from_itsy(complainer)
     if opt_c is None:
         return 1
     with open(out_filename, 'w') as f:
         f.write(opt_c)
     return 0
 
-def c_from_itsy(source):
-    defs = parser.top(source)
-    if typecheck.status_error <= typecheck.check(defs):
+def c_from_itsy(complainer):
+    try:
+        defs = parser.top(complainer.text)
+    except Unparsable as exc:
+        complainer.syntax_error(exc)
+        return None
+    typecheck.check(defs, complainer)
+    if not complainer.ok():
         return None
     c_defs = map(c_emit, defs)
     return c_prelude + '\n' + '\n\n'.join(c_defs) + '\n'

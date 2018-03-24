@@ -7,13 +7,10 @@ from structs import Visitor
 from ast import Void
 
 
-status_ok, status_warning, status_error = range(3)
-
-def check(defs):
-    sc = Scope()
+def check(defs, complainer):
+    sc = Scope(complainer=complainer)
     for d in defs:
         tc_def(d, sc)
-    return sc.status
 
 def tc_opt_exp(opt_exp, te, type_):
     if opt_exp is not None:
@@ -21,20 +18,18 @@ def tc_opt_exp(opt_exp, te, type_):
 
 class Scope(object):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, complainer=None):
         self.parent = parent
-        self.status = status_ok
+        if complainer is None and parent is not None:
+            complainer = parent.complainer
+        self.complainer = complainer
         self.names = {}
 
     def def_var(self, name, type_):
         self.names[name] = type_   # or something
 
     def err(self, plaint, t):   # t = ast node
-        sc = self
-        while sc is not None and sc.status < status_error:
-            sc.status = status_error
-            sc = sc.parent
-        print '%s: %s' % (where(t), plaint) # XXX
+        self.complainer.semantic_error(plaint, where(t))
 
 def where(t):
     return t.pos # XXX
