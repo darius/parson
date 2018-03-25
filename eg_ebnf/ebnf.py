@@ -12,6 +12,7 @@ class Empty (Struct('')): pass
 class Symbol(Struct('text')): pass
 class Either(Struct('e1 e2')): pass
 class Chain (Struct('e1 e2')): pass
+class Star  (Struct('e1')): pass
 
 grammar_source = r"""
 '' rule* :end.
@@ -218,14 +219,16 @@ The first-sets of each either-branch must be disjoint.
 firsts(Empty)            = {}                      # or make it {epsilon}?
 firsts(Symbol(t))        = {t}
 firsts(Call(r))          = firsts(rules[r])        # to closure
-firsts(Either(e1, e2))   = firsts(e1) \/ firsts(e2)
-firsts(Chain(e1, e2))    = firsts(e1) \/ (firsts(e2) if nullable(e1) else {})
+firsts(Either(e1, e2))   = firsts(e1) | firsts(e2)
+firsts(Chain(e1, e2))    = firsts(e1) | (firsts(e2) if nullable(e1) else {})
+firsts(Star(e1))         = firsts(e1)              # | {epsilon} if we go that way
 
 nullable(Empty)          = Yes
 nullable(Symbol(_))      = No
 nullable(Call(r))        = nullable(rules[r])      # to closure
 nullable(Either(e1, e2)) = nullable(e1) | nullable(e2)
 nullable(Chain(e1, e2))  = nullable(e1) & nullable(e2)
+nullable(Star(_))        = Yes
 
 Can we do this with one function instead of two? E.g. using {epsilon} as above?
 In fact, couldn't EOF be a valid token to switch on? I don't think I'm accounting
@@ -252,5 +255,4 @@ class First(Visitor):
     def Either(self, t, bounds, nullable): return self(t.e1, bounds, nullable) | self(t.e2, bounds, nullable)
     def Chain(self, t, bounds, nullable):  return (self(t.e1, bounds, nullable)
                                                    | (self(t.e2, bounds, nullable) if nullable(t.e1) else empty_set))
-
 first = First()
