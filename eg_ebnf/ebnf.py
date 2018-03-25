@@ -47,7 +47,8 @@ B: 'b'.
 C: .
 
 exp: term terms.
-terms: ('+'|'-') exp | .
+terms: addop exp | .
+addop: ('+'|'-').
 term: factor factors.
 factors: '*' factors | .
 factor: 'x' | '(' exp ')'.
@@ -58,7 +59,8 @@ factor: 'x' | '(' exp ')'.
 #. ('B', Symbol('b'))
 #. ('C', Empty())
 #. ('exp', Chain(Call('term'), Call('terms')))
-#. ('terms', Either(Chain(Either(Symbol('+'), Symbol('-')), Call('exp')), Empty()))
+#. ('terms', Either(Chain(Call('addop'), Call('exp')), Empty()))
+#. ('addop', Either(Symbol('+'), Symbol('-')))
 #. ('term', Chain(Call('factor'), Call('factors')))
 #. ('factors', Either(Chain(Symbol('*'), Call('factors')), Empty()))
 #. ('factor', Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')')))))
@@ -67,15 +69,28 @@ def parse(text):
     rules = dict(parser(text))  # TODO check for dupes
     return rules
 
-## parse(eg)
-#. {'A': Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y')), 'C': Empty(), 'B': Symbol('b'), 'terms': Either(Chain(Either(Symbol('+'), Symbol('-')), Call('exp')), Empty()), 'factors': Either(Chain(Symbol('*'), Call('factors')), Empty()), 'term': Chain(Call('factor'), Call('factors')), 'exp': Chain(Call('term'), Call('terms')), 'factor': Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))}
-## compute_nullables(parse(eg))
-#. {'A': False, 'C': True, 'B': False, 'terms': True, 'factors': True, 'term': False, 'exp': False, 'factor': False}
-## compute_firsts(parse(eg))
-#. {'A': frozenset(['y', 'b']), 'C': frozenset([]), 'B': frozenset(['b']), 'terms': frozenset(['+', '-']), 'factors': frozenset(['*']), 'term': frozenset(['x', '(']), 'exp': frozenset(['x', '(']), 'factor': frozenset(['x', '('])}
+def compute_it(rules):      # (redundant temp def for testing)
+    rule_nullable = compute_nullables(rules)
+    def my_nullable(t): return nullable(t, rule_nullable)
+    def my_first(t, bounds): return first(t, bounds, my_nullable)
+    my_firsts = fixpoint(rules, empty_set, my_first)
+    for r in sorted(rules):
+        print '%-8s %-6s %s' % (r, my_nullable(rules[r]), ' '.join(sorted(my_firsts[r])))
+
+## compute_it(parse(eg))
+#. A        False  b y
+#. B        False  b
+#. C        True   
+#. addop    False  + -
+#. exp      False  ( x
+#. factor   False  ( x
+#. factors  True   *
+#. term     False  ( x
+#. terms    True   + -
 
 ## expand(parse(eg))
 #. void A(void);
+#. void addop(void);
 #. void C(void);
 #. void B(void);
 #. void terms(void);
@@ -97,6 +112,17 @@ def parse(text):
 #.   }
 #. }
 #. 
+#. void addop(void) {
+#.   switch (token) {
+#.     case '+': {
+#.       if (token != '+') abort(); next();
+#.     } break;
+#.     case '-': {
+#.       if (token != '-') abort(); next();
+#.     } break;
+#.   }
+#. }
+#. 
 #. void C(void) {
 #.   
 #. }
@@ -107,19 +133,27 @@ def parse(text):
 #. 
 #. void terms(void) {
 #.   switch (token) {
-#.     case '+': {
-#.       if (token != '+') abort(); next();
-#.     } break;
+#.     case '+':
 #.     case '-': {
-#.       if (token != '-') abort(); next();
+#.       addop();
+#.       exp();
+#.     } break;
+#.     default: {
+#.       
 #.     } break;
 #.   }
-#.   exp();
 #. }
 #. 
 #. void factors(void) {
-#.   if (token != '*') abort(); next();
-#.   factors();
+#.   switch (token) {
+#.     case '*': {
+#.       if (token != '*') abort(); next();
+#.       factors();
+#.     } break;
+#.     default: {
+#.       
+#.     } break;
+#.   }
 #. }
 #. 
 #. void term(void) {
@@ -146,62 +180,60 @@ def parse(text):
 #. }
 #. 
 
+Analysis = Struct('nullable firsts')
+
 def expand(rules):
     rule_nullable = compute_nullables(rules)
     def my_nullable(t): return nullable(t, rule_nullable)
     def my_first(t, bounds): return first(t, bounds, my_nullable)
     rule_firsts = fixpoint(rules, empty_set, my_first) # XXX these names are too confusable
     def exact_first(t): return first(t, rule_firsts, my_nullable)
+    ana = Analysis(my_nullable, exact_first)
     for name in rules:
         print 'void %s(void);' % name
     print
     for name in rules:
-        body = gen(rules[name], exact_first)
+        body = gen(rules[name], ana)
         print 'void %s(void) %s' % (name, embrace(body))
         print
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
 
-def compute_firsts(rules):      # (redundant temp def for testing)
-    rule_nullable = compute_nullables(rules)
-    def my_nullable(t): return nullable(t, rule_nullable)
-    def my_first(t, bounds): return first(t, bounds, my_nullable)
-    return fixpoint(rules, empty_set, my_first)
-
 class Gen(Visitor):
-    def Call(self, t, firsts):
+    def Call(self, t, ana):
         return '%s();' % t.name
-    def Empty(self, t, firsts):
+    def Empty(self, t, ana):
         return ''
-    def Symbol(self, t, firsts):
+    def Symbol(self, t, ana):
         return 'if (token != %r) abort(); next();' % t.text
-    def Either(self, t, firsts):
-        return gen_either(flatten(t), firsts)
-    def Chain(self, t, firsts):
-        return self(t.e1, firsts) + '\n' + self(t.e2, firsts)
+    def Either(self, t, ana):
+        return gen_switch(flatten(t), ana)
+    def Chain(self, t, ana):
+        return self(t.e1, ana) + '\n' + self(t.e2, ana)
 gen = Gen()
 
 class Flatten(Visitor):
-    def Empty(self, t):   return []
     def Either(self, t):  return self(t.e1) + self(t.e2)
     def default(self, t): return [t]
 flatten = Flatten()
 
-def gen_either(ts, firsts):
+def gen_switch(ts, ana):
     if not ts:
         return ''
     if len(ts) == 1:
-        return gen(ts[0], firsts)
-    first_sets = map(firsts, ts)
+        return gen(ts[0], ana)
+    first_sets = map(ana.firsts, ts)
     overlap = first_sets[0].intersection(*first_sets[1:])
-    warning = '// NOT LL(1)!\n' if overlap else ''
+    n_default = sum(map(ana.nullable, ts))
+    warning = '// NOT LL(1)!\n' if overlap or 1 < n_default else ''
     return warning + ('switch (token) %s'
-                      % embrace('\n'.join(branch(t, firsts) for t in ts)))
+                      % embrace('\n'.join(branch(t, ana) for t in ts)))
 
-def branch(t, firsts):
-    cases = '\n'.join('case %r:' % c for c in firsts(t))
-    return '%s %s break;' % (cases, embrace(gen(t, firsts)))
+def branch(t, ana):
+    cases = ('default:' if ana.nullable(t)
+             else '\n'.join('case %r:' % c for c in ana.firsts(t)))
+    return '%s %s break;' % (cases, embrace(gen(t, ana)))
 
 def fixpoint(rules, initial, f):
     bounds = {name: initial for name in rules}
