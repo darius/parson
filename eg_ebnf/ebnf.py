@@ -180,7 +180,6 @@ class Gen(Visitor):
         return gen_either(flatten(t), firsts)
     def Chain(self, t, firsts):
         return self(t.e1, firsts) + '\n' + self(t.e2, firsts)
-
 gen = Gen()
 
 class Flatten(Visitor):
@@ -190,7 +189,8 @@ class Flatten(Visitor):
 flatten = Flatten()
 
 def gen_either(ts, firsts):
-    assert ts, "No branches"
+    if not ts:
+        return ''
     if len(ts) == 1:
         return gen(ts[0], firsts)
     first_sets = map(firsts, ts)
@@ -215,6 +215,7 @@ def fixpoint(rules, initial, f):
 r"""
 OK, what's LL(1)?
 The first-sets of each either-branch must be disjoint.
+Also, the argument of a Star must be non-nullable (not checked yet).
 
 firsts(Empty)            = {}                      # or make it {epsilon}?
 firsts(Symbol(t))        = {t}
@@ -244,6 +245,7 @@ class Nullable(Visitor):
     def Symbol(self, t, bounds): return False
     def Either(self, t, bounds): return self(t.e1, bounds) | self(t.e2, bounds)
     def Chain(self, t, bounds):  return self(t.e1, bounds) & self(t.e2, bounds)
+    def Star(self, t, bounds):   XXX
 nullable = Nullable()
 
 empty_set = frozenset()
@@ -255,4 +257,5 @@ class First(Visitor):
     def Either(self, t, bounds, nullable): return self(t.e1, bounds, nullable) | self(t.e2, bounds, nullable)
     def Chain(self, t, bounds, nullable):  return (self(t.e1, bounds, nullable)
                                                    | (self(t.e2, bounds, nullable) if nullable(t.e1) else empty_set))
+    def Star(self, t, bounds, nullable):   XXX
 first = First()
