@@ -7,11 +7,11 @@ TODO: design an action language along the lines of Parson or something
 from structs import Struct, Visitor
 from parson import Grammar
 
+class Call  (Struct('name')): pass
 class Empty (Struct('')): pass
+class Symbol(Struct('text')): pass
 class Either(Struct('e1 e2')): pass
 class Chain (Struct('e1 e2')): pass
-class Symbol(Struct('text')): pass
-class Call  (Struct('name')): pass
 
 grammar_source = r"""
 '' rule* :end.
@@ -169,12 +169,12 @@ def compute_firsts(rules):      # (redundant temp def for testing)
     return fixpoint(rules, empty_set, my_first)
 
 class Gen(Visitor):
+    def Call(self, t, firsts):
+        return '%s();' % t.name
     def Empty(self, t, firsts):
         return ''
     def Symbol(self, t, firsts):
         return 'if (token != %r) abort(); next();' % t.text
-    def Call(self, t, firsts):
-        return '%s();' % t.name
     def Either(self, t, firsts):
         return gen_either(flatten(t), firsts)
     def Chain(self, t, firsts):
@@ -183,8 +183,8 @@ class Gen(Visitor):
 gen = Gen()
 
 class Flatten(Visitor):
-    def Either(self, t):  return self(t.e1) + self(t.e2)
     def Empty(self, t):   return []
+    def Either(self, t):  return self(t.e1) + self(t.e2)
     def default(self, t): return [t]
 flatten = Flatten()
 
@@ -236,9 +236,9 @@ def compute_nullables(rules):
     return fixpoint(rules, True, nullable)
 
 class Nullable(Visitor):
+    def Call(self, t, bounds):   return bounds[t.name]
     def Empty(self, t, bounds):  return True
     def Symbol(self, t, bounds): return False
-    def Call(self, t, bounds):   return bounds[t.name]
     def Either(self, t, bounds): return self(t.e1, bounds) | self(t.e2, bounds)
     def Chain(self, t, bounds):  return self(t.e1, bounds) & self(t.e2, bounds)
 nullable = Nullable()
@@ -246,9 +246,9 @@ nullable = Nullable()
 empty_set = frozenset()
 
 class First(Visitor):
+    def Call(self, t, bounds, nullable):   return bounds[t.name]
     def Empty(self, t, bounds, nullable):  return empty_set
     def Symbol(self, t, bounds, nullable): return frozenset([t.text])
-    def Call(self, t, bounds, nullable):   return bounds[t.name]
     def Either(self, t, bounds, nullable): return self(t.e1, bounds, nullable) | self(t.e2, bounds, nullable)
     def Chain(self, t, bounds, nullable):  return (self(t.e1, bounds, nullable)
                                                    | (self(t.e2, bounds, nullable) if nullable(t.e1) else empty_set))
