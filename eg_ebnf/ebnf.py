@@ -24,7 +24,8 @@ exp          :  term ('|' exp :Either)?
 
 term         :  factor (term :Chain)?.
 factor       :  qstring  :Symbol
-             |  name     :Call.
+             |  name     :Call
+             |  '(' exp ')'.
 
 name         :  /([A-Za-z_]\w*)/.
 
@@ -46,7 +47,7 @@ B: 'b'.
 C: .
 
 exp: term terms.
-terms: '+' exp | '-' exp | .
+terms: ('+'|'-') exp | .
 term: factor factors.
 factors: '*' factors | .
 factor: 'x' | '(' exp ')'.
@@ -57,7 +58,7 @@ factor: 'x' | '(' exp ')'.
 #. ('B', Symbol('b'))
 #. ('C', Empty())
 #. ('exp', Chain(Call('term'), Call('terms')))
-#. ('terms', Either(Chain(Symbol('+'), Call('exp')), Either(Chain(Symbol('-'), Call('exp')), Empty())))
+#. ('terms', Either(Chain(Either(Symbol('+'), Symbol('-')), Call('exp')), Empty()))
 #. ('term', Chain(Call('factor'), Call('factors')))
 #. ('factors', Either(Chain(Symbol('*'), Call('factors')), Empty()))
 #. ('factor', Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')')))))
@@ -67,7 +68,7 @@ def parse(text):
     return rules
 
 ## parse(eg)
-#. {'A': Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y')), 'C': Empty(), 'B': Symbol('b'), 'terms': Either(Chain(Symbol('+'), Call('exp')), Either(Chain(Symbol('-'), Call('exp')), Empty())), 'factors': Either(Chain(Symbol('*'), Call('factors')), Empty()), 'term': Chain(Call('factor'), Call('factors')), 'exp': Chain(Call('term'), Call('terms')), 'factor': Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))}
+#. {'A': Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y')), 'C': Empty(), 'B': Symbol('b'), 'terms': Either(Chain(Either(Symbol('+'), Symbol('-')), Call('exp')), Empty()), 'factors': Either(Chain(Symbol('*'), Call('factors')), Empty()), 'term': Chain(Call('factor'), Call('factors')), 'exp': Chain(Call('term'), Call('terms')), 'factor': Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))}
 ## compute_nullables(parse(eg))
 #. {'A': False, 'C': True, 'B': False, 'terms': True, 'factors': True, 'term': False, 'exp': False, 'factor': False}
 ## compute_firsts(parse(eg))
@@ -108,13 +109,12 @@ def parse(text):
 #.   switch (token) {
 #.     case '+': {
 #.       if (token != '+') abort(); next();
-#.       exp();
 #.     } break;
 #.     case '-': {
 #.       if (token != '-') abort(); next();
-#.       exp();
 #.     } break;
 #.   }
+#.   exp();
 #. }
 #. 
 #. void factors(void) {
