@@ -195,7 +195,6 @@ def gen_either(ts, firsts):
     first_sets = map(firsts, ts)
     overlap = first_sets[0].intersection(*first_sets[1:])
     warning = '// NOT LL(1)!\n' if overlap else ''
-    # TODO flatten nested switches
     return warning + ('switch (token) %s'
                       % embrace('\n'.join(branch(t, firsts) for t in ts)))
 
