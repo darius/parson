@@ -2,8 +2,10 @@
 Parse a grammar, check that it's LL(1), and emit C code to parse according to it.
 TODO: stars/pluses etc.
 TODO: design an action language along the lines of Parson or something
+TODO: generate an actually-useful parser
 """
 
+from collections import Counter
 from structs import Struct, Visitor
 import parson
 import metagrammar
@@ -52,14 +54,19 @@ def gen_switch(ts, ana):
         return ''
     if len(ts) == 1:
         return gen(ts[0], ana)
-    first_sets = map(ana.firsts, ts)
-    overlap = first_sets[0].intersection(*first_sets[1:])
-    n_default = sum(map(ana.nullable, ts))
+
     warning = ''
-    if overlap:
-        warning += '// NOT LL(1)! Overlap: %r\n' % sorted(overlap)
+
+    n_default = sum(map(ana.nullable, ts))
     if 1 < n_default:
         warning += '// NOT LL(1)! Multiple defaults\n'
+
+    first_sets = map(ana.firsts, ts)
+    counts = Counter(token for fs in first_sets for token in fs)
+    overlap = [token for token in counts if 1 < counts[token]]
+    if overlap:
+        warning += '// NOT LL(1)! Overlap: %r\n' % sorted(overlap)
+
     # TODO: if no default, add one that aborts
     return warning + ('switch (token) %s'
                       % embrace('\n'.join(branch(t, ana) for t in ts)))
