@@ -11,8 +11,10 @@ import metagrammar
 metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
 def metaparse(text):
-    pairs = metaparser(text)  # TODO check for dupes
+    pairs = metaparser(text)
     nonterminals = tuple(pair[0] for pair in pairs)
+    if len(nonterminals) != len(set(nonterminals)):
+        raise Exception("Duplicate definitions", nonterminals)
     return Grammar(nonterminals, dict(pairs))
 
 Grammar = Struct('nonterminals rules')
