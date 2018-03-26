@@ -103,11 +103,11 @@ def compute_it(rules):      # (redundant temp def for testing)
 #.   switch (token) {
 #.     case 'b': {
 #.       B();
-#.       if (token != 'x') abort(); next();
+#.       eat('x');
 #.       A();
 #.     } break;
 #.     case 'y': {
-#.       if (token != 'y') abort(); next();
+#.       eat('y');
 #.     } break;
 #.   }
 #. }
@@ -115,10 +115,10 @@ def compute_it(rules):      # (redundant temp def for testing)
 #. void addop(void) {
 #.   switch (token) {
 #.     case '+': {
-#.       if (token != '+') abort(); next();
+#.       eat('+');
 #.     } break;
 #.     case '-': {
-#.       if (token != '-') abort(); next();
+#.       eat('-');
 #.     } break;
 #.   }
 #. }
@@ -128,7 +128,7 @@ def compute_it(rules):      # (redundant temp def for testing)
 #. }
 #. 
 #. void B(void) {
-#.   if (token != 'b') abort(); next();
+#.   eat('b');
 #. }
 #. 
 #. void terms(void) {
@@ -147,7 +147,7 @@ def compute_it(rules):      # (redundant temp def for testing)
 #. void factors(void) {
 #.   switch (token) {
 #.     case '*': {
-#.       if (token != '*') abort(); next();
+#.       eat('*');
 #.       factors();
 #.     } break;
 #.     default: {
@@ -169,12 +169,12 @@ def compute_it(rules):      # (redundant temp def for testing)
 #. void factor(void) {
 #.   switch (token) {
 #.     case 'x': {
-#.       if (token != 'x') abort(); next();
+#.       eat('x');
 #.     } break;
 #.     case '(': {
-#.       if (token != '(') abort(); next();
+#.       eat('(');
 #.       exp();
-#.       if (token != ')') abort(); next();
+#.       eat(')');
 #.     } break;
 #.   }
 #. }
@@ -206,7 +206,7 @@ class Gen(Visitor):
     def Empty(self, t, ana):
         return ''
     def Symbol(self, t, ana):
-        return 'if (token != %r) abort(); next();' % t.text
+        return 'eat(%r);' % t.text
     def Either(self, t, ana):
         return gen_switch(flatten(t), ana)
     def Chain(self, t, ana):
