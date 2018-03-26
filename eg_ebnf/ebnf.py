@@ -101,8 +101,9 @@ def fixpoint(rules, initial, make_visitor):
     bounds = {name: initial for name in rules}
     while True:
         prev_state = dict(bounds)
+        visitor = make_visitor(bounds)
         for name in rules:
-            bounds[name] = make_visitor(bounds)(rules[name])
+            bounds[name] = visitor(rules[name])
         if prev_state == bounds:
             return bounds
 
