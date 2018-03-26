@@ -20,7 +20,9 @@ exp          :  term ('|' exp :Either)?
              |                :Empty.
 
 term         :  factor (term :Chain)?.
-factor       :  qstring  :Symbol
+factor       :  primary ('*' :Star)?.
+
+primary      :  qstring  :Symbol
              |  name     :Call
              |  '(' exp ')'.
 

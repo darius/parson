@@ -1,6 +1,5 @@
 """
 Parse a grammar, check that it's LL(1), and emit C code to parse according to it.
-TODO: stars/pluses etc.
 TODO: design an action language along the lines of Parson or something
 TODO: generate an actually-useful parser
 """
@@ -42,12 +41,23 @@ class Gen(Visitor):
     def Symbol(self, t, ana): return 'eat(%r);' % t.text
     def Either(self, t, ana): return gen_switch(flatten(t), ana)
     def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana)
+    def Star(self, t, ana):   return gen_while(t.e1, ana)
 gen = Gen()
 
 class Flatten(Visitor):
     def Either(self, t):  return self(t.e1) + self(t.e2)
     def default(self, t): return [t]
 flatten = Flatten()
+
+def gen_while(t, ana):
+    warning = ''
+    if ana.nullable(t):
+        warning += '// NOT LL(1)! Nullable star body'
+    test = ' || '.join(map(gen_test, ana.firsts(t)))
+    return warning + 'while (%s) %s' % (test, embrace(gen(t, ana)))
+
+def gen_test(token):
+    return 'token == %r' % token
 
 def gen_switch(ts, ana):
     if not ts:
@@ -70,7 +80,7 @@ def gen_switch(ts, ana):
     branches = [branch(t, ana) for t in ts]
     if n_default == 0:
         branches.append('default:\n  abort();')
-    return warning + ('switch (token) %s' % embrace('\n'.join(branches)))
+    return warning + 'switch (token) %s' % embrace('\n'.join(branches))
 
 def branch(t, ana):
     cases = ('default:' if ana.nullable(t)
@@ -133,7 +143,7 @@ class Nullable(Visitor):
     def Symbol(self, t): return False
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) & self(t.e2)
-    def Star(self, t):   XXX
+    def Star(self, t):   return True
 
 def compute_firsts(rules, nul):
     return fixpoint(rules, empty_set, lambda fst: First(nul, fst)) # TODO better naming
@@ -148,7 +158,7 @@ class First(Visitor):
     def Symbol(self, t): return frozenset([t.text])
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
-    def Star(self, t):   XXX
+    def Star(self, t):   return self(t.e1)
 
 empty_set = frozenset()
 
@@ -160,11 +170,9 @@ A: B 'x' A | 'y'.
 B: 'b'.
 C: .
 
-exp: term terms.
-terms: addop exp | .
+exp: term (addop exp | ).
 addop: ('+'|'-').
-term: factor factors.
-factors: '*' factors | .
+term: factor ('*' factor)*.
 factor: 'x' | '(' exp ')'.
 """
 
@@ -173,11 +181,9 @@ factor: 'x' | '(' exp ')'.
 #. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
 #. B        Symbol('b')
 #. C        Empty()
-#. exp      Chain(Call('term'), Call('terms'))
-#. terms    Either(Chain(Call('addop'), Call('exp')), Empty())
+#. exp      Chain(Call('term'), Either(Chain(Call('addop'), Call('exp')), Empty()))
 #. addop    Either(Symbol('+'), Symbol('-'))
-#. term     Chain(Call('factor'), Call('factors'))
-#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
+#. term     Chain(Call('factor'), Star(Chain(Symbol('*'), Call('factor'))))
 #. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
 
 ## show_ana(metaparse(eg))
@@ -185,10 +191,8 @@ factor: 'x' | '(' exp ')'.
 #. B        False  b
 #. C        True   
 #. exp      False  ( x
-#. terms    True   + -
 #. addop    False  + -
 #. term     False  ( x
-#. factors  True   *
 #. factor   False  ( x
 
 def show_ana(grammar):
@@ -202,10 +206,8 @@ def show_ana(grammar):
 #. void B(void);
 #. void C(void);
 #. void exp(void);
-#. void terms(void);
 #. void addop(void);
 #. void term(void);
-#. void factors(void);
 #. void factor(void);
 #. 
 #. void A(void) {
@@ -233,10 +235,6 @@ def show_ana(grammar):
 #. 
 #. void exp(void) {
 #.   term();
-#.   terms();
-#. }
-#. 
-#. void terms(void) {
 #.   switch (token) {
 #.     case '+':
 #.     case '-': {
@@ -264,18 +262,9 @@ def show_ana(grammar):
 #. 
 #. void term(void) {
 #.   factor();
-#.   factors();
-#. }
-#. 
-#. void factors(void) {
-#.   switch (token) {
-#.     case '*': {
-#.       eat('*');
-#.       factors();
-#.     } break;
-#.     default: {
-#.       
-#.     } break;
+#.   while (token == '*') {
+#.     eat('*');
+#.     factor();
 #.   }
 #. }
 #. 
