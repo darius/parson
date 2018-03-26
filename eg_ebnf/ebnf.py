@@ -28,6 +28,9 @@ def expand(grammar):
         print 'void %s(void) %s' % (name, embrace(body))
         print
 
+def embrace(s): return '{%s\n}' % indent('\n' + s)
+def indent(s): return s.replace('\n', '\n  ')
+
 def analyze(grammar):
     rule_nullable = compute_nullables(grammar.rules)
     def my_nullable(t): return nullable(t, rule_nullable)
@@ -36,20 +39,12 @@ def analyze(grammar):
     def exact_first(t): return first(t, rule_firsts, my_nullable)
     return Analysis(my_nullable, exact_first)
 
-def embrace(s): return '{%s\n}' % indent('\n' + s)
-def indent(s): return s.replace('\n', '\n  ')
-
 class Gen(Visitor):
-    def Call(self, t, ana):
-        return '%s();' % t.name
-    def Empty(self, t, ana):
-        return ''
-    def Symbol(self, t, ana):
-        return 'eat(%r);' % t.text
-    def Either(self, t, ana):
-        return gen_switch(flatten(t), ana)
-    def Chain(self, t, ana):
-        return self(t.e1, ana) + '\n' + self(t.e2, ana)
+    def Call(self, t, ana):   return '%s();' % t.name
+    def Empty(self, t, ana):  return ''
+    def Symbol(self, t, ana): return 'eat(%r);' % t.text
+    def Either(self, t, ana): return gen_switch(flatten(t), ana)
+    def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana)
 gen = Gen()
 
 class Flatten(Visitor):
@@ -66,6 +61,7 @@ def gen_switch(ts, ana):
     overlap = first_sets[0].intersection(*first_sets[1:])
     n_default = sum(map(ana.nullable, ts))
     warning = '// NOT LL(1)!\n' if overlap or 1 < n_default else ''
+    # TODO: if no default, add one that aborts
     return warning + ('switch (token) %s'
                       % embrace('\n'.join(branch(t, ana) for t in ts)))
 
@@ -147,31 +143,32 @@ factors: '*' factors | .
 factor: 'x' | '(' exp ')'.
 """
 
-## for r,e in sorted(parser(eg)): print '%-8s %s' % (r, e)
+## egg = parse(eg)
+## for r in egg.nonterminals: print '%-8s %s' % (r, egg.rules[r])
 #. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
 #. B        Symbol('b')
 #. C        Empty()
-#. addop    Either(Symbol('+'), Symbol('-'))
 #. exp      Chain(Call('term'), Call('terms'))
-#. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
-#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
-#. term     Chain(Call('factor'), Call('factors'))
 #. terms    Either(Chain(Call('addop'), Call('exp')), Empty())
+#. addop    Either(Symbol('+'), Symbol('-'))
+#. term     Chain(Call('factor'), Call('factors'))
+#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
+#. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
 
 ## show_ana(parse(eg))
 #. A        False  b y
 #. B        False  b
 #. C        True   
-#. addop    False  + -
 #. exp      False  ( x
-#. factor   False  ( x
-#. factors  True   *
-#. term     False  ( x
 #. terms    True   + -
+#. addop    False  + -
+#. term     False  ( x
+#. factors  True   *
+#. factor   False  ( x
 
 def show_ana(grammar):
     ana = analyze(grammar)
-    for r in sorted(grammar.nonterminals):
+    for r in grammar.nonterminals:
         print '%-8s %-6s %s' % (r, ana.nullable(grammar.rules[r]),
                                 ' '.join(sorted(ana.firsts(grammar.rules[r]))))
 
