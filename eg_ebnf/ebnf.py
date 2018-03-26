@@ -54,30 +54,18 @@ factors: '*' factors | .
 factor: 'x' | '(' exp ')'.
 """
 
-## for rule in parser(eg): print rule
-#. ('A', Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y')))
-#. ('B', Symbol('b'))
-#. ('C', Empty())
-#. ('exp', Chain(Call('term'), Call('terms')))
-#. ('terms', Either(Chain(Call('addop'), Call('exp')), Empty()))
-#. ('addop', Either(Symbol('+'), Symbol('-')))
-#. ('term', Chain(Call('factor'), Call('factors')))
-#. ('factors', Either(Chain(Symbol('*'), Call('factors')), Empty()))
-#. ('factor', Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')')))))
+## for r,e in sorted(parser(eg)): print '%-8s %s' % (r, e)
+#. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
+#. B        Symbol('b')
+#. C        Empty()
+#. addop    Either(Symbol('+'), Symbol('-'))
+#. exp      Chain(Call('term'), Call('terms'))
+#. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
+#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
+#. term     Chain(Call('factor'), Call('factors'))
+#. terms    Either(Chain(Call('addop'), Call('exp')), Empty())
 
-def parse(text):
-    rules = dict(parser(text))  # TODO check for dupes
-    return rules
-
-def compute_it(rules):      # (redundant temp def for testing)
-    rule_nullable = compute_nullables(rules)
-    def my_nullable(t): return nullable(t, rule_nullable)
-    def my_first(t, bounds): return first(t, bounds, my_nullable)
-    my_firsts = fixpoint(rules, empty_set, my_first)
-    for r in sorted(rules):
-        print '%-8s %-6s %s' % (r, my_nullable(rules[r]), ' '.join(sorted(my_firsts[r])))
-
-## compute_it(parse(eg))
+## show_ana(parse(eg))
 #. A        False  b y
 #. B        False  b
 #. C        True   
@@ -87,6 +75,16 @@ def compute_it(rules):      # (redundant temp def for testing)
 #. factors  True   *
 #. term     False  ( x
 #. terms    True   + -
+
+def parse(text):
+    rules = dict(parser(text))  # TODO check for dupes
+    return rules
+
+def show_ana(rules):
+    ana = analyze(rules)
+    for r in sorted(rules):
+        print '%-8s %-6s %s' % (r, ana.nullable(rules[r]), ' '.join(sorted(ana.firsts(rules[r]))))
+
 
 ## expand(parse(eg))
 #. void A(void);
@@ -183,12 +181,7 @@ def compute_it(rules):      # (redundant temp def for testing)
 Analysis = Struct('nullable firsts')
 
 def expand(rules):
-    rule_nullable = compute_nullables(rules)
-    def my_nullable(t): return nullable(t, rule_nullable)
-    def my_first(t, bounds): return first(t, bounds, my_nullable)
-    rule_firsts = fixpoint(rules, empty_set, my_first) # XXX these names are too confusable
-    def exact_first(t): return first(t, rule_firsts, my_nullable)
-    ana = Analysis(my_nullable, exact_first)
+    ana = analyze(rules)
     for name in rules:
         print 'void %s(void);' % name
     print
@@ -196,6 +189,14 @@ def expand(rules):
         body = gen(rules[name], ana)
         print 'void %s(void) %s' % (name, embrace(body))
         print
+
+def analyze(rules):
+    rule_nullable = compute_nullables(rules)
+    def my_nullable(t): return nullable(t, rule_nullable)
+    def my_first(t, bounds): return first(t, bounds, my_nullable)
+    rule_firsts = fixpoint(rules, empty_set, my_first) # XXX these names are too confusable
+    def exact_first(t): return first(t, rule_firsts, my_nullable)
+    return Analysis(my_nullable, exact_first)
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
