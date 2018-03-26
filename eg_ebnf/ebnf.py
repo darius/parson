@@ -84,7 +84,7 @@ def gen_switch(ts, ana):
 
 def branch(t, ana):
     cases = ('default:' if ana.nullable(t)
-             else '\n'.join('case %r:' % c for c in ana.firsts(t)))
+             else '\n'.join('case %r:' % c for c in sorted(ana.firsts(t))))
     return '%s %s break;' % (cases, embrace(gen(t, ana)))
 
 
