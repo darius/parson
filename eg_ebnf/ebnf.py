@@ -67,9 +67,10 @@ def gen_switch(ts, ana):
     if overlap:
         warning += '// NOT LL(1)! Overlap: %r\n' % sorted(overlap)
 
-    # TODO: if no default, add one that aborts
-    return warning + ('switch (token) %s'
-                      % embrace('\n'.join(branch(t, ana) for t in ts)))
+    branches = [branch(t, ana) for t in ts]
+    if n_default == 0:
+        branches.append('default:\n  abort();')
+    return warning + ('switch (token) %s' % embrace('\n'.join(branches)))
 
 def branch(t, ana):
     cases = ('default:' if ana.nullable(t)
@@ -217,6 +218,8 @@ def show_ana(grammar):
 #.     case 'y': {
 #.       eat('y');
 #.     } break;
+#.     default:
+#.       abort();
 #.   }
 #. }
 #. 
@@ -254,6 +257,8 @@ def show_ana(grammar):
 #.     case '-': {
 #.       eat('-');
 #.     } break;
+#.     default:
+#.       abort();
 #.   }
 #. }
 #. 
@@ -284,5 +289,7 @@ def show_ana(grammar):
 #.       exp();
 #.       eat(')');
 #.     } break;
+#.     default:
+#.       abort();
 #.   }
 #. }
