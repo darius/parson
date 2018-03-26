@@ -94,45 +94,49 @@ for that ("follow sets", iirc).
 Analysis = Struct('nullable firsts')
 
 def analyze(grammar):
-    rule_nullable = compute_nullables(grammar.rules)
-    def my_nullable(t): return nullable(t, rule_nullable)
-    def my_first(t, bounds): return first(t, bounds, my_nullable)
-    rule_firsts = fixpoint(grammar.rules, empty_set, my_first) # XXX these names are too confusable
-    def exact_first(t): return first(t, rule_firsts, my_nullable)
-    return Analysis(my_nullable, exact_first)
+    nul = Nullable(compute_nullables(grammar.rules))
+    fst = First(nul, compute_firsts(grammar.rules, nul))
+    return Analysis(nul, fst)
 
-def fixpoint(rules, initial, f):
+def fixpoint(rules, initial, make_visitor):
     bounds = {name: initial for name in rules}
     while True:
         prev_state = dict(bounds)
         for name in rules:
-            bounds[name] = f(rules[name], bounds)
+            bounds[name] = make_visitor(bounds)(rules[name])
         if prev_state == bounds:
             return bounds
 
 def compute_nullables(rules):
-    return fixpoint(rules, True, nullable)
+    return fixpoint(rules, True, Nullable)
 
 class Nullable(Visitor):
-    def Call(self, t, bounds):   return bounds[t.name]
-    def Empty(self, t, bounds):  return True
-    def Symbol(self, t, bounds): return False
-    def Either(self, t, bounds): return self(t.e1, bounds) | self(t.e2, bounds)
-    def Chain(self, t, bounds):  return self(t.e1, bounds) & self(t.e2, bounds)
-    def Star(self, t, bounds):   XXX
-nullable = Nullable()
+    def __init__(self, nul):
+        self.nul = nul
 
-empty_set = frozenset()
+    def Call(self, t):   return self.nul[t.name]
+    def Empty(self, t):  return True
+    def Symbol(self, t): return False
+    def Either(self, t): return self(t.e1) | self(t.e2)
+    def Chain(self, t):  return self(t.e1) & self(t.e2)
+    def Star(self, t):   XXX
+
+def compute_firsts(rules, nul):
+    return fixpoint(rules, empty_set, lambda fst: First(nul, fst)) # TODO better naming
 
 class First(Visitor):
-    def Call(self, t, bounds, nullable):   return bounds[t.name]
-    def Empty(self, t, bounds, nullable):  return empty_set
-    def Symbol(self, t, bounds, nullable): return frozenset([t.text])
-    def Either(self, t, bounds, nullable): return self(t.e1, bounds, nullable) | self(t.e2, bounds, nullable)
-    def Chain(self, t, bounds, nullable):  return (self(t.e1, bounds, nullable)
-                                                   | (self(t.e2, bounds, nullable) if nullable(t.e1) else empty_set))
-    def Star(self, t, bounds, nullable):   XXX
-first = First()
+    def __init__(self, nul, fst):
+        self.nul = nul
+        self.fst = fst
+
+    def Call(self, t):   return self.fst[t.name]
+    def Empty(self, t):  return empty_set
+    def Symbol(self, t): return frozenset([t.text])
+    def Either(self, t): return self(t.e1) | self(t.e2)
+    def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
+    def Star(self, t):   XXX
+
+empty_set = frozenset()
 
 
 # Smoke test
