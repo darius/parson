@@ -55,7 +55,11 @@ def gen_switch(ts, ana):
     first_sets = map(ana.firsts, ts)
     overlap = first_sets[0].intersection(*first_sets[1:])
     n_default = sum(map(ana.nullable, ts))
-    warning = '// NOT LL(1)!\n' if overlap or 1 < n_default else ''
+    warning = ''
+    if overlap:
+        warning += '// NOT LL(1)! Overlap: %r\n' % sorted(overlap)
+    if 1 < n_default:
+        warning += '// NOT LL(1)! Multiple defaults\n'
     # TODO: if no default, add one that aborts
     return warning + ('switch (token) %s'
                       % embrace('\n'.join(branch(t, ana) for t in ts)))
