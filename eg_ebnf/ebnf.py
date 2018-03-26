@@ -40,7 +40,7 @@ class Gen(Visitor):
     def Empty(self, t, ana):  return ''
     def Symbol(self, t, ana): return 'eat(%r);' % t.text
     def Either(self, t, ana): return gen_switch(flatten(t), ana)
-    def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana)
+    def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana) # TODO drop empty lines
     def Star(self, t, ana):   return gen_while(t.e1, ana)
 gen = Gen()
 
