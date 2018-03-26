@@ -16,7 +16,6 @@ def metaparse(text):
     return Grammar(nonterminals, dict(pairs))
 
 Grammar = Struct('nonterminals rules')
-Analysis = Struct('nullable firsts')
 
 
 # Generating a parser
@@ -91,6 +90,8 @@ Can we do this with one function instead of two? E.g. using {epsilon} as above?
 In fact, couldn't EOF be a valid token to switch on? I don't think I'm accounting
 for that ("follow sets", iirc).
 """
+
+Analysis = Struct('nullable firsts')
 
 def analyze(grammar):
     rule_nullable = compute_nullables(grammar.rules)
