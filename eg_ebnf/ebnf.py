@@ -8,15 +8,18 @@ from structs import Struct, Visitor
 import parson
 import metagrammar
 
-parser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
+metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
-def parse(text):
-    pairs = parser(text)  # TODO check for dupes
+def metaparse(text):
+    pairs = metaparser(text)  # TODO check for dupes
     nonterminals = tuple(pair[0] for pair in pairs)
     return Grammar(nonterminals, dict(pairs))
 
 Grammar = Struct('nonterminals rules')
 Analysis = Struct('nullable firsts')
+
+
+# Generating a parser
 
 def expand(grammar):
     ana = analyze(grammar)
@@ -30,14 +33,6 @@ def expand(grammar):
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
-
-def analyze(grammar):
-    rule_nullable = compute_nullables(grammar.rules)
-    def my_nullable(t): return nullable(t, rule_nullable)
-    def my_first(t, bounds): return first(t, bounds, my_nullable)
-    rule_firsts = fixpoint(grammar.rules, empty_set, my_first) # XXX these names are too confusable
-    def exact_first(t): return first(t, rule_firsts, my_nullable)
-    return Analysis(my_nullable, exact_first)
 
 class Gen(Visitor):
     def Call(self, t, ana):   return '%s();' % t.name
@@ -70,14 +65,8 @@ def branch(t, ana):
              else '\n'.join('case %r:' % c for c in ana.firsts(t)))
     return '%s %s break;' % (cases, embrace(gen(t, ana)))
 
-def fixpoint(rules, initial, f):
-    bounds = {name: initial for name in rules}
-    while True:
-        prev_state = dict(bounds)
-        for name in rules:
-            bounds[name] = f(rules[name], bounds)
-        if prev_state == bounds:
-            return bounds
+
+# Grammar analysis
 
 r"""
 OK, what's LL(1)?
@@ -102,6 +91,23 @@ Can we do this with one function instead of two? E.g. using {epsilon} as above?
 In fact, couldn't EOF be a valid token to switch on? I don't think I'm accounting
 for that ("follow sets", iirc).
 """
+
+def analyze(grammar):
+    rule_nullable = compute_nullables(grammar.rules)
+    def my_nullable(t): return nullable(t, rule_nullable)
+    def my_first(t, bounds): return first(t, bounds, my_nullable)
+    rule_firsts = fixpoint(grammar.rules, empty_set, my_first) # XXX these names are too confusable
+    def exact_first(t): return first(t, rule_firsts, my_nullable)
+    return Analysis(my_nullable, exact_first)
+
+def fixpoint(rules, initial, f):
+    bounds = {name: initial for name in rules}
+    while True:
+        prev_state = dict(bounds)
+        for name in rules:
+            bounds[name] = f(rules[name], bounds)
+        if prev_state == bounds:
+            return bounds
 
 def compute_nullables(rules):
     return fixpoint(rules, True, nullable)
@@ -143,7 +149,7 @@ factors: '*' factors | .
 factor: 'x' | '(' exp ')'.
 """
 
-## egg = parse(eg)
+## egg = metaparse(eg)
 ## for r in egg.nonterminals: print '%-8s %s' % (r, egg.rules[r])
 #. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
 #. B        Symbol('b')
@@ -155,7 +161,7 @@ factor: 'x' | '(' exp ')'.
 #. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
 #. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
 
-## show_ana(parse(eg))
+## show_ana(metaparse(eg))
 #. A        False  b y
 #. B        False  b
 #. C        True   
@@ -172,7 +178,7 @@ def show_ana(grammar):
         print '%-8s %-6s %s' % (r, ana.nullable(grammar.rules[r]),
                                 ' '.join(sorted(ana.firsts(grammar.rules[r]))))
 
-## expand(parse(eg))
+## expand(metaparse(eg))
 #. void A(void);
 #. void B(void);
 #. void C(void);
