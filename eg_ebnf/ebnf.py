@@ -6,31 +6,33 @@ TODO: design an action language along the lines of Parson or something
 
 from structs import Struct, Visitor
 import parson
-import grammar
+import metagrammar
 
-parser = parson.Grammar(grammar.grammar_source).bind(grammar)
+parser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
 def parse(text):
-    rules = dict(parser(text))  # TODO check for dupes
-    return rules
+    pairs = parser(text)  # TODO check for dupes
+    nonterminals = tuple(pair[0] for pair in pairs)
+    return Grammar(nonterminals, dict(pairs))
 
+Grammar = Struct('nonterminals rules')
 Analysis = Struct('nullable firsts')
 
-def expand(rules):
-    ana = analyze(rules)
-    for name in rules:
+def expand(grammar):
+    ana = analyze(grammar)
+    for name in grammar.nonterminals:
         print 'void %s(void);' % name
     print
-    for name in rules:
-        body = gen(rules[name], ana)
+    for name in grammar.nonterminals:
+        body = gen(grammar.rules[name], ana)
         print 'void %s(void) %s' % (name, embrace(body))
         print
 
-def analyze(rules):
-    rule_nullable = compute_nullables(rules)
+def analyze(grammar):
+    rule_nullable = compute_nullables(grammar.rules)
     def my_nullable(t): return nullable(t, rule_nullable)
     def my_first(t, bounds): return first(t, bounds, my_nullable)
-    rule_firsts = fixpoint(rules, empty_set, my_first) # XXX these names are too confusable
+    rule_firsts = fixpoint(grammar.rules, empty_set, my_first) # XXX these names are too confusable
     def exact_first(t): return first(t, rule_firsts, my_nullable)
     return Analysis(my_nullable, exact_first)
 
@@ -167,20 +169,21 @@ factor: 'x' | '(' exp ')'.
 #. term     False  ( x
 #. terms    True   + -
 
-def show_ana(rules):
-    ana = analyze(rules)
-    for r in sorted(rules):
-        print '%-8s %-6s %s' % (r, ana.nullable(rules[r]), ' '.join(sorted(ana.firsts(rules[r]))))
+def show_ana(grammar):
+    ana = analyze(grammar)
+    for r in sorted(grammar.nonterminals):
+        print '%-8s %-6s %s' % (r, ana.nullable(grammar.rules[r]),
+                                ' '.join(sorted(ana.firsts(grammar.rules[r]))))
 
 ## expand(parse(eg))
 #. void A(void);
-#. void addop(void);
-#. void C(void);
 #. void B(void);
-#. void terms(void);
-#. void factors(void);
-#. void term(void);
+#. void C(void);
 #. void exp(void);
+#. void terms(void);
+#. void addop(void);
+#. void term(void);
+#. void factors(void);
 #. void factor(void);
 #. 
 #. void A(void) {
@@ -196,23 +199,17 @@ def show_ana(rules):
 #.   }
 #. }
 #. 
-#. void addop(void) {
-#.   switch (token) {
-#.     case '+': {
-#.       eat('+');
-#.     } break;
-#.     case '-': {
-#.       eat('-');
-#.     } break;
-#.   }
+#. void B(void) {
+#.   eat('b');
 #. }
 #. 
 #. void C(void) {
 #.   
 #. }
 #. 
-#. void B(void) {
-#.   eat('b');
+#. void exp(void) {
+#.   term();
+#.   terms();
 #. }
 #. 
 #. void terms(void) {
@@ -228,6 +225,22 @@ def show_ana(rules):
 #.   }
 #. }
 #. 
+#. void addop(void) {
+#.   switch (token) {
+#.     case '+': {
+#.       eat('+');
+#.     } break;
+#.     case '-': {
+#.       eat('-');
+#.     } break;
+#.   }
+#. }
+#. 
+#. void term(void) {
+#.   factor();
+#.   factors();
+#. }
+#. 
 #. void factors(void) {
 #.   switch (token) {
 #.     case '*': {
@@ -238,16 +251,6 @@ def show_ana(rules):
 #.       
 #.     } break;
 #.   }
-#. }
-#. 
-#. void term(void) {
-#.   factor();
-#.   factors();
-#. }
-#. 
-#. void exp(void) {
-#.   term();
-#.   terms();
 #. }
 #. 
 #. void factor(void) {

@@ -11,7 +11,7 @@ class Either(_S('e1 e2')): pass
 class Chain (_S('e1 e2')): pass
 class Star  (_S('e1')): pass
 
-grammar_source = r"""
+metagrammar_text = r"""
 '' rule* :end.
 
 rule         :  name ':' exp '.' :hug.
