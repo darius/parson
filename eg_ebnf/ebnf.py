@@ -5,146 +5,14 @@ TODO: design an action language along the lines of Parson or something
 """
 
 from structs import Struct, Visitor
-from parson import Grammar
+import parson
 import grammar
 
-parser = Grammar(grammar.grammar_source).bind(grammar)
-
-eg = """
-A: B 'x' A | 'y'.
-B: 'b'.
-C: .
-
-exp: term terms.
-terms: addop exp | .
-addop: ('+'|'-').
-term: factor factors.
-factors: '*' factors | .
-factor: 'x' | '(' exp ')'.
-"""
-
-## for r,e in sorted(parser(eg)): print '%-8s %s' % (r, e)
-#. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
-#. B        Symbol('b')
-#. C        Empty()
-#. addop    Either(Symbol('+'), Symbol('-'))
-#. exp      Chain(Call('term'), Call('terms'))
-#. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
-#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
-#. term     Chain(Call('factor'), Call('factors'))
-#. terms    Either(Chain(Call('addop'), Call('exp')), Empty())
-
-## show_ana(parse(eg))
-#. A        False  b y
-#. B        False  b
-#. C        True   
-#. addop    False  + -
-#. exp      False  ( x
-#. factor   False  ( x
-#. factors  True   *
-#. term     False  ( x
-#. terms    True   + -
+parser = parson.Grammar(grammar.grammar_source).bind(grammar)
 
 def parse(text):
     rules = dict(parser(text))  # TODO check for dupes
     return rules
-
-def show_ana(rules):
-    ana = analyze(rules)
-    for r in sorted(rules):
-        print '%-8s %-6s %s' % (r, ana.nullable(rules[r]), ' '.join(sorted(ana.firsts(rules[r]))))
-
-## expand(parse(eg))
-#. void A(void);
-#. void addop(void);
-#. void C(void);
-#. void B(void);
-#. void terms(void);
-#. void factors(void);
-#. void term(void);
-#. void exp(void);
-#. void factor(void);
-#. 
-#. void A(void) {
-#.   switch (token) {
-#.     case 'b': {
-#.       B();
-#.       eat('x');
-#.       A();
-#.     } break;
-#.     case 'y': {
-#.       eat('y');
-#.     } break;
-#.   }
-#. }
-#. 
-#. void addop(void) {
-#.   switch (token) {
-#.     case '+': {
-#.       eat('+');
-#.     } break;
-#.     case '-': {
-#.       eat('-');
-#.     } break;
-#.   }
-#. }
-#. 
-#. void C(void) {
-#.   
-#. }
-#. 
-#. void B(void) {
-#.   eat('b');
-#. }
-#. 
-#. void terms(void) {
-#.   switch (token) {
-#.     case '+':
-#.     case '-': {
-#.       addop();
-#.       exp();
-#.     } break;
-#.     default: {
-#.       
-#.     } break;
-#.   }
-#. }
-#. 
-#. void factors(void) {
-#.   switch (token) {
-#.     case '*': {
-#.       eat('*');
-#.       factors();
-#.     } break;
-#.     default: {
-#.       
-#.     } break;
-#.   }
-#. }
-#. 
-#. void term(void) {
-#.   factor();
-#.   factors();
-#. }
-#. 
-#. void exp(void) {
-#.   term();
-#.   terms();
-#. }
-#. 
-#. void factor(void) {
-#.   switch (token) {
-#.     case 'x': {
-#.       eat('x');
-#.     } break;
-#.     case '(': {
-#.       eat('(');
-#.       exp();
-#.       eat(')');
-#.     } break;
-#.   }
-#. }
-#. 
 
 Analysis = Struct('nullable firsts')
 
@@ -260,3 +128,138 @@ class First(Visitor):
                                                    | (self(t.e2, bounds, nullable) if nullable(t.e1) else empty_set))
     def Star(self, t, bounds, nullable):   XXX
 first = First()
+
+
+# Smoke test
+
+eg = """
+A: B 'x' A | 'y'.
+B: 'b'.
+C: .
+
+exp: term terms.
+terms: addop exp | .
+addop: ('+'|'-').
+term: factor factors.
+factors: '*' factors | .
+factor: 'x' | '(' exp ')'.
+"""
+
+## for r,e in sorted(parser(eg)): print '%-8s %s' % (r, e)
+#. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
+#. B        Symbol('b')
+#. C        Empty()
+#. addop    Either(Symbol('+'), Symbol('-'))
+#. exp      Chain(Call('term'), Call('terms'))
+#. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
+#. factors  Either(Chain(Symbol('*'), Call('factors')), Empty())
+#. term     Chain(Call('factor'), Call('factors'))
+#. terms    Either(Chain(Call('addop'), Call('exp')), Empty())
+
+## show_ana(parse(eg))
+#. A        False  b y
+#. B        False  b
+#. C        True   
+#. addop    False  + -
+#. exp      False  ( x
+#. factor   False  ( x
+#. factors  True   *
+#. term     False  ( x
+#. terms    True   + -
+
+def show_ana(rules):
+    ana = analyze(rules)
+    for r in sorted(rules):
+        print '%-8s %-6s %s' % (r, ana.nullable(rules[r]), ' '.join(sorted(ana.firsts(rules[r]))))
+
+## expand(parse(eg))
+#. void A(void);
+#. void addop(void);
+#. void C(void);
+#. void B(void);
+#. void terms(void);
+#. void factors(void);
+#. void term(void);
+#. void exp(void);
+#. void factor(void);
+#. 
+#. void A(void) {
+#.   switch (token) {
+#.     case 'b': {
+#.       B();
+#.       eat('x');
+#.       A();
+#.     } break;
+#.     case 'y': {
+#.       eat('y');
+#.     } break;
+#.   }
+#. }
+#. 
+#. void addop(void) {
+#.   switch (token) {
+#.     case '+': {
+#.       eat('+');
+#.     } break;
+#.     case '-': {
+#.       eat('-');
+#.     } break;
+#.   }
+#. }
+#. 
+#. void C(void) {
+#.   
+#. }
+#. 
+#. void B(void) {
+#.   eat('b');
+#. }
+#. 
+#. void terms(void) {
+#.   switch (token) {
+#.     case '+':
+#.     case '-': {
+#.       addop();
+#.       exp();
+#.     } break;
+#.     default: {
+#.       
+#.     } break;
+#.   }
+#. }
+#. 
+#. void factors(void) {
+#.   switch (token) {
+#.     case '*': {
+#.       eat('*');
+#.       factors();
+#.     } break;
+#.     default: {
+#.       
+#.     } break;
+#.   }
+#. }
+#. 
+#. void term(void) {
+#.   factor();
+#.   factors();
+#. }
+#. 
+#. void exp(void) {
+#.   term();
+#.   terms();
+#. }
+#. 
+#. void factor(void) {
+#.   switch (token) {
+#.     case 'x': {
+#.       eat('x');
+#.     } break;
+#.     case '(': {
+#.       eat('(');
+#.       exp();
+#.       eat(')');
+#.     } break;
+#.   }
+#. }
+#. 
