@@ -14,11 +14,16 @@ metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 def metaparse(text):
     pairs = metaparser(text)
     nonterminals = tuple(pair[0] for pair in pairs)
-    if len(nonterminals) != len(set(nonterminals)):
-        raise Exception("Duplicate definitions", nonterminals)
+    dups = find_duplicates(nonterminals)
+    if dups:
+        raise Exception("Duplicate definitions", dups)
     return Grammar(nonterminals, dict(pairs))
 
 Grammar = Struct('nonterminals rules')
+
+def find_duplicates(xs):
+    counts = Counter(xs)
+    return sorted(x for x,n in counts.items() if 1 < n)
 
 
 # Generating a parser
@@ -72,10 +77,9 @@ def gen_switch(ts, ana):
         warning += '// NOT LL(1)! Multiple defaults\n'
 
     first_sets = map(ana.firsts, ts)
-    counts = Counter(token for fs in first_sets for token in fs)
-    overlap = [token for token in counts if 1 < counts[token]]
+    overlap = find_duplicates(token for fs in first_sets for token in fs)
     if overlap:
-        warning += '// NOT LL(1)! Overlap: %r\n' % sorted(overlap)
+        warning += '// NOT LL(1)! Overlap: %r\n' % overlap
 
     branches = [branch(t, ana) for t in ts]
     if n_default == 0:
