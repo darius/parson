@@ -6,40 +6,9 @@ TODO: design an action language along the lines of Parson or something
 
 from structs import Struct, Visitor
 from parson import Grammar
+import grammar
 
-class Call  (Struct('name')): pass
-class Empty (Struct('')): pass
-class Symbol(Struct('text')): pass
-class Either(Struct('e1 e2')): pass
-class Chain (Struct('e1 e2')): pass
-class Star  (Struct('e1')): pass
-
-grammar_source = r"""
-'' rule* :end.
-
-rule         :  name ':' exp '.' :hug.
-
-exp          :  term ('|' exp :Either)?
-             |                :Empty.
-
-term         :  factor (term :Chain)?.
-factor       :  qstring  :Symbol
-             |  name     :Call
-             |  '(' exp ')'.
-
-name         :  /([A-Za-z_]\w*)/.
-
-qstring     ~:  /'/ quoted_char* /'/ FNORD :join.
-quoted_char ~:  /\\(.)/ | /([^'])/.
-
-FNORD       ~:  whitespace?.
-whitespace  ~:  /(?:\s|#.*)+/.
-"""
-parser = Grammar(grammar_source)(Empty=Empty,
-                                 Either=Either,
-                                 Chain=Chain,
-                                 Symbol=Symbol,
-                                 Call=Call)
+parser = Grammar(grammar.grammar_source).bind(grammar)
 
 eg = """
 A: B 'x' A | 'y'.
@@ -84,7 +53,6 @@ def show_ana(rules):
     ana = analyze(rules)
     for r in sorted(rules):
         print '%-8s %-6s %s' % (r, ana.nullable(rules[r]), ' '.join(sorted(ana.firsts(rules[r]))))
-
 
 ## expand(parse(eg))
 #. void A(void);
