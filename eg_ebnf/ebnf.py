@@ -93,7 +93,7 @@ def branch(t, ana):
 r"""
 OK, what's LL(1)?
 The first-sets of each either-branch must be disjoint.
-Also, the argument of a Star must be non-nullable (not checked yet).
+Also, the argument of a Star must be non-nullable.
 
 firsts(Empty)            = {}                      # or make it {epsilon}?
 firsts(Symbol(t))        = {t}
