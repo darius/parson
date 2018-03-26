@@ -24,11 +24,10 @@ def expand(grammar):
     ana = analyze(grammar)
     for name in grammar.nonterminals:
         print 'void %s(void);' % name
-    print
     for name in grammar.nonterminals:
         body = gen(grammar.rules[name], ana)
-        print 'void %s(void) %s' % (name, embrace(body))
         print
+        print 'void %s(void) %s' % (name, embrace(body))
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
@@ -273,4 +272,3 @@ def show_ana(grammar):
 #.     } break;
 #.   }
 #. }
-#. 
