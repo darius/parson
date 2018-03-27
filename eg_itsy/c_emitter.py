@@ -184,8 +184,8 @@ class CExpEmitter(Visitor):
     def If_exp(self, t, p):
         lp, rp = binaries['?:']
         return wrap(p, rp, # TODO recheck that rp is the right thing here in place of the usual lp
-                    '%s ? %s : %s' % (self(t.e1, lp),
-                                      self(t.e2, 0),
+                    '%s ? %s : %s' % (self(t.e2, lp),
+                                      self(t.e1, 0),
                                       self(t.e3, rp)))
 
     def Assign(self, t, p):

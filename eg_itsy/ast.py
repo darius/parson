@@ -54,6 +54,7 @@ def chain(*seqs):
 
 class Seq(         Struct('e1 e2')): pass
 class Assign(      Struct('e1 opt_binop e2')): pass
+class If_exp(      Struct('e1 e2 e3')): pass
 class And(         Struct('e1 e2')): pass
 class Or(          Struct('e1 e2')): pass
 class Binary_exp(  Struct('e1 binop e2')): pass
@@ -71,5 +72,4 @@ class Sizeof_type( Struct('pos type')): pass
 class Sizeof(      Struct('pos e1')): pass
 class Unary_exp(   Struct('pos unop e1')): pass
 class Pre_incr(    Struct('pos e1 op')): pass
-class If_exp(      Struct('pos e1 e2 e3')): pass
 class Compound_exp(Struct('pos exps')): pass

@@ -39,11 +39,11 @@ p5 = 'let a: int = a^++^;'
 
 # I guess this output without parens is actually correct, though confusing to read. TODO check
 # Maybe we should just always parenthesize a run of ',' operators...
-p6, = parser.statement('return if pattern < pp && pp[-1] == c {--pp, 1} else {0};')
+p6, = parser.statement('return (--pp, 1) if pattern < pp && pp[-1] == c else 0;')
 ## c_emit(p6)
 #. 'return pattern < pp && pp[-1] == c ? --pp, 1 : 0;'
 ## p6
-#. Return(0, If_exp(7, And(Binary_exp(Variable(10, 'pattern'), '<', Variable(20, 'pp')), Binary_exp(Index(Variable(26, 'pp'), Unary_exp(29, '-', Literal(30, '1', 'integer'))), '==', Variable(36, 'c'))), Seq(Pre_incr(39, Variable(41, 'pp'), '--'), Literal(45, '1', 'integer')), Literal(54, '0', 'integer')))
+#. Return(0, If_exp(Seq(Pre_incr(8, Variable(10, 'pp'), '--'), Literal(14, '1', 'integer')), And(Binary_exp(Variable(20, 'pattern'), '<', Variable(30, 'pp')), Binary_exp(Index(Variable(36, 'pp'), Unary_exp(39, '-', Literal(40, '1', 'integer'))), '==', Variable(46, 'c'))), Literal(53, '0', 'integer')))
 
 p7, = parser.exp('a || b || c')
 ## c_exp(p7, 0)
@@ -94,7 +94,7 @@ ce, = parser.exp('[1,2]: []int')
 #.     2,
 #. }
 
-e1, = parser.exp('0 + if 1 {2} else {3} * 4')
+e1, = parser.exp('0 + (2 if 1 else 3) * 4')
 ## print c_exp(e1)
 #. 0 + (1 ? 2 : 3) * 4
 

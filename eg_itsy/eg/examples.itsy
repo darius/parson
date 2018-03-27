@@ -5,7 +5,7 @@ to f(x: int): int {
 }
 
 to fib(n: int): int {
-    return if n < 2 { 1 } else { fib(n-1) + fib(n-2) };
+    return 1 if n < 2 else fib(n-1) + fib(n-2);
 }
 
 to fact(n: int): int {

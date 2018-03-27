@@ -20,8 +20,8 @@ let names: [4]^char = [   // TODO leave out the 4
 ];
 
 to dump1(pc: int) {
-    printf("%c %2u: %-4s ", if accepts[pc] {'*'} else {' '}, pc, names[ops[pc]]);
-    printf(if pc == accept {"\n"} else if ops[pc] == op_eat {"'%c' %d\n"} else {"%d %d\n"},
+    printf("%c %2u: %-4s ", '*' if accepts[pc] else ' ', pc, names[ops[pc]]);
+    printf("\n" if pc == accept else "'%c' %d\n" if ops[pc] == op_eat else "%d %d\n",
            arg1[pc], arg2[pc]);
 }
 
@@ -81,7 +81,7 @@ to run(start: int, input: ^char): int {
             after(input^, state^, accept, &next_end);
         }
         for state = next_start; state < next_end; ++state {
-            if (accepts[state^]) {
+            if accepts[state^] {
                 return 1;
             }
             occupied[state^] = 0;
@@ -104,7 +104,7 @@ to emit(op: uint8, r, s: int, accepting: uint8): int {
 let pattern, pp: ^char;
 
 to eat(c: char): int {
-    return if pattern < pp && pp[-1] == c {--pp, 1} else {0};
+    return (--pp, 1) if pattern < pp && pp[-1] == c else 0;
 }
 
 to parsing(precedence, state: int): int {
@@ -124,7 +124,7 @@ to parsing(precedence, state: int): int {
         rhs = emit(op_eat, (--pp)^, state, 0);
     }
     while pattern < pp && pp[-1] != '(' {
-        let prec: int = if pp[-1] == '|' {3} else {5};
+        let prec: int = 3 if pp[-1] == '|' else 5;
         if prec <= precedence { break; }
         if eat('|') {
             let rhs2: int = parsing(prec, state);
