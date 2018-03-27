@@ -181,7 +181,7 @@ class Flatten(Visitor):
 flatten = Flatten()
 
 def gen_while(t, ana):
-    test = ' || '.join(map(gen_test, ana.firsts(t)))
+    test = ' || '.join(map(gen_test, sorted(ana.firsts(t))))
     return 'while (%s) %s' % (test, embrace(gen(t, ana)))
 
 def gen_test(token):
