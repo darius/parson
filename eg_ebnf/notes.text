@@ -1,0 +1,38 @@
+def Maybe(e1):     return Either(e1, Empty())
+def Plus(e1):      return Chain(e1, Star(e1))                # inefficient because dup
+def Plus2(e1, e2): return Chain(e1, Star(Chain(e2, e1)))     # inefficient because dup
+def Star2(e1, e2): return Maybe(Plus2(e1, e2))
+# TODO more efficient implementations
+So, how to do that? We could generate custom code for each, but that's
+extra work, especially if we want to vary backends.
+
+[[e*]]     = loop { unless(!!e) break; [[e]]; }
+[[e+]]     = loop { [[e]]; unless(!!e) break; }
+[[e++sep]] = loop { [[e]]; unless(!!sep) break; [[sep]]; }
+[[e**sep]] = if(!!e) [[e++sep]];    # assuming e is not nullable
+
+This suggests replacing the Star type with a Loop type like
+
+  Loop(break_at, es)   
+  where break_at is an index in [0..len(es)]
+  inserting a break test at that index,
+  which checks against the first-set of es[break_at % len(es)]
+
+or similarly
+
+  Loop(es_before_break, es_after_break)
+
+(These lists es here can be restricted to length <= 1, but they do
+require empty-list to be distinct from Empty(), to make it clear when
+the break test's lookahead wraps around.)
+
+nullable(Loop(before, after)) = nullable(before)
+firsts(Loop(before, after))   = firsts(before) | (firsts(after) if nullable(before) else {})
+# I guess.
+
+Another approach: just translate everything to BNF and let tail-call
+optimization sort it out. Not a crazy idea, but I think it'd take more
+work in imperative target languages with no goto, and produce
+less-predictable code there, and might not fly well with semantic
+actions.
+
