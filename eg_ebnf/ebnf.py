@@ -11,85 +11,70 @@ import metagrammar
 
 metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
+def gen_parser(text):
+    grammar = metaparse(text)   # TODO catch parse errors
+    grammar.ana = analyze(grammar)
+    grammar.errors = check(grammar)
+    grammar.parser = '\n'.join(codegen(grammar))
+    for plaint in grammar.errors:
+        print '//', plaint
+    if grammar.errors: print
+    print grammar.parser
+    return grammar
+
 def metaparse(text):
     pairs = metaparser(text)
     nonterminals = tuple(pair[0] for pair in pairs)
-    dups = find_duplicates(nonterminals)
-    if dups:
-        raise Exception("Duplicate definitions", dups)
-    return Grammar(nonterminals, dict(pairs))
+    return Grammar(nonterminals, dict(pairs), None, None)
 
-Grammar = Struct('nonterminals rules')
+Grammar = Struct('nonterminals rules ana parser')
+
+
+# Check that the grammar is well-formed and LL(1)
+
+def check(grammar):
+    errors = []
+    dups = find_duplicates(grammar.nonterminals)
+    if dups:
+        errors.append("Duplicate definitions: %r", dups)
+    def error(plaint):
+        errors.append('%s: %s' % (name, plaint))
+    for name in grammar.nonterminals:
+        Checker(grammar.ana, error)(grammar.rules[name])
+    return errors
 
 def find_duplicates(xs):
     counts = Counter(xs)
     return sorted(x for x,n in counts.items() if 1 < n)
 
+class Checker(Visitor):
+    def __init__(self, ana, error):
+        self.ana = ana
+        self.error = error
 
-# Generating a parser
+    def Either(self, t):
+        ts = flatten(t)
+        if 1 < len(ts):
+            if 1 < sum(map(self.ana.nullable, ts)):
+                self.error("Multiple defaults")
+            first_sets = map(self.ana.firsts, ts)
+            overlap = find_duplicates(token for fs in first_sets for token in fs)
+            if overlap:
+                self.error("Branches overlap: %r" % overlap)
+        for leaf in ts:
+            self(leaf)
 
-def expand(grammar):
-    ana = analyze(grammar)
-    for name in grammar.nonterminals:
-        print 'void %s(void);' % name
-    for name in grammar.nonterminals:
-        body = gen(grammar.rules[name], ana)
-        print
-        print 'void %s(void) %s' % (name, embrace(body))
+    def Chain(self, t):
+        self(t.e1)
+        self(t.e2)
 
-def embrace(s): return '{%s\n}' % indent('\n' + s)
-def indent(s): return s.replace('\n', '\n  ')
+    def Star(self, t):
+        if self.ana.nullable(t.e1):
+            self.error("Unproductive loop")
+        self(t.e1)
 
-class Gen(Visitor):
-    def Call(self, t, ana):   return '%s();' % t.name
-    def Empty(self, t, ana):  return ''
-    def Symbol(self, t, ana): return 'eat(%r);' % t.text
-    def Either(self, t, ana): return gen_switch(flatten(t), ana)
-    def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana) # TODO drop empty lines
-    def Star(self, t, ana):   return gen_while(t.e1, ana)
-gen = Gen()
-
-class Flatten(Visitor):
-    def Either(self, t):  return self(t.e1) + self(t.e2)
-    def default(self, t): return [t]
-flatten = Flatten()
-
-def gen_while(t, ana):
-    warning = ''
-    if ana.nullable(t):
-        warning += '// NOT LL(1)! Nullable star body'
-    test = ' || '.join(map(gen_test, ana.firsts(t)))
-    return warning + 'while (%s) %s' % (test, embrace(gen(t, ana)))
-
-def gen_test(token):
-    return 'token == %r' % token
-
-def gen_switch(ts, ana):
-    if not ts:
-        return ''
-    if len(ts) == 1:
-        return gen(ts[0], ana)
-
-    warning = ''
-
-    n_default = sum(map(ana.nullable, ts))
-    if 1 < n_default:
-        warning += '// NOT LL(1)! Multiple defaults\n'
-
-    first_sets = map(ana.firsts, ts)
-    overlap = find_duplicates(token for fs in first_sets for token in fs)
-    if overlap:
-        warning += '// NOT LL(1)! Overlap: %r\n' % overlap
-
-    branches = [branch(t, ana) for t in ts]
-    if n_default == 0:
-        branches.append('default:\n  abort();')
-    return warning + 'switch (token) %s' % embrace('\n'.join(branches))
-
-def branch(t, ana):
-    cases = ('default:' if ana.nullable(t)
-             else '\n'.join('case %r:' % c for c in sorted(ana.firsts(t))))
-    return '%s %s break;' % (cases, embrace(gen(t, ana)))
+    def default(self, t):
+        pass
 
 
 # Grammar analysis
@@ -167,6 +152,58 @@ class First(Visitor):
 empty_set = frozenset()
 
 
+# Generating a parser
+
+def codegen(grammar):
+    ana = analyze(grammar)
+    for name in grammar.nonterminals:
+        yield 'void %s(void);' % name
+    for name in grammar.nonterminals:
+        body = gen(grammar.rules[name], ana)
+        yield ''
+        yield 'void %s(void) %s' % (name, embrace(body))
+
+def embrace(s): return '{%s\n}' % indent('\n' + s)
+def indent(s): return s.replace('\n', '\n  ')
+
+class Gen(Visitor):
+    def Call(self, t, ana):   return '%s();' % t.name
+    def Empty(self, t, ana):  return ''
+    def Symbol(self, t, ana): return 'eat(%r);' % t.text
+    def Either(self, t, ana): return gen_switch(flatten(t), ana)
+    def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana) # TODO drop empty lines
+    def Star(self, t, ana):   return gen_while(t.e1, ana)
+gen = Gen()
+
+class Flatten(Visitor):
+    def Either(self, t):  return self(t.e1) + self(t.e2)
+    def default(self, t): return [t]
+flatten = Flatten()
+
+def gen_while(t, ana):
+    test = ' || '.join(map(gen_test, ana.firsts(t)))
+    return 'while (%s) %s' % (test, embrace(gen(t, ana)))
+
+def gen_test(token):
+    return 'token == %r' % token
+
+def gen_switch(ts, ana):
+    if not ts:
+        return ''
+    if len(ts) == 1:
+        return gen(ts[0], ana)
+    branches = [branch(t, ana) for t in ts]
+    n_default = sum(map(ana.nullable, ts))
+    if n_default == 0:
+        branches.append('default:\n  abort();')
+    return 'switch (token) %s' % embrace('\n'.join(branches))
+
+def branch(t, ana):
+    cases = ('default:' if ana.nullable(t)
+             else '\n'.join('case %r:' % c for c in sorted(ana.firsts(t))))
+    return '%s %s break;' % (cases, embrace(gen(t, ana)))
+
+
 # Smoke test
 
 eg = """
@@ -205,7 +242,7 @@ def show_ana(grammar):
         print '%-8s %-6s %s' % (r, ana.nullable(grammar.rules[r]),
                                 ' '.join(sorted(ana.firsts(grammar.rules[r]))))
 
-## expand(metaparse(eg))
+## for line in codegen(metaparse(eg)): print line
 #. void A(void);
 #. void B(void);
 #. void C(void);
