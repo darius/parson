@@ -142,6 +142,13 @@ with open('eg/examples.itsy') as f: examples = f.read()
 #.     } while (x-- > 0);
 #. }
 #. 
+#. typedef struct Closure Closure;
+#. struct Closure {
+#.     void (*f)(Closure *, float64);
+#.     int free_var1;
+#.     int free_var2;
+#. };
+#. 
 
 with open('eg/regex.itsy') as f: regex = f.read()
 ## cdefs(regex)

@@ -36,3 +36,8 @@ to foo() {
         else if b { break; }
     } while x-->0;
 }
+
+struct Closure {
+   f: ^(^Closure, float64) void;
+   free_var1, free_var2: int;
+}
