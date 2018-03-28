@@ -1,0 +1,238 @@
+// Interpreter for the "Universal Machine"
+// documented at http://boundvariable.org/task.shtml
+
+// Compile-time options:
+
+// Turn off safety checks; assume the UM image is neither incorrect
+// nor malevolent.
+enum { trusting = 0 }
+
+// Max # of arrays that can be active at once.
+enum { max_arrays = 8 * 1024 * 1024 }
+
+
+// Standard helper functions
+
+to panic(complaint: ^char) {
+    fprintf(stderr, "%s\n", complaint);
+    exit(1);
+}
+
+to allot(size: size_t): ^void {
+    let r: ^void = malloc(size);
+    if NULL == r && 0 < size { panic(strerror(errno)); }
+    return r;
+}
+
+to open_file(filename: ^char, mode: ^char): ^FILE {
+    if 0 == strcmp("-", filename) {
+        return stdin if 'r' == mode[0] else stdout;
+    }
+    let r: ^FILE = fopen(filename, mode);
+    if NULL == r { panic(strerror(errno)); }
+    return r;
+}
+
+
+// UM state
+
+typedef u8  = uint8;        // maybe these should be the real Itsy names
+typedef u32 = uint32;
+
+typedef Platter = u32;
+
+let r: [8]Platter;              // The registers
+
+struct Array {
+    size: u32;
+    _: ^Platter;
+}
+
+to make_array(nplatters: u32): Array {
+    return [nplatters, allot(nplatters * sizeof:^Platter)]: Array;  // the cast eventually shouldn't be needed
+}
+
+to fetch(a: Array, i: u32): Platter {
+    if !trusting && a.size <= i { panic("Fetch out of bounds"); }
+    return a._[i];
+}
+
+to store(a: Array, i: u32, p: Platter) {
+    if !trusting && a.size <= i { panic("Store out of bounds"); }
+    a._[i] = p;
+}
+
+let first_free: unsigned;
+let next_free:  [max_arrays]unsigned; // 0 value means active
+let arrays:     [max_arrays]Array;
+
+to set_up_free_list() {
+    first_free = ~0;
+    let i: unsigned;
+    for i = max_arrays; 1 < i; --i {
+        next_free[i - 1] = first_free;
+        first_free = i - 1;
+    }
+    next_free[0] = 0;
+}
+
+to get_array(id: u32): Array {
+    if trusting || (id < max_arrays && 0 == next_free[id]) {
+        return arrays[id];
+    }
+    panic("Bad array");
+    return arrays[0];
+}
+
+to allocate(size: u32): u32 {
+    let i: unsigned = first_free;
+    if ~0:unsigned == i { panic("Out of arrays"); }
+    first_free = next_free[i];
+    next_free[i] = 0;
+    arrays[i] = make_array(size);
+    memset(arrays[i]._, 0, size * sizeof arrays[i]._[0]);
+    return i;
+}
+
+to abandon(id: u32) {
+    let a: Array = get_array(id);
+    free(a._);
+    next_free[id] = first_free;
+    first_free = id;
+    if !trusting && 0 == id { panic("Abandoned 0"); }
+}
+
+to duplicate(id: u32) {
+    if 0 != id {
+        let a: Array = get_array(id);
+        free(arrays[0]._);
+        arrays[0] = make_array(a.size);
+        memcpy(arrays[0]._, a._, a.size * sizeof a._[0]);
+    }
+}
+
+enum Opcodes {
+    cond_move,
+    array_index,
+    array_amend,
+    add,
+    mult,
+    division,
+    not_and,
+    halt,
+    alloc,
+    abandonment,
+    output,
+    input,
+    load_program,
+    orthography,
+}
+
+to spin_cycle() {
+    let finger: u32 = 0;
+
+    for ;; {
+        let insn: Platter = fetch(arrays[0], finger);
+        ++finger;
+
+        // These unfortunately for speed are not quite always used.
+        // In the C version they were macros:
+        let a: unsigned = 7 & (insn >> 6);
+        let b: unsigned = 7 & (insn >> 3);
+        let c: unsigned = 7 & (insn >> 0);
+
+        match insn >> 28 {
+            on cond_move {
+                if 0 != r[c] {
+                    r[a] = r[b];
+                }
+            }
+            on array_index {
+                r[a] = fetch(get_array(r[b]), r[c]);
+            }
+            on array_amend {
+                store(get_array(r[a]), r[b], r[c]);
+            }
+            on add {
+                r[a] = r[b] + r[c];
+            }
+            on mult {
+                r[a] = r[b] * r[c];
+            }
+            on division {
+                r[a] = r[b] / r[c];
+            }
+            on not_and {
+                r[a] = ~(r[b] & r[c]);
+            }
+            on halt {
+                return;
+            }
+            on alloc {
+                r[b] = allocate(r[c]);
+            }
+            on abandonment {
+                abandon(r[c]);
+            }
+            on output {
+                putchar(r[c]);
+            }
+            on input {
+                fflush(stdout);
+                let ch: int = getchar();
+                r[c] = ~0 if EOF == ch else 0xff & ch;
+            }
+            on load_program {
+                duplicate(r[b]);
+                finger = r[c];
+            }
+            on orthography {
+                let a1: unsigned = 7 & (insn >> (32 - 7));
+                r[a1] = insn & 0x01ffffff;
+            }
+            else {
+                panic("Unknown instruction");
+            }
+        }
+    }
+}
+
+
+// Loading and running the image
+
+to make_platter(a, b, c, d: u8): u32 {
+    return a<<24 | b<<16 | c<<8 | d;
+}
+
+to file_size_and_rewind(f: ^FILE): size_t {
+    fseek(f, 0, SEEK_END);
+    let rc: long = ftell(f);
+    rewind(f);
+    return rc: size_t;
+}
+
+to read_zero(f: ^FILE) {
+    let size: size_t = file_size_and_rewind(f);
+    assert(0 == size % 4);
+    arrays[0] = make_array(size / 4);
+    let i: u32 = 0;
+    for i = 0; i < size / 4; ++i {
+	let a: int = fgetc(f);
+	let b: int = fgetc(f);
+	let c: int = fgetc(f);
+	let d: int = fgetc(f);
+	assert(EOF != a && EOF != b && EOF != c && EOF != d);
+	arrays[0]._[i] = make_platter(a, b, c, d);
+    }
+    assert(EOF == fgetc(f));
+}
+
+to main(argc: int, argv: ^^char): int {
+    if 2 != argc { panic("Usage: vm filename"); }
+    set_up_free_list();
+    let f: ^FILE = open_file(argv[1], "rb");
+    read_zero(f);
+    fclose(f);
+    spin_cycle();
+    return 0;
+}
