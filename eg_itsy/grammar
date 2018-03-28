@@ -206,7 +206,6 @@ FNORD         ~:      whitespace*.
 whitespace    ~:      /\s+/ | comment.
 comment       ~:      /\/\/.*/.
 keyword       ~:      /break|continue|do|else|enum|for|if|let|match|on|return|sizeof|struct|to|typedef|union|void|while/ /\b/.
-digit         ~:      /(\d)/.
 
 id:                   !keyword /([A-Za-z_][A-Za-z_0-9]*)/.
-integer:              digit+ FNORD :join.    # TODO negative too; and unsigned, etc.
+integer:              /(0x[0-9A-Fa-f]+|\d+)/.    # TODO negative too; and unsigned, etc.
