@@ -148,14 +148,16 @@ exp4
         .
 
 exp5
-        : unary_exp ( '*'  !'='    :'*'  unary_exp :Binary_exp
-                    | '/' !/[=\/]/ :'/'  unary_exp :Binary_exp
-                    | '%'  !'='    :'%'  unary_exp :Binary_exp
-                    | '&'  !/[&=]/ :'&'  unary_exp :Binary_exp
-                    | '<<' !'='    :'<<' unary_exp :Binary_exp
-                    | '>>' !'='    :'>>' unary_exp :Binary_exp
-                    )*
+        : exp6 ( '*'  !'='    :'*'  exp6 :Binary_exp
+               | '/' !/[=\/]/ :'/'  exp6 :Binary_exp
+               | '%'  !'='    :'%'  exp6 :Binary_exp
+               | '&'  !/[&=]/ :'&'  exp6 :Binary_exp
+               | '<<' !'='    :'<<' exp6 :Binary_exp
+               | '>>' !'='    :'>>' exp6 :Binary_exp
+               )*
         .
+
+exp6    : unary_exp ( ':' type       :Cast )*.
 
 unary_exp
         : :position (
@@ -183,7 +185,6 @@ postfix_exp
             | '^'                           :Deref
             | '++'                    :'++' :Post_incr
             | '--'                    :'--' :Post_incr
-            | ':' type                      :Cast
             )*
         .
 
