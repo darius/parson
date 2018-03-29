@@ -11,23 +11,30 @@ import metagrammar
 
 metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
-def gen_parser(text):
-    grammar = metaparse(text)   # TODO catch parse errors
-    grammar.ana = analyze(grammar)
-    grammar.errors = check(grammar)
-    grammar.parser = '\n'.join(codegen(grammar))
-    for plaint in grammar.errors:
-        print '//', plaint
-    if grammar.errors: print
-    print grammar.parser
-    return grammar
+class Grammar(object):
+    def __init__(self, text):
+        pairs = metaparser(text)
+        self.nonterminals = tuple(pair[0] for pair in pairs)
+        self.rules = dict(pairs)
+        self.ana = analyze(self)
+        self.errors = []
+        check(self)
 
-def metaparse(text):
-    pairs = metaparser(text)
-    nonterminals = tuple(pair[0] for pair in pairs)
-    return Grammar(nonterminals, dict(pairs), None, None)
+    def show_analysis(self):
+        for r in self.nonterminals:
+            nul = self.ana.nullable(self.rules[r])
+            fst = self.ana.firsts(self.rules[r])
+            print '%-8s %-6s %s' % (r, nul, ' '.join(sorted(fst)))
 
-Grammar = Struct('nonterminals rules ana parser')
+    def gen_parser(self):
+        return '\n'.join(codegen(self))
+
+    def print_parser(self):
+        for plaint in self.errors:
+            print '//', plaint
+        if self.errors: print
+        print self.gen_parser()
+    
 
 
 # Check that the grammar is well-formed and LL(1)
@@ -133,6 +140,7 @@ class Nullable(Visitor):
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) & self(t.e2)
     def Star(self, t):   return True
+    def Action(self, t): return True
 
 def compute_firsts(rules, nul):
     return fixpoint(rules, empty_set, lambda fst: First(nul, fst)) # TODO better naming
@@ -148,6 +156,7 @@ class First(Visitor):
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
     def Star(self, t):   return self(t.e1)
+    def Action(self, t): return empty_set
 
 empty_set = frozenset()
 
@@ -155,7 +164,7 @@ empty_set = frozenset()
 # Generating a parser
 
 def codegen(grammar):
-    ana = analyze(grammar)
+    ana = analyze(grammar)      # TODO reuse grammar.ana
     for name in grammar.nonterminals:
         yield 'void %s(void);' % name
     for name in grammar.nonterminals:
@@ -173,6 +182,7 @@ class Gen(Visitor):
     def Either(self, t, ana): return gen_switch(flatten(t), ana)
     def Chain(self, t, ana):  return self(t.e1, ana) + '\n' + self(t.e2, ana) # TODO drop empty lines
     def Star(self, t, ana):   return gen_while(t.e1, ana)
+    def Action(self, t, ana): return ''
 gen = Gen()
 
 class Flatten(Visitor):
@@ -217,7 +227,7 @@ term: factor ('*' factor)*.
 factor: 'x' | '(' exp ')'.
 """
 
-## egg = metaparse(eg)
+## egg = Grammar(eg)
 ## for r in egg.nonterminals: print '%-8s %s' % (r, egg.rules[r])
 #. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
 #. B        Symbol('b')
@@ -227,7 +237,7 @@ factor: 'x' | '(' exp ')'.
 #. term     Chain(Call('factor'), Star(Chain(Symbol('*'), Call('factor'))))
 #. factor   Either(Symbol('x'), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
 
-## show_ana(metaparse(eg))
+## egg.show_analysis()
 #. A        False  b y
 #. B        False  b
 #. C        True   
@@ -236,13 +246,7 @@ factor: 'x' | '(' exp ')'.
 #. term     False  ( x
 #. factor   False  ( x
 
-def show_ana(grammar):
-    ana = analyze(grammar)
-    for r in grammar.nonterminals:
-        print '%-8s %-6s %s' % (r, ana.nullable(grammar.rules[r]),
-                                ' '.join(sorted(ana.firsts(grammar.rules[r]))))
-
-## for line in codegen(metaparse(eg)): print line
+## egg.print_parser()
 #. void A(void);
 #. void B(void);
 #. void C(void);
