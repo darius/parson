@@ -1,7 +1,5 @@
 """
 Parse a grammar, check that it's LL(1), and emit C code to parse according to it.
-TODO: design an action language along the lines of Parson or something
-TODO: generate an actually-useful parser
 """
 
 from collections import Counter
