@@ -183,12 +183,22 @@ class First(Visitor):
 empty_set = frozenset()
 
 
-# Intermediate form
+# Intermediate form    TODO better name
 # Embed the result of the LL(1) analysis where it's needed by
 # an interpreter or compiler of the grammar.
 
-class Branch(Struct('cases opt_default')): pass
+# firsts is the first-set of body.
 class Loop(Struct('firsts body')): pass
+
+# Each case is a pair (kinds, t) where kinds is the first-set of
+# t. Every Branch has a catch-all, 'default'. It's a Fail unless the
+# source grammar supplies a nullable case. (This catch-all could be
+# avoided if we could know that the cases are exhaustive.)
+class Branch(Struct('cases default')): pass
+
+# possibles is a frozenset of the tokens that would have made the
+# parse not fail at this point.
+class Fail(Struct('possibles')): pass
 
 class Intermediate(Visitor):
     def Call(self, t, ana):   return t
@@ -208,21 +218,24 @@ flatten = Flatten()
 
 def gen_branch(ts, ana):
     cases = []
-    opt_default = None
+    defaults = []
     for t in ts:
         im = intermediate(t, ana)
         if ana.nullable(t):
-            opt_default = im
+            defaults.append(im)
         else:
             firsts = ana.firsts(t)
             if firsts: cases.append((firsts, im))
-    n = len(cases) + (1 if opt_default else 0)
-    if n == 0:
-        return metagrammar.Empty()
-    elif n == 1:
-        return opt_default or cases[0][1]
-    else:
-        return Branch(cases, opt_default)
+
+    if not defaults:
+        if not cases:       return Fail(empty_set)
+        if len(cases) == 1: return cases[0][1]
+        possibles = frozenset().union(*map(ana.firsts, ts))
+        defaults = [Fail(possibles)]
+    # We always just use the first default, because we only require
+    # this to work for an LL(1) grammar.
+    if not cases: return defaults[0]
+    return Branch(cases, defaults[0])
 
 
 # Generate a parser in pseudo-C
@@ -243,6 +256,7 @@ class Gen(Visitor):
     def Empty(self, t):  return ''
     def Symbol(self, t): return 'eat(%r);' % t.text
     def Branch(self, t): return gen_switch(t)
+    def Fail(self, t):   return 'abort();'
     def Chain(self, t):  return self(t.e1) + '\n' + self(t.e2) # TODO drop empty lines
     def Loop(self, t):   return gen_while(t.firsts, self(t.body))
     def Action(self, t): return ''
@@ -256,14 +270,11 @@ def gen_test(token):
     return 'token == %r' % token
 
 def gen_switch(t):
-    branches = map(gen_case, t.cases)
-    branches.append('default: %s' % (embrace(gen(t.opt_default)) if t.opt_default
-                                     else '\n  abort();'))
-    return 'switch (token) %s' % embrace('\n'.join(branches))
-
-def gen_case((firsts, t)):
-    labels = '\n'.join('case %r:' % c for c in sorted(firsts))
-    return '%s %s break;' % (labels, embrace(gen(t)))
+    cases = ['%s %s' % ('\n'.join('case %r:' % c for c in sorted(kinds)),
+                        embrace(gen(alt)))
+             for kinds, alt in t.cases]
+    default = 'default: ' + embrace(gen(t.default))
+    return 'switch (token) ' + embrace(' break;\n'.join(cases + [default]))
 
 
 # Parse by interpretation
@@ -292,6 +303,9 @@ class Parsing(Visitor):
 #        print zip(self.calls, self.stack), 'returned', t.name
     def Empty(self, t):
         pass
+    def Fail(self, t):
+        raise SyntaxError("Unexpected token %r; expecting one of %r"
+                          % (self.tokens[self.i], sorted(t.possibles)))
     def Symbol(self, t):
         if self.tokens[self.i] == t.text:
             self.i += 1
@@ -299,12 +313,10 @@ class Parsing(Visitor):
             raise SyntaxError("Missing %r" % t.text)
     def Branch(self, t):
         tok = self.tokens[self.i]
-        for firsts, alt in t.cases:
-            if tok in firsts:
+        for kinds, alt in t.cases:
+            if tok in kinds:
                 return self(alt)
-        if t.opt_default:
-            return self(t.opt_default)
-        raise SyntaxError("Unexpected token %r" % tok)
+        self(t.default)
     def Chain(self, t):
         self(t.e1)
         self(t.e2)
@@ -340,10 +352,10 @@ class Code(object):
         if op == 'return':
             arg = ''
         elif op == 'branch':
-            x, y = arg
-            y = [(','.join(sorted(kinds)), dest)
-                 for kinds,dest in sorted(y, key=lambda (kinds,dest): dest)]
-            arg = x, y
+            cases, default = arg
+            cases = [(','.join(sorted(kinds)), dest)
+                     for kinds, dest in cases]
+            arg = cases, default
         print '%-10s %3d %-6s %r' % (label, pc, op, arg)
 
     def parse(self, tokens, start='start'):
@@ -377,23 +389,22 @@ class Code(object):
                 else:
                     raise SyntaxError("Missing %r" % arg)
             elif op == 'branch':
-                opt_default, cases = arg
+                cases, default = arg
                 for kinds, dest in cases:
                     if tokens[i] in kinds:
                         pc += dest
                         break
                 else:
-                    if opt_default is not None:
-                        pc += opt_default
-                    else:
-                        raise SyntaxError("Expecting one of %r"
-                                          % (sum([kinds for kinds,dest in cases], ()),))
+                    pc += default
             elif op == 'jump':
                 pc += arg
             elif op == 'act':
                 action = self.actions[arg]
                 frame = frames[-1]
                 frame[:] = [action(*frame)]
+            elif op == 'fail':
+                raise SyntaxError("Unexpected token %r; expecting one of %r"
+                                  % (tokens[i], sorted(arg)))
             else:
                 assert False
 
@@ -402,6 +413,7 @@ class Compiling(Visitor):
     def Empty(self, t):  return []
     def Symbol(self, t): return [('eat', t.text)]
     def Branch(self, t): return compile_branch(t)
+    def Fail(self, t):   return [('fail', t.possibles)]
     def Chain(self, t):  return self(t.e1) + self(t.e2)
     def Loop(self, t):   return compile_loop(t)
     def Action(self, t): return [('act', t.name)]
@@ -411,24 +423,22 @@ def compile_branch(t):
     cases = []
     insns = []
     fixups = []
-    for firsts, alt in t.cases:
-        off = len(insns)        # Offset from the branch insn
-        cases.append((firsts, off))
+    for kinds, alt in t.cases:
+        dest = len(insns)       # Offset from the branch insn
+        cases.append((kinds, dest))
         insns.extend(compiling(alt))
         fixups.append(len(insns))
         insns.append(None)      # to be fixed up
-    opt_default = None
-    if t.opt_default:
-        opt_default = len(insns) # Offset from the branch insn
-        insns.extend(compiling(t.opt_default))
+    default = len(insns)        # Offset from the branch insn
+    insns.extend(compiling(t.default))
     for addr in fixups:
         insns[addr] = ('jump', len(insns) - (addr + 1)) # Skip to the common exit point
-    insns.insert(0, ('branch', (opt_default, cases)))
+    insns.insert(0, ('branch', (cases, default)))
     return insns
 
 def compile_loop(t):
     body = compiling(t.body)
-    return ([('branch', (len(body)+1, [(t.firsts, 0)]))]
+    return ([('branch', ([(t.firsts, 0)], len(body)+1))]
             + body
             + [('jump', -len(body)-2)])
 
@@ -467,6 +477,14 @@ factor: 'x' :X | '(' exp ')'.
 #. term     False  ( x
 #. factor   False  ( x
 
+## for r in egg.nonterminals: print '%-8s %s' % (r, intermediate(egg.rules[r], egg.ana))
+#. A        Branch([(frozenset(['b']), Chain(Call('B'), Chain(Symbol('x'), Call('A')))), (frozenset(['y']), Symbol('y'))], Fail(frozenset(['y', 'b'])))
+#. B        Symbol('b')
+#. C        Empty()
+#. exp      Chain(Call('term'), Branch([(frozenset(['+']), Chain(Symbol('+'), Chain(Call('exp'), Action('add')))), (frozenset(['-']), Chain(Symbol('-'), Chain(Call('exp'), Action('sub'))))], Empty()))
+#. term     Chain(Call('factor'), Loop(frozenset(['*']), Chain(Symbol('*'), Chain(Call('factor'), Action('mul')))))
+#. factor   Branch([(frozenset(['x']), Chain(Symbol('x'), Action('X'))), (frozenset(['(']), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))], Fail(frozenset(['x', '('])))
+
 ## egg.parse("".split(), start='B')
 #. Missing 'b' at 0
 ## egg.parse("b b".split(), start='B')
@@ -474,7 +492,7 @@ factor: 'x' :X | '(' exp ')'.
 ## egg.parse("b b".split(), start='A')
 #. Missing 'x' at 1
 ## egg.parse("b x".split(), start='A')
-#. Unexpected token None at 2
+#. Unexpected token None; expecting one of ['b', 'y'] at 2
 ## egg.parse("b x y".split(), start='A')
 #. ok at 3 []
 ## egg.parse("b x b x y".split(), start='A')
@@ -483,7 +501,7 @@ factor: 'x' :X | '(' exp ')'.
 ## egg.parse("x", start='exp')
 #. ok at 1 [3]
 ## egg.parse("x+", start='exp')
-#. Unexpected token None at 2
+#. Unexpected token None; expecting one of ['(', 'x'] at 2
 ## egg.parse("x+x", start='exp')
 #. ok at 3 [6]
 ## egg.parse("x+x*x", start='exp')
@@ -493,44 +511,46 @@ factor: 'x' :X | '(' exp ')'.
 
 ## egc = egg.compile()
 ## egc.show()
-#. A            0 branch (None, [('b', 0), ('y', 4)])
+#. A            0 branch ([('b', 0), ('y', 4)], 6)
 #.              1 call   'B'
 #.              2 eat    'x'
 #.              3 call   'A'
-#.              4 jump   2
+#.              4 jump   3
 #.              5 eat    'y'
-#.              6 jump   0
-#.              7 return ''
-#. B            8 eat    'b'
-#.              9 return ''
-#. C           10 return ''
-#. exp         11 call   'term'
-#.             12 branch (8, [('+', 0), ('-', 4)])
-#.             13 eat    '+'
-#.             14 call   'exp'
-#.             15 act    'add'
-#.             16 jump   4
-#.             17 eat    '-'
-#.             18 call   'exp'
-#.             19 act    'sub'
-#.             20 jump   0
-#.             21 return ''
-#. term        22 call   'factor'
-#.             23 branch (4, [('*', 0)])
-#.             24 eat    '*'
-#.             25 call   'factor'
-#.             26 act    'mul'
-#.             27 jump   -5
-#.             28 return ''
-#. factor      29 branch (None, [('x', 0), ('(', 3)])
-#.             30 eat    'x'
-#.             31 act    'X'
-#.             32 jump   4
-#.             33 eat    '('
-#.             34 call   'exp'
-#.             35 eat    ')'
-#.             36 jump   0
-#.             37 return ''
+#.              6 jump   1
+#.              7 fail   frozenset(['y', 'b'])
+#.              8 return ''
+#. B            9 eat    'b'
+#.             10 return ''
+#. C           11 return ''
+#. exp         12 call   'term'
+#.             13 branch ([('+', 0), ('-', 4)], 8)
+#.             14 eat    '+'
+#.             15 call   'exp'
+#.             16 act    'add'
+#.             17 jump   4
+#.             18 eat    '-'
+#.             19 call   'exp'
+#.             20 act    'sub'
+#.             21 jump   0
+#.             22 return ''
+#. term        23 call   'factor'
+#.             24 branch ([('*', 0)], 4)
+#.             25 eat    '*'
+#.             26 call   'factor'
+#.             27 act    'mul'
+#.             28 jump   -5
+#.             29 return ''
+#. factor      30 branch ([('x', 0), ('(', 3)], 7)
+#.             31 eat    'x'
+#.             32 act    'X'
+#.             33 jump   5
+#.             34 eat    '('
+#.             35 call   'exp'
+#.             36 eat    ')'
+#.             37 jump   1
+#.             38 fail   frozenset(['x', '('])
+#.             39 return ''
 ### egc.parse("x", start='exp')
 ### egc.parse("x+x-x", start='exp')
 ### egc.parse("x+(x*x+x)", start='exp')
@@ -554,8 +574,9 @@ factor: 'x' :X | '(' exp ')'.
 #.     case 'y': {
 #.       eat('y');
 #.     } break;
-#.     default: 
+#.     default: {
 #.       abort();
+#.     }
 #.   }
 #. }
 #. 
@@ -606,7 +627,8 @@ factor: 'x' :X | '(' exp ')'.
 #.       exp();
 #.       eat(')');
 #.     } break;
-#.     default: 
+#.     default: {
 #.       abort();
+#.     }
 #.   }
 #. }
