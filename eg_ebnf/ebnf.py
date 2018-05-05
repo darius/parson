@@ -265,14 +265,18 @@ def gen_while(firsts, body):
     return 'while (%s) %s' % (test, embrace(body))
 
 def gen_test(token):
-    return 'token == %r' % token
+    return 'token.kind == %s' % c_encode_token(token)
+
+def c_encode_token(token):
+    return repr(token)
 
 def gen_switch(t):
-    cases = ['%s %s' % ('\n'.join('case %r:' % c for c in sorted(kinds)),
+    cases = ['%s %s' % ('\n'.join('case %s:' % c_encode_token(c)
+                                  for c in sorted(kinds)),
                         embrace(gen(alt)))
              for kinds, alt in t.cases]
     default = 'default: ' + embrace(gen(t.default))
-    return 'switch (token) ' + embrace(' break;\n'.join(cases + [default]))
+    return 'switch (token.kind) ' + embrace(' break;\n'.join(cases + [default]))
 
 
 # Parse by interpretation
@@ -563,7 +567,7 @@ factor: 'x' :X | '(' exp ')'.
 #. void factor(void);
 #. 
 #. void A(void) {
-#.   switch (token) {
+#.   switch (token.kind) {
 #.     case 'b': {
 #.       B();
 #.       eat('x');
@@ -588,7 +592,7 @@ factor: 'x' :X | '(' exp ')'.
 #. 
 #. void exp(void) {
 #.   term();
-#.   switch (token) {
+#.   switch (token.kind) {
 #.     case '+': {
 #.       eat('+');
 #.       exp();
@@ -607,7 +611,7 @@ factor: 'x' :X | '(' exp ')'.
 #. 
 #. void term(void) {
 #.   factor();
-#.   while (token == '*') {
+#.   while (token.kind == '*') {
 #.     eat('*');
 #.     factor();
 #.     
@@ -615,7 +619,7 @@ factor: 'x' :X | '(' exp ')'.
 #. }
 #. 
 #. void factor(void) {
-#.   switch (token) {
+#.   switch (token.kind) {
 #.     case 'x': {
 #.       eat('x');
 #.       
