@@ -182,7 +182,7 @@ empty_set = frozenset()
 
 
 # Intermediate form    TODO better name
-# Embed the result of the LL(1) analysis where it's needed by
+# Embed the result of the LL(1) analysis where it'll be needed by
 # an interpreter or compiler of the grammar.
 
 # firsts is the first-set of body.
@@ -255,7 +255,7 @@ class Gen(Visitor):
     def Symbol(self, t): return 'eat(%r);' % t.text
     def Branch(self, t): return gen_switch(t)
     def Fail(self, t):   return 'abort();'
-    def Chain(self, t):  return self(t.e1) + '\n' + self(t.e2) # TODO drop empty lines
+    def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
     def Loop(self, t):   return gen_while(t.firsts, self(t.body))
     def Action(self, t): return ''
 gen = Gen()
@@ -596,12 +596,10 @@ factor: 'x' :X | '(' exp ')'.
 #.     case '+': {
 #.       eat('+');
 #.       exp();
-#.       
 #.     } break;
 #.     case '-': {
 #.       eat('-');
 #.       exp();
-#.       
 #.     } break;
 #.     default: {
 #.       
@@ -614,7 +612,6 @@ factor: 'x' :X | '(' exp ')'.
 #.   while (token.kind == '*') {
 #.     eat('*');
 #.     factor();
-#.     
 #.   }
 #. }
 #. 
@@ -622,7 +619,6 @@ factor: 'x' :X | '(' exp ')'.
 #.   switch (token.kind) {
 #.     case 'x': {
 #.       eat('x');
-#.       
 #.     } break;
 #.     case '(': {
 #.       eat('(');
