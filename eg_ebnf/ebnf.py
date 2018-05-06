@@ -237,21 +237,21 @@ def gen_branch(ts, ana):
 
 def codegen(grammar):
     for name in grammar.nonterminals:
-        yield 'void %s(void);' % name
+        yield 'void parse_%s(void);' % name
     for name in grammar.nonterminals:
         body = gen(intermediate(grammar.rules[name], grammar.ana))
         yield ''
-        yield 'void %s(void) %s' % (name, embrace(body))
+        yield 'void parse_%s(void) %s' % (name, embrace(body))
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
 
 class Gen(Visitor):
-    def Call(self, t):   return '%s();' % t.name
+    def Call(self, t):   return 'parse_%s();' % t.name
     def Empty(self, t):  return ''
     def Symbol(self, t): return 'eat(%r);' % t.text
     def Branch(self, t): return gen_switch(t)
-    def Fail(self, t):   return 'abort();'
+    def Fail(self, t):   return 'parser_fail();'
     def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
     def Loop(self, t):   return gen_while(t.firsts, self(t.body))
     def Action(self, t): return ''
