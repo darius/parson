@@ -18,6 +18,8 @@ class Grammar(object):
         self.ana = analyze(self)
         self.errors = []
         check(self)
+        self.inter = {name: intermediate(rule, self.ana)
+                      for name, rule in self.rules.items()}
 
     def show_analysis(self):
         for r in self.nonterminals:
@@ -35,12 +37,10 @@ class Grammar(object):
         print self.gen_parser()
     
     def parse(self, tokens, start='start'):
-        rules = {name: intermediate(self.rules[name], self.ana)
-                 for name in self.nonterminals}
-        parsing = Parsing(rules, self.actions, tokens)
+        parsing = Parsing(self.inter, self.actions, tokens)
         parsing.calls.append(start)
         try:
-            parsing(rules[start])
+            parsing(self.inter[start])
         except SyntaxError, e:
             print e, "at %d" % parsing.i
         else:
@@ -51,7 +51,7 @@ class Grammar(object):
         insns = []
         for name in self.nonterminals:
             labels[name] = len(insns)
-            insns.extend(compiling(intermediate(self.rules[name], self.ana)))
+            insns.extend(compiling(self.inter[name]))
             insns.append(('return', None))
         # TODO: make sure the client knows about self.errors
         return Code(insns, labels, self.actions)
@@ -235,9 +235,7 @@ def gen_branch(ts, ana):
 # Generate a parser in pseudo-C
 
 def codegen(grammar):
-    inter = {name: intermediate(rule, grammar.ana)
-             for name, rule in grammar.rules.items()}
-    kinds = set().union(*map(collect_kinds, inter.values()))
+    kinds = set().union(*map(collect_kinds, grammar.inter.values()))
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
@@ -245,7 +243,7 @@ def codegen(grammar):
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
     for name in grammar.nonterminals:
-        body = gen(inter[name])
+        body = gen(grammar.inter[name])
         yield ''
         yield 'void parse_%s(void) %s' % (name, embrace(body))
 
