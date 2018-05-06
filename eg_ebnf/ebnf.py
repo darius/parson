@@ -27,6 +27,9 @@ class Grammar(object):
             fst = self.ana.firsts(self.rules[r])
             print '%-8s %-6s %s' % (r, nul, ' '.join(sorted(fst)))
 
+    def gen_kinds(self):
+        return '\n'.join(gen_kinds(self))
+
     def gen_parser(self):
         return '\n'.join(codegen(self))
 
@@ -234,21 +237,12 @@ def gen_branch(ts, ana):
 
 # Generate a parser in pseudo-C
 
-def codegen(grammar):
+def gen_kinds(grammar):
     kinds = set().union(*map(collect_kinds, grammar.inter.values()))
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
     yield '};'
-    for name in grammar.nonterminals:
-        yield 'void parse_%s(void);' % name
-    for name in grammar.nonterminals:
-        body = gen(grammar.inter[name])
-        yield ''
-        yield 'void parse_%s(void) %s' % (name, embrace(body))
-
-def embrace(s): return '{%s\n}' % indent('\n' + s)
-def indent(s): return s.replace('\n', '\n  ')
 
 class CollectKinds(Visitor):
     def Symbol(self, t):  return set([c_encode_token(t.text)])
@@ -258,24 +252,6 @@ class CollectKinds(Visitor):
     def Loop(self, t):    return set(map(c_encode_token, t.firsts)) | self(t.body)
     def default(self, t): return set()
 collect_kinds = CollectKinds()
-
-class Gen(Visitor):
-    def Call(self, t):   return 'parse_%s();' % t.name
-    def Empty(self, t):  return ''
-    def Symbol(self, t): return 'eat(%s);' % c_encode_token(t.text)
-    def Branch(self, t): return gen_switch(t)
-    def Fail(self, t):   return 'parser_fail();'
-    def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
-    def Loop(self, t):   return gen_while(t.firsts, self(t.body))
-    def Action(self, t): return ''
-gen = Gen()
-
-def gen_while(firsts, body):
-    test = ' || '.join(map(gen_test, sorted(firsts)))
-    return 'while (%s) %s' % (test, embrace(body))
-
-def gen_test(token):
-    return 'token.kind == %s' % c_encode_token(token)
 
 def c_encode_token(token):
     return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
@@ -314,6 +290,35 @@ escapes = {
     ';': '_SEMICOLON',
     ':': '_COLON',
 }
+
+def codegen(grammar):
+    for name in grammar.nonterminals:
+        yield 'void parse_%s(void);' % name
+    for name in grammar.nonterminals:
+        body = gen(grammar.inter[name])
+        yield ''
+        yield 'void parse_%s(void) %s' % (name, embrace(body))
+
+def embrace(s): return '{%s\n}' % indent('\n' + s)
+def indent(s): return s.replace('\n', '\n  ')
+
+class Gen(Visitor):
+    def Call(self, t):   return 'parse_%s();' % t.name
+    def Empty(self, t):  return ''
+    def Symbol(self, t): return 'eat(%s);' % c_encode_token(t.text)
+    def Branch(self, t): return gen_switch(t)
+    def Fail(self, t):   return 'parser_fail();'
+    def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
+    def Loop(self, t):   return gen_while(t.firsts, self(t.body))
+    def Action(self, t): return ''
+gen = Gen()
+
+def gen_while(firsts, body):
+    test = ' || '.join(map(gen_test, sorted(firsts)))
+    return 'while (%s) %s' % (test, embrace(body))
+
+def gen_test(token):
+    return 'token.kind == %s' % c_encode_token(token)
 
 def gen_switch(t):
     cases = ['%s %s' % ('\n'.join('case %s:' % c_encode_token(c)
@@ -614,16 +619,6 @@ factor: 'x' :X | '(' exp ')'.
 
 
 ## egg.print_parser()
-#. enum {
-#. kind__STAR,
-#. kind_b,
-#. kind__LPAREN,
-#. kind__RPAREN,
-#. kind__DASH,
-#. kind_y,
-#. kind_x,
-#. kind__PLUS,
-#. };
 #. void parse_A(void);
 #. void parse_B(void);
 #. void parse_C(void);
