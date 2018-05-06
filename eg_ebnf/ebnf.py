@@ -199,14 +199,11 @@ class Branch(Struct('cases default')): pass
 class Fail(Struct('possibles')): pass
 
 class Intermediate(Visitor):
-    def Call(self, t, ana):   return t
-    def Empty(self, t, ana):  return t
-    def Symbol(self, t, ana): return t
-    def Either(self, t, ana): return gen_branch(flatten(t), ana)
-    def Chain(self, t, ana):  return metagrammar.Chain(self(t.e1, ana),
-                                                       self(t.e2, ana))
-    def Star(self, t, ana):   return Loop(ana.firsts(t.e1), self(t.e1, ana))
-    def Action(self, t, ana): return t
+    def Either(self, t, ana):  return gen_branch(flatten(t), ana)
+    def Chain(self, t, ana):   return metagrammar.Chain(self(t.e1, ana),
+                                                        self(t.e2, ana))
+    def Star(self, t, ana):    return Loop(ana.firsts(t.e1), self(t.e1, ana))
+    def default(self, t, ana): return t
 intermediate = Intermediate()
 
 class Flatten(Visitor):
