@@ -58,17 +58,16 @@ class Grammar(object):
 
 
 # Check that the grammar is well-formed and LL(1)
+# TODO: what about left recursion
 
 def check(grammar):
-    errors = []
     dups = find_duplicates(grammar.nonterminals)
     if dups:
-        errors.append("Duplicate definitions: %r", dups)
+        grammar.errors.append("Duplicate definitions: %r" % dups)
     def error(plaint):
-        errors.append('%s: %s' % (name, plaint))
+        grammar.errors.append('%s: %s' % (name, plaint))
     for name in grammar.nonterminals:
         Checker(grammar.ana, error)(grammar.rules[name])
-    return errors
 
 def find_duplicates(xs):
     counts = Counter(xs)
@@ -495,10 +494,17 @@ def compile_loop(t):
 
 # Smoke test
 
-## import operator
-## actions = dict(X=lambda: 3, **operator.__dict__)
+bad = r"""
+A: A.
+B: 'b'.
+B: A.
+"""
 
-eg = """
+## badg = Grammar(bad, {})
+## badg.errors
+#. ["Duplicate definitions: ['B']"]
+
+eg = r"""
 A: B 'x' A | 'y'.
 B: 'b'.
 C: .
@@ -509,6 +515,9 @@ exp:    term ( '+' exp :add
 term:   factor ('*' factor :mul)*.
 factor: 'x' :X | '(' exp ')'.
 """
+
+## import operator
+## actions = dict(X=lambda: 3, **operator.__dict__)
 
 ## egg = Grammar(eg, actions)
 ## for r in egg.nonterminals: print '%-8s %s' % (r, egg.rules[r])
