@@ -236,20 +236,36 @@ def gen_branch(ts, ana):
 # Generate a parser in pseudo-C
 
 def codegen(grammar):
+    inter = {name: intermediate(rule, grammar.ana)
+             for name, rule in grammar.rules.items()}
+    kinds = set().union(*map(collect_kinds, inter.values()))
+    yield 'enum {'
+    for kind in kinds:
+        yield kind + ','
+    yield '};'
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
     for name in grammar.nonterminals:
-        body = gen(intermediate(grammar.rules[name], grammar.ana))
+        body = gen(inter[name])
         yield ''
         yield 'void parse_%s(void) %s' % (name, embrace(body))
 
 def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
 
+class CollectKinds(Visitor):
+    def Symbol(self, t):  return set([c_encode_token(t.text)])
+    def Branch(self, t):  return set().union(*[set(map(c_encode_token, kinds)) | self(alt)
+                                               for kinds,alt in t.cases])
+    def Chain(self, t):   return self(t.e1) | self(t.e2)
+    def Loop(self, t):    return set(map(c_encode_token, t.firsts)) | self(t.body)
+    def default(self, t): return set()
+collect_kinds = CollectKinds()
+
 class Gen(Visitor):
     def Call(self, t):   return 'parse_%s();' % t.name
     def Empty(self, t):  return ''
-    def Symbol(self, t): return 'eat(%r);' % t.text
+    def Symbol(self, t): return 'eat(%s);' % c_encode_token(t.text)
     def Branch(self, t): return gen_switch(t)
     def Fail(self, t):   return 'parser_fail();'
     def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
@@ -265,7 +281,42 @@ def gen_test(token):
     return 'token.kind == %s' % c_encode_token(token)
 
 def c_encode_token(token):
-    return repr(token)
+    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
+
+escapes = {
+    '!': '_BANG',
+    '@': '_AT',
+    '#': '_HASH',
+    '$': '_DOLLAR',
+    '%': '_PERCENT',
+    '^': '_HAT',
+    '&': '_AMPERSAND',
+    '*': '_STAR',
+    '(': '_LPAREN',
+    ')': '_RPAREN',
+    '-': '_DASH',
+    '_': '_UNDERSCORE',
+    '\\': '_BACKSLASH',
+    '|': '_BAR',
+    "'": '_QUOTE',
+    '"': '_DOUBLEQUOTE',
+    '/': '_SLASH',
+    '?': '_QUESTION',
+    ',': '_COMMA',
+    '.': '_DOT',
+    '<': '_LESS',
+    '>': '_GREATER',
+    '[': '_LBRACKET',
+    ']': '_RBRACKET',
+    '=': '_EQUALS',
+    '+': '_PLUS',
+    '`': '_BACKQUOTE',
+    '~': '_TILDE',
+    '{': '_LBRACE',
+    '}': '_RBRACE',
+    ';': '_SEMICOLON',
+    ':': '_COLON',
+}
 
 def gen_switch(t):
     cases = ['%s %s' % ('\n'.join('case %s:' % c_encode_token(c)
@@ -556,47 +607,57 @@ factor: 'x' :X | '(' exp ')'.
 
 
 ## egg.print_parser()
-#. void A(void);
-#. void B(void);
-#. void C(void);
-#. void exp(void);
-#. void term(void);
-#. void factor(void);
+#. enum {
+#. kind__STAR,
+#. kind_b,
+#. kind__LPAREN,
+#. kind__RPAREN,
+#. kind__DASH,
+#. kind_y,
+#. kind_x,
+#. kind__PLUS,
+#. };
+#. void parse_A(void);
+#. void parse_B(void);
+#. void parse_C(void);
+#. void parse_exp(void);
+#. void parse_term(void);
+#. void parse_factor(void);
 #. 
-#. void A(void) {
+#. void parse_A(void) {
 #.   switch (token.kind) {
-#.     case 'b': {
-#.       B();
-#.       eat('x');
-#.       A();
+#.     case kind_b: {
+#.       parse_B();
+#.       eat(kind_x);
+#.       parse_A();
 #.     } break;
-#.     case 'y': {
-#.       eat('y');
+#.     case kind_y: {
+#.       eat(kind_y);
 #.     } break;
 #.     default: {
-#.       abort();
+#.       parser_fail();
 #.     }
 #.   }
 #. }
 #. 
-#. void B(void) {
-#.   eat('b');
+#. void parse_B(void) {
+#.   eat(kind_b);
 #. }
 #. 
-#. void C(void) {
+#. void parse_C(void) {
 #.   
 #. }
 #. 
-#. void exp(void) {
-#.   term();
+#. void parse_exp(void) {
+#.   parse_term();
 #.   switch (token.kind) {
-#.     case '+': {
-#.       eat('+');
-#.       exp();
+#.     case kind__PLUS: {
+#.       eat(kind__PLUS);
+#.       parse_exp();
 #.     } break;
-#.     case '-': {
-#.       eat('-');
-#.       exp();
+#.     case kind__DASH: {
+#.       eat(kind__DASH);
+#.       parse_exp();
 #.     } break;
 #.     default: {
 #.       
@@ -604,26 +665,26 @@ factor: 'x' :X | '(' exp ')'.
 #.   }
 #. }
 #. 
-#. void term(void) {
-#.   factor();
-#.   while (token.kind == '*') {
-#.     eat('*');
-#.     factor();
+#. void parse_term(void) {
+#.   parse_factor();
+#.   while (token.kind == kind__STAR) {
+#.     eat(kind__STAR);
+#.     parse_factor();
 #.   }
 #. }
 #. 
-#. void factor(void) {
+#. void parse_factor(void) {
 #.   switch (token.kind) {
-#.     case 'x': {
-#.       eat('x');
+#.     case kind_x: {
+#.       eat(kind_x);
 #.     } break;
-#.     case '(': {
-#.       eat('(');
-#.       exp();
-#.       eat(')');
+#.     case kind__LPAREN: {
+#.       eat(kind__LPAREN);
+#.       parse_exp();
+#.       eat(kind__RPAREN);
 #.     } break;
 #.     default: {
-#.       abort();
+#.       parser_fail();
 #.     }
 #.   }
 #. }
