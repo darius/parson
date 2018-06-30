@@ -238,12 +238,15 @@ def gen_branch(ts, ana):
 # Generate a parser in C
 
 def gen_kinds(grammar):
-    tokens = set().union(*map(collect_tokens, grammar.inter.values()))
-    kinds = map(c_encode_token, tokens)
+    tokens = grammar_tokens(grammar)
+    kinds = sorted(map(c_encode_token, tokens))
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
     yield '};'
+
+def grammar_tokens(grammar):
+    return set().union(*map(collect_tokens, grammar.inter.values()))
 
 class CollectTokens(Visitor):
     def Symbol(self, t):  return set([t.text])
