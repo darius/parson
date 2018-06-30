@@ -235,23 +235,24 @@ def gen_branch(ts, ana):
     return Branch(cases, defaults[0])
 
 
-# Generate a parser in pseudo-C
+# Generate a parser in C
 
 def gen_kinds(grammar):
-    kinds = set().union(*map(collect_kinds, grammar.inter.values()))
+    tokens = set().union(*map(collect_tokens, grammar.inter.values()))
+    kinds = map(c_encode_token, tokens)
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
     yield '};'
 
-class CollectKinds(Visitor):
-    def Symbol(self, t):  return set([c_encode_token(t.text)])
-    def Branch(self, t):  return set().union(*[set(map(c_encode_token, kinds)) | self(alt)
+class CollectTokens(Visitor):
+    def Symbol(self, t):  return set([t.text])
+    def Branch(self, t):  return set().union(*[set(kinds) | self(alt)
                                                for kinds,alt in t.cases])
     def Chain(self, t):   return self(t.e1) | self(t.e2)
-    def Loop(self, t):    return set(map(c_encode_token, t.firsts)) | self(t.body)
+    def Loop(self, t):    return set(t.firsts) | self(t.body)
     def default(self, t): return set()
-collect_kinds = CollectKinds()
+collect_tokens = CollectTokens()
 
 def c_encode_token(token):
     return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
