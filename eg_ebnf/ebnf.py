@@ -2,6 +2,7 @@
 Parse a grammar, check that it's LL(1), and emit C code to parse according to it.
 """
 
+import codecs
 from collections import Counter
 from structs import Struct, Visitor
 import parson
@@ -245,8 +246,54 @@ def gen_kinds(grammar):
         yield kind + ','
     yield '};'
 
+def gen_lexer(grammar):
+    tokens = grammar_tokens(grammar)
+    assert all(tokens)
+    trie = make_trie('', None, tokens)
+    for line in gen_trie(trie, 0):
+        yield line
+    yield 'lex_error("XXX");'
+
 def grammar_tokens(grammar):
     return set().union(*map(collect_tokens, grammar.inter.values()))
+
+def gen_trie((opt_on_empty, branches), offset):
+    heads = sorted(branches.keys())
+    if opt_on_empty:
+        default = 'token.kind = %s; scan += %d; return;' % (opt_on_empty, offset)
+    else:
+        default = ''
+    if heads:
+        yield 'switch (scan[%d]) {' % offset
+        for head in heads:
+            yield 'case %s:' % c_char_literal(head)
+            for line in gen_trie(branches[head], offset + 1):
+                yield '  ' + line
+            yield '  break;'
+        if default:
+            yield 'default:'
+            yield '  ' + default
+        yield '}'
+    elif default:
+        yield default
+
+def c_char_literal(ch):
+    # TODO anywhere this doesn't match C?
+    return "'%s'" % codecs.encode(ch, 'string_escape')
+
+def make_trie(prefix, opt_on_empty, tokens):
+    parts = collect((t[0], t[1:]) for t in tokens if t)
+    branches = {head: make_trie(prefix + head,
+                                c_encode_token(prefix + head) if '' in tails else None,
+                                tails)
+                for head, tails in parts.items()}
+    return (opt_on_empty, branches) # TODO do this in the caller
+
+def collect(pairs):
+    result = {}
+    for k, v in pairs:
+        result.setdefault(k, []).append(v)
+    return result
 
 class CollectTokens(Visitor):
     def Symbol(self, t):  return set([t.text])
@@ -296,6 +343,8 @@ escapes = {
 }
 
 def codegen(grammar):
+    yield 'void lex_XXX(void) %s' % embrace('\n'.join(gen_lexer(grammar)))
+    yield ''
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
     for name in grammar.nonterminals:
