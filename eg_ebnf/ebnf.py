@@ -269,12 +269,9 @@ collect_tokens = CollectTokens()
 
 def sprout(prefix, tokens):
     parts = collect((t[0], t[1:]) for t in tokens if t)
-    return {head: (c_encode_token(prefix + head) if '' in tails else None,
+    return {head: (prefix + head if '' in tails else None,
                    sprout(prefix + head, tails))
             for head, tails in parts.items()}
-
-def c_encode_token(token):
-    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
 
 def collect(pairs):
     result = {}
@@ -286,7 +283,7 @@ def gen_trie((opt_on_empty, branches), offset):
     heads = sorted(branches.keys())
     if opt_on_empty:
         default = ('token.kind = %s; scan += %d; return;'
-                   % (opt_on_empty, offset))
+                   % (c_encode_token(opt_on_empty), offset))
     else:
         default = ''
     if heads:
@@ -306,6 +303,9 @@ def gen_trie((opt_on_empty, branches), offset):
 def c_char_literal(ch):
     # TODO anywhere this doesn't match C?
     return "'%s'" % codecs.encode(ch, 'string_escape')
+
+def c_encode_token(token):
+    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
 
 escapes = {
     '!': '_BANG',
