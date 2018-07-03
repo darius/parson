@@ -248,8 +248,9 @@ def gen_kinds(grammar):
 
 def gen_lexer(grammar):
     tokens = grammar_tokens(grammar)
+    tokens -= set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX hack
     assert all(tokens)
-    trie = make_trie('', None, tokens)
+    trie = (None, sprout('', tokens))
     for line in gen_trie(trie, 0):
         yield line
     yield 'lex_error("XXX");'
@@ -257,10 +258,35 @@ def gen_lexer(grammar):
 def grammar_tokens(grammar):
     return set().union(*map(collect_tokens, grammar.inter.values()))
 
+class CollectTokens(Visitor):
+    def Symbol(self, t):  return set([t.text])
+    def Branch(self, t):  return set().union(*[set(kinds) | self(alt)
+                                               for kinds,alt in t.cases])
+    def Chain(self, t):   return self(t.e1) | self(t.e2)
+    def Loop(self, t):    return set(t.firsts) | self(t.body)
+    def default(self, t): return set()
+collect_tokens = CollectTokens()
+
+def sprout(prefix, tokens):
+    parts = collect((t[0], t[1:]) for t in tokens if t)
+    return {head: (c_encode_token(prefix + head) if '' in tails else None,
+                   sprout(prefix + head, tails))
+            for head, tails in parts.items()}
+
+def c_encode_token(token):
+    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
+
+def collect(pairs):
+    result = {}
+    for k, v in pairs:
+        result.setdefault(k, []).append(v)
+    return result
+
 def gen_trie((opt_on_empty, branches), offset):
     heads = sorted(branches.keys())
     if opt_on_empty:
-        default = 'token.kind = %s; scan += %d; return;' % (opt_on_empty, offset)
+        default = ('token.kind = %s; scan += %d; return;'
+                   % (opt_on_empty, offset))
     else:
         default = ''
     if heads:
@@ -280,32 +306,6 @@ def gen_trie((opt_on_empty, branches), offset):
 def c_char_literal(ch):
     # TODO anywhere this doesn't match C?
     return "'%s'" % codecs.encode(ch, 'string_escape')
-
-def make_trie(prefix, opt_on_empty, tokens):
-    parts = collect((t[0], t[1:]) for t in tokens if t)
-    branches = {head: make_trie(prefix + head,
-                                c_encode_token(prefix + head) if '' in tails else None,
-                                tails)
-                for head, tails in parts.items()}
-    return (opt_on_empty, branches) # TODO do this in the caller
-
-def collect(pairs):
-    result = {}
-    for k, v in pairs:
-        result.setdefault(k, []).append(v)
-    return result
-
-class CollectTokens(Visitor):
-    def Symbol(self, t):  return set([t.text])
-    def Branch(self, t):  return set().union(*[set(kinds) | self(alt)
-                                               for kinds,alt in t.cases])
-    def Chain(self, t):   return self(t.e1) | self(t.e2)
-    def Loop(self, t):    return set(t.firsts) | self(t.body)
-    def default(self, t): return set()
-collect_tokens = CollectTokens()
-
-def c_encode_token(token):
-    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
 
 escapes = {
     '!': '_BANG',
@@ -343,7 +343,7 @@ escapes = {
 }
 
 def codegen(grammar):
-    yield 'void lex_XXX(void) %s' % embrace('\n'.join(gen_lexer(grammar)))
+    yield 'void lex_trie(void) %s' % embrace('\n'.join(gen_lexer(grammar)))
     yield ''
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
@@ -672,6 +672,36 @@ factor: 'x' :X | '(' exp ')'.
 
 
 ## egg.print_parser()
+#. void lex_trie(void) {
+#.   switch (scan[0]) {
+#.   case '(':
+#.     token.kind = kind__LPAREN; scan += 1; return;
+#.     break;
+#.   case ')':
+#.     token.kind = kind__RPAREN; scan += 1; return;
+#.     break;
+#.   case '*':
+#.     token.kind = kind__STAR; scan += 1; return;
+#.     break;
+#.   case '+':
+#.     token.kind = kind__PLUS; scan += 1; return;
+#.     break;
+#.   case '-':
+#.     token.kind = kind__DASH; scan += 1; return;
+#.     break;
+#.   case 'b':
+#.     token.kind = kind_b; scan += 1; return;
+#.     break;
+#.   case 'x':
+#.     token.kind = kind_x; scan += 1; return;
+#.     break;
+#.   case 'y':
+#.     token.kind = kind_y; scan += 1; return;
+#.     break;
+#.   }
+#.   lex_error("XXX");
+#. }
+#. 
 #. void parse_A(void);
 #. void parse_B(void);
 #. void parse_C(void);
