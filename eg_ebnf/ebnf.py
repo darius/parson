@@ -246,15 +246,6 @@ def gen_kinds(grammar):
         yield kind + ','
     yield '};'
 
-def gen_lexer(grammar):
-    tokens = grammar_tokens(grammar)
-    tokens -= set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX hack
-    assert all(tokens)
-    trie = (None, sprout('', tokens))
-    for line in gen_trie(trie, 0):
-        yield line
-    yield 'lex_error("XXX");'
-
 def grammar_tokens(grammar):
     return set().union(*map(collect_tokens, grammar.inter.values()))
 
@@ -266,6 +257,15 @@ class CollectTokens(Visitor):
     def Loop(self, t):    return set(t.firsts) | self(t.body)
     def default(self, t): return set()
 collect_tokens = CollectTokens()
+
+def gen_lexer(grammar):
+    tokens = grammar_tokens(grammar)
+    tokens -= set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX hack
+    assert all(tokens)
+    trie = (None, sprout('', tokens))
+    for line in gen_trie(trie, 0):
+        yield line
+    yield 'lex_error("XXX");'
 
 def sprout(prefix, tokens):
     parts = collect((t[0], t[1:]) for t in tokens if t)
