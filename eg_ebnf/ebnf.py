@@ -268,12 +268,12 @@ def gen_lexer(grammar):
     yield 'lex_error("XXX");'
 
 def sprout(prefix, tokens):
-    parts = collect((t[0], t[1:]) for t in tokens if t)
+    parts = map_from_relation((t[0], t[1:]) for t in tokens if t)
     return {head: (prefix + head if '' in tails else None,
                    sprout(prefix + head, tails))
             for head, tails in parts.items()}
 
-def collect(pairs):
+def map_from_relation(pairs):
     result = {}
     for k, v in pairs:
         result.setdefault(k, []).append(v)
