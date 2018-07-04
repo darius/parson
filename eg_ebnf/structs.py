@@ -25,6 +25,21 @@ def Struct(field_names, name=None, supertype=(object,)):
         return '%s(%s)' % (get_name(self), ', '.join(repr(getattr(self, f))
                                                      for f in field_names))
 
+    def __hash__(self):
+        return hash((name, tuple(map(self.__dict__.__getitem__, field_names))))
+
+    def __eq__(self, other):
+        return (self.__class__ is other.__class__    # I guess...
+                and all(self.__dict__[field] == other.__dict__[field]
+                        for field in field_names))
+    def __ne__(self, other):
+        return not __eq__(self, other)
+    def compare(self, other):
+        if self.__class__ is not other.__class__:
+            raise NotImplemented
+        return cmp(map(self.__dict__.__getitem__, field_names),
+                   map(other.__dict__.__getitem__, field_names))
+
     # (for use with pprint)
     def my_as_sexpr(self):         # XXX better name?
         return (get_name(self),) + tuple(as_sexpr(getattr(self, f))
@@ -35,6 +50,13 @@ def Struct(field_names, name=None, supertype=(object,)):
                 supertype,
                 dict(__init__=__init__,
                      __repr__=__repr__,
+                     __hash__=__hash__,
+                     __eq__=__eq__,
+                     __ne__=__ne__,
+                     __lt__=lambda self, other: compare(self, other) < 0,
+                     __le__=lambda self, other: compare(self, other) <= 0,
+                     __gt__=lambda self, other: compare(self, other) > 0,
+                     __ge__=lambda self, other: compare(self, other) >= 0,
                      as_sexpr=my_as_sexpr,
                      _meta_fields=field_names))
 

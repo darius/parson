@@ -26,7 +26,7 @@ class Grammar(object):
         for r in self.nonterminals:
             nul = self.ana.nullable(self.rules[r])
             fst = self.ana.firsts(self.rules[r])
-            print '%-8s %-6s %s' % (r, nul, ' '.join(sorted(fst)))
+            print '%-8s %-6s %s' % (r, nul, ' '.join(sorted(s.text for s in fst)))
 
     def gen_kinds(self):
         return '\n'.join(gen_kinds(self))
@@ -175,7 +175,7 @@ class First(Visitor):
 
     def Call(self, t):   return self.fst[t.name]
     def Empty(self, t):  return empty_set
-    def Symbol(self, t): return frozenset([t.text])
+    def Symbol(self, t): return frozenset([t])
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
     def Star(self, t):   return self(t.e1)
@@ -239,39 +239,45 @@ def gen_branch(ts, ana):
 # Generate a parser in C
 
 def gen_kinds(grammar):
-    tokens = grammar_tokens(grammar)
+    tokens = grammar_symbols(grammar)
     kinds = sorted(map(c_encode_token, tokens))
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
     yield '};'
 
-def grammar_tokens(grammar):
-    return set().union(*map(collect_tokens, grammar.inter.values()))
+def grammar_keywords(grammar): # XXX unused
+    return [t.text for t in grammar_tokens(grammar) if t.kind == 'keyword']
 
-class CollectTokens(Visitor):
-    def Symbol(self, t):  return set([t.text])
+def grammar_tokens(grammar):
+    return set([t.text for t in grammar_symbols(grammar)])
+
+def grammar_symbols(grammar):
+    return set().union(*map(collect_symbols, grammar.inter.values()))
+
+class CollectSymbols(Visitor):
+    def Symbol(self, t):  return set([t])
     def Branch(self, t):  return set().union(*[set(kinds) | self(alt)
                                                for kinds,alt in t.cases])
     def Chain(self, t):   return self(t.e1) | self(t.e2)
     def Loop(self, t):    return set(t.firsts) | self(t.body)
     def default(self, t): return set()
-collect_tokens = CollectTokens()
+collect_symbols = CollectSymbols()
 
 def gen_lexer(grammar):
-    tokens = grammar_tokens(grammar)
-    tokens -= set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX hack
-    assert all(tokens)
-    trie = (None, sprout('', tokens))
+    syms = grammar_symbols(grammar)
+    blacklist = set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX 
+    assert all(t.text for t in syms)
+    trie = sprout([(t.text, t) for t in syms if t.text not in blacklist])
     for line in gen_trie(trie, 0):
         yield line
     yield 'lex_error("XXX");'
 
-def sprout(prefix, tokens):
-    parts = map_from_relation((t[0], t[1:]) for t in tokens if t)
-    return {head: (prefix + head if '' in tails else None,
-                   sprout(prefix + head, tails))
-            for head, tails in parts.items()}
+def sprout(rel):
+    parts = map_from_relation((k[0], (k[1:], v))
+                              for k,v in rel if k)
+    return (dict(rel).get(''),
+            {head: sprout(tails) for head,tails in parts.items()})
 
 def map_from_relation(pairs):
     result = {}
@@ -305,7 +311,7 @@ def c_char_literal(ch):
     return "'%s'" % codecs.encode(ch, 'string_escape')
 
 def c_encode_token(token):
-    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token)
+    return 'kind_%s' % ''.join(escapes.get(c, c) for c in token.text)
 
 escapes = {
     '!': '_BANG',
@@ -358,7 +364,7 @@ def indent(s): return s.replace('\n', '\n  ')
 class Gen(Visitor):
     def Call(self, t):   return 'parse_%s();' % t.name
     def Empty(self, t):  return ''
-    def Symbol(self, t): return 'eat(%s);' % c_encode_token(t.text)
+    def Symbol(self, t): return 'eat(%s);' % c_encode_token(t)
     def Branch(self, t): return gen_switch(t)
     def Fail(self, t):   return 'parser_fail();'
     def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
@@ -419,7 +425,7 @@ class Parsing(Visitor):
     def Branch(self, t):
         tok = self.tokens[self.i]
         for kinds, alt in t.cases:
-            if tok in kinds:
+            if tok in [s.text for s in kinds]: # XXX awkward
                 return self(alt)
         self(t.default)
     def Chain(self, t):
@@ -458,7 +464,7 @@ class Code(object):
             arg = ''
         elif op == 'branch':
             cases, default = arg
-            cases = [(','.join(sorted(kinds)), dest)
+            cases = [(','.join(sorted(s.text for s in kinds)), dest)
                      for kinds, dest in cases]
             arg = cases, default
         print '%-10s %3d %-6s %r' % (label, pc, op, arg)
@@ -489,14 +495,14 @@ class Code(object):
                     return results
                 frames[-1].extend(results)
             elif op == 'eat':
-                if tokens[i] == arg:
+                if tokens[i] == arg.text:
                     i += 1
                 else:
                     raise SyntaxError("Missing %r" % arg)
             elif op == 'branch':
                 cases, default = arg
                 for kinds, dest in cases:
-                    if tokens[i] in kinds:
+                    if tokens[i] in [s.text for s in kinds]: # XXX awkward
                         pc += dest
                         break
                 else:
@@ -516,7 +522,7 @@ class Code(object):
 class Compiling(Visitor):
     def Call(self, t):   return [('call', t.name)]
     def Empty(self, t):  return []
-    def Symbol(self, t): return [('eat', t.text)]
+    def Symbol(self, t): return [('eat', t)]
     def Branch(self, t): return compile_branch(t)
     def Fail(self, t):   return [('fail', t.possibles)]
     def Chain(self, t):  return self(t.e1) + self(t.e2)
@@ -577,12 +583,12 @@ factor: 'x' :X | '(' exp ')'.
 
 ## egg = Grammar(eg, actions)
 ## for r in egg.nonterminals: print '%-8s %s' % (r, egg.rules[r])
-#. A        Either(Chain(Call('B'), Chain(Symbol('x'), Call('A'))), Symbol('y'))
-#. B        Symbol('b')
+#. A        Either(Chain(Call('B'), Chain(Symbol('x', 'literal'), Call('A'))), Symbol('y', 'literal'))
+#. B        Symbol('b', 'literal')
 #. C        Empty()
-#. exp      Chain(Call('term'), Either(Chain(Symbol('+'), Chain(Call('exp'), Action('add'))), Either(Chain(Symbol('-'), Chain(Call('exp'), Action('sub'))), Empty())))
-#. term     Chain(Call('factor'), Star(Chain(Symbol('*'), Chain(Call('factor'), Action('mul')))))
-#. factor   Either(Chain(Symbol('x'), Action('X')), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))
+#. exp      Chain(Call('term'), Either(Chain(Symbol('+', 'literal'), Chain(Call('exp'), Action('add'))), Either(Chain(Symbol('-', 'literal'), Chain(Call('exp'), Action('sub'))), Empty())))
+#. term     Chain(Call('factor'), Star(Chain(Symbol('*', 'literal'), Chain(Call('factor'), Action('mul')))))
+#. factor   Either(Chain(Symbol('x', 'literal'), Action('X')), Chain(Symbol('(', 'literal'), Chain(Call('exp'), Symbol(')', 'literal'))))
 
 ## egg.show_analysis()
 #. A        False  b y
@@ -593,12 +599,12 @@ factor: 'x' :X | '(' exp ')'.
 #. factor   False  ( x
 
 ## for r in egg.nonterminals: print '%-8s %s' % (r, intermediate(egg.rules[r], egg.ana))
-#. A        Branch([(frozenset(['b']), Chain(Call('B'), Chain(Symbol('x'), Call('A')))), (frozenset(['y']), Symbol('y'))], Fail(frozenset(['y', 'b'])))
-#. B        Symbol('b')
+#. A        Branch([(frozenset([Symbol('b', 'literal')]), Chain(Call('B'), Chain(Symbol('x', 'literal'), Call('A')))), (frozenset([Symbol('y', 'literal')]), Symbol('y', 'literal'))], Fail(frozenset([Symbol('b', 'literal'), Symbol('y', 'literal')])))
+#. B        Symbol('b', 'literal')
 #. C        Empty()
-#. exp      Chain(Call('term'), Branch([(frozenset(['+']), Chain(Symbol('+'), Chain(Call('exp'), Action('add')))), (frozenset(['-']), Chain(Symbol('-'), Chain(Call('exp'), Action('sub'))))], Empty()))
-#. term     Chain(Call('factor'), Loop(frozenset(['*']), Chain(Symbol('*'), Chain(Call('factor'), Action('mul')))))
-#. factor   Branch([(frozenset(['x']), Chain(Symbol('x'), Action('X'))), (frozenset(['(']), Chain(Symbol('('), Chain(Call('exp'), Symbol(')'))))], Fail(frozenset(['x', '('])))
+#. exp      Chain(Call('term'), Branch([(frozenset([Symbol('+', 'literal')]), Chain(Symbol('+', 'literal'), Chain(Call('exp'), Action('add')))), (frozenset([Symbol('-', 'literal')]), Chain(Symbol('-', 'literal'), Chain(Call('exp'), Action('sub'))))], Empty()))
+#. term     Chain(Call('factor'), Loop(frozenset([Symbol('*', 'literal')]), Chain(Symbol('*', 'literal'), Chain(Call('factor'), Action('mul')))))
+#. factor   Branch([(frozenset([Symbol('x', 'literal')]), Chain(Symbol('x', 'literal'), Action('X'))), (frozenset([Symbol('(', 'literal')]), Chain(Symbol('(', 'literal'), Chain(Call('exp'), Symbol(')', 'literal'))))], Fail(frozenset([Symbol('x', 'literal'), Symbol('(', 'literal')])))
 
 ## egg.parse("".split(), start='B')
 #. Missing 'b' at 0
@@ -607,7 +613,7 @@ factor: 'x' :X | '(' exp ')'.
 ## egg.parse("b b".split(), start='A')
 #. Missing 'x' at 1
 ## egg.parse("b x".split(), start='A')
-#. Unexpected token None; expecting one of ['b', 'y'] at 2
+#. Unexpected token None; expecting one of [Symbol('b', 'literal'), Symbol('y', 'literal')] at 2
 ## egg.parse("b x y".split(), start='A')
 #. ok at 3 []
 ## egg.parse("b x b x y".split(), start='A')
@@ -616,55 +622,55 @@ factor: 'x' :X | '(' exp ')'.
 ## egg.parse("x", start='exp')
 #. ok at 1 [3]
 ## egg.parse("x+", start='exp')
-#. Unexpected token None; expecting one of ['(', 'x'] at 2
+#. Unexpected token None; expecting one of [Symbol('(', 'literal'), Symbol('x', 'literal')] at 2
 ## egg.parse("x+x", start='exp')
 #. ok at 3 [6]
 ## egg.parse("x+x*x", start='exp')
-#. ok at 5 [12]
+#. ok at 3 [6]
 ## egg.parse("x+(x*x+x)", start='exp')
-#. ok at 9 [15]
+#. Missing ')' at 4
 
 ## egc = egg.compile()
 ## egc.show()
 #. A            0 branch ([('b', 0), ('y', 4)], 6)
 #.              1 call   'B'
-#.              2 eat    'x'
+#.              2 eat    Symbol('x', 'literal')
 #.              3 call   'A'
 #.              4 jump   3
-#.              5 eat    'y'
+#.              5 eat    Symbol('y', 'literal')
 #.              6 jump   1
-#.              7 fail   frozenset(['y', 'b'])
+#.              7 fail   frozenset([Symbol('b', 'literal'), Symbol('y', 'literal')])
 #.              8 return ''
-#. B            9 eat    'b'
+#. B            9 eat    Symbol('b', 'literal')
 #.             10 return ''
 #. C           11 return ''
 #. exp         12 call   'term'
 #.             13 branch ([('+', 0), ('-', 4)], 8)
-#.             14 eat    '+'
+#.             14 eat    Symbol('+', 'literal')
 #.             15 call   'exp'
 #.             16 act    'add'
 #.             17 jump   4
-#.             18 eat    '-'
+#.             18 eat    Symbol('-', 'literal')
 #.             19 call   'exp'
 #.             20 act    'sub'
 #.             21 jump   0
 #.             22 return ''
 #. term        23 call   'factor'
 #.             24 branch ([('*', 0)], 4)
-#.             25 eat    '*'
+#.             25 eat    Symbol('*', 'literal')
 #.             26 call   'factor'
 #.             27 act    'mul'
 #.             28 jump   -5
 #.             29 return ''
 #. factor      30 branch ([('x', 0), ('(', 3)], 7)
-#.             31 eat    'x'
+#.             31 eat    Symbol('x', 'literal')
 #.             32 act    'X'
 #.             33 jump   5
-#.             34 eat    '('
+#.             34 eat    Symbol('(', 'literal')
 #.             35 call   'exp'
-#.             36 eat    ')'
+#.             36 eat    Symbol(')', 'literal')
 #.             37 jump   1
-#.             38 fail   frozenset(['x', '('])
+#.             38 fail   frozenset([Symbol('x', 'literal'), Symbol('(', 'literal')])
 #.             39 return ''
 ### egc.parse("x", start='exp')
 ### egc.parse("x+x-x", start='exp')

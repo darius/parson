@@ -6,11 +6,26 @@ from structs import Struct as _S
 
 class Call  (_S('name')): pass
 class Empty (_S('')): pass
-class Symbol(_S('text')): pass
+class Symbol(_S('text kind')): pass
 class Either(_S('e1 e2')): pass
 class Chain (_S('e1 e2')): pass
 class Star  (_S('e1')): pass
 class Action(_S('name')): pass
+
+# Test structs implementation of comparisons and hashing:
+## Action('x') == Action('x')
+#. True
+## Action('x') == Action('y')
+#. False
+## Action('x') < Action('y')
+#. True
+## Action('x') > Action('y')
+#. False
+## d = {Action('x'): 1}
+## d[Action('x')]
+#. 1
+## set([Action('x'), Action('x')])
+#. set([Action('x')])
 
 # TODO more efficient implementations:
 def Maybe(e1):     return Either(e1, Empty())
@@ -34,8 +49,8 @@ factor       :  primary ('**' primary :Star2
                         |'?'          :Maybe
                         )?.
 
-primary      :  qstring      :Symbol
-             |  dqstring     :Symbol    # the same, just for now
+primary      :  qstring      :'literal' :Symbol
+             |  dqstring     :'keyword' :Symbol
              |  name         :Call
              |  ':' name     :Action
              |  ':' qstring  :Action
