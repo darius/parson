@@ -246,12 +246,6 @@ def gen_kinds(grammar):
         yield kind + ','
     yield '};'
 
-def grammar_keywords(grammar): # XXX unused
-    return [t.text for t in grammar_tokens(grammar) if t.kind == 'keyword']
-
-def grammar_tokens(grammar):
-    return set([t.text for t in grammar_symbols(grammar)])
-
 def grammar_symbols(grammar):
     return set().union(*map(collect_symbols, grammar.inter.values()))
 
@@ -266,9 +260,9 @@ collect_symbols = CollectSymbols()
 
 def gen_lexer(grammar):
     syms = grammar_symbols(grammar)
-    blacklist = set('ID INTEGER STRING_LITERAL CHAR_LITERAL'.split()) # XXX 
+    syms = set(t for t in syms if t.kind == 'literal') # for now
     assert all(t.text for t in syms)
-    trie = sprout([(t.text, t) for t in syms if t.text not in blacklist])
+    trie = sprout([(t.text, t) for t in syms])
     for line in gen_trie(trie, 0):
         yield line
     yield 'lex_error("XXX");'

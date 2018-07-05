@@ -51,6 +51,7 @@ factor       :  primary ('**' primary :Star2
 
 primary      :  qstring      :'literal' :Symbol
              |  dqstring     :'keyword' :Symbol
+             |  '$' name     :'lexer'   :Symbol
              |  name         :Call
              |  ':' name     :Action
              |  ':' qstring  :Action
