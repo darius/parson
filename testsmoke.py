@@ -194,3 +194,66 @@ def catch_position(parse, string):
 
 ## catch_position(Grammar(r" 'x'* /$/ ")(), 'xxxhi')
 #. 3
+
+
+# Like test2, but in the grammar syntax and using immediate actions
+# instead of folds:
+test3_grammar = Grammar(r"""
+start: FNORD E.
+E:     F (F :make_app)*.
+F:     V :make_var
+    |  '\\' Lam
+    |  '(' E ')'.
+Lam:   V ('.' E | Lam) :make_lam.
+V:     /([A-Za-z]+)/.
+FNORD ~: /\s*/.
+""")
+test3 = test3_grammar(**globals()).start.expecting_one_result()
+
+# Same checks as test2:
+
+## test3('x')
+#. 'x'
+## test3('\\x.x')
+#. '(lambda (x) x)'
+## test3('(x x)')
+#. '(x x)'
+
+## test3('hello')
+#. 'hello'
+## test3(' x')
+#. 'x'
+## test3('\\x . y  ')
+#. '(lambda (x) y)'
+## test3('((hello world))')
+#. '(hello world)'
+
+## test3('  hello ')
+#. 'hello'
+## test3('hello     there hi')
+#. '((hello there) hi)'
+## test3('a b c d e')
+#. '((((a b) c) d) e)'
+
+## test3.attempt('')
+## test3('x x . y')
+#. '(x x)'
+## test3.attempt('\\.x')
+## test3.attempt('(when (in the)')
+## test3('((when (in the)))')
+#. '(when (in the))'
+
+## test3('\\a.a')
+#. '(lambda (a) a)'
+
+## test3('  \\hello . (hello)x \t')
+#. '(lambda (hello) (hello x))'
+
+## test3('\\M . (\\f . M (f f)) (\\f . M (f f))')
+#. '(lambda (M) ((lambda (f) (M (f f))) (lambda (f) (M (f f)))))'
+
+## test3('\\a b.a')
+#. '(lambda (a) (lambda (b) a))'
+
+## test3('\\a b c . a b')
+#. '(lambda (a) (lambda (b) (lambda (c) (a b))))'
