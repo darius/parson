@@ -5,7 +5,7 @@ https://github.com/aosabook/500lines/tree/master/template-engine
 """
 
 from parson import Grammar
-from structs import Struct
+from structs import Struct, Visitor
 
 grammar = r"""  block :end.
 
@@ -26,56 +26,14 @@ ident:     /([A-Za-z_][A-Za-z_0-9]*)/.
 _:         /\s*/.
 """
 
-class Block(Struct('chunks')):
-    def free_vars(self):
-        return set().union(*[chunk.free_vars() for chunk in self.chunks])
-    def gen(self):
-        return '\n'.join(chunk.gen() for chunk in self.chunks)
-
-class Literal(Struct('string')):
-    def free_vars(self):
-        return set()
-    def gen(self):
-        return '_append(%r)' % self.string
-
-class If(Struct('expr block')):
-    def free_vars(self):
-        return self.expr.free_vars() | self.block.free_vars()
-    def gen(self):
-        return ('if %s:\n    %s'
-                % (self.expr.gen(), indent(self.block.gen())))
-
-class For(Struct('variable expr block')):
-    def free_vars(self):
-        return ((self.expr.free_vars() | self.block.free_vars())
-                - set([self.variable]))
-    def gen(self):
-        return ('for v_%s in %s:\n    %s'
-                % (self.variable, self.expr.gen(), indent(self.block.gen())))
-
-class Expr(Struct('expr')):
-    def free_vars(self):
-        return self.expr.free_vars()
-    def gen(self):
-        return '_append(str(%s))' % self.expr.gen()
-
-class VarRef(Struct('variable')):
-    def free_vars(self):
-        return set([self.variable])
-    def gen(self):
-        return 'v_%s' % self.variable
-
-class Access(Struct('base attribute')):
-    def free_vars(self):
-        return self.base.free_vars()
-    def gen(self):
-        return '%s.%s' % (self.base.gen(), self.attribute)
-
-class Call(Struct('operand function')):
-    def free_vars(self):
-        return self.operand.free_vars()
-    def gen(self):
-        return '%s(%s)' % (self.function, self.operand.gen())
+class Block(Struct('chunks')): pass
+class Literal(Struct('string')): pass
+class If(Struct('expr block')): pass
+class For(Struct('variable expr block')): pass
+class Expr(Struct('expr')): pass
+class VarRef(Struct('variable')): pass
+class Access(Struct('base attribute')): pass
+class Call(Struct('operand function')): pass
 
 parse = Grammar(grammar)(**globals()).expecting_one_result()
 
@@ -86,7 +44,7 @@ def compile_template(text):
     return env['_expand']
 
 def gen(template):
-    t = """\
+    py = """\
 def _expand(_context):
     _acc = []
     _append = _acc.append
@@ -94,8 +52,37 @@ def _expand(_context):
     %s
     return ''.join(_acc)"""
     decls = '\n'.join('v_%s = _context[%r]' % (name, name)
-                      for name in template.free_vars())
-    return t % (indent(decls), indent(template.gen()))
+                      for name in free_vars(template))
+    return py % (indent(decls), indent(gen_visitor(template)))
+
+class Gen(Visitor):
+    def Block(self, t):   return '\n'.join(map(self, t.chunks))
+    def Literal(self, t): return '_append(%r)' % t.string
+    def If(self, t):      return ('if %s:\n    %s'
+                                  % (self(t.expr),
+                                     indent(self(t.block))))
+    def For(self, t):     return ('for v_%s in %s:\n    %s'
+                                  % (t.variable, self(t.expr),
+                                     indent(self(t.block))))
+    def Expr(self, t):    return '_append(str(%s))' % self(t.expr)
+    def VarRef(self, t):  return 'v_%s' % t.variable
+    def Access(self, t):  return '%s.%s' % (self(t.base), t.attribute)
+    def Call(self, t):    return '%s(%s)' % (t.function, self(t.operand))
+
+gen_visitor = Gen()
+
+class FreeVars(Visitor):
+    def Block(self, t):   return set().union(*map(self, t.chunks))
+    def Literal(self, t): return set()
+    def If(self, t):      return self(t.expr) | self(t.block)
+    def For(self, t):     return ((self(t.expr) | self(t.block))
+                                  - set([t.variable]))
+    def Expr(self, t):    return self(t.expr)
+    def VarRef(self, t):  return set([t.variable])
+    def Access(self, t):  return self(t.base)
+    def Call(self, t):    return self(t.operand)
+
+free_vars = FreeVars()
 
 def indent(s):
     return s.replace('\n', '\n    ')
