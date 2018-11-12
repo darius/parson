@@ -27,8 +27,7 @@ def to_c_main(filename, out_filename=None):
         out_filename = stem + '.c'
     with open(filename) as f:
         text = f.read()
-    complainer = Complainer(text, filename)
-    opt_c = c_from_itsy(complainer)
+    opt_c = c_from_itsy(Complainer(text, filename))
     if opt_c is None:
         return 1
     with open(out_filename, 'w') as f:
