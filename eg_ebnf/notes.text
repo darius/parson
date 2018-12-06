@@ -1,3 +1,6 @@
+see also
+https://python-history.blogspot.com/2018/05/the-origins-of-pgen.html
+
 def Maybe(e1):     return Either(e1, Empty())
 def Plus(e1):      return Chain(e1, Star(e1))                # inefficient because dup
 def Plus2(e1, e2): return Chain(e1, Star(Chain(e2, e1)))     # inefficient because dup
