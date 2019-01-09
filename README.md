@@ -63,3 +63,24 @@ Examples of where I've used it for more than examples:
   * [tinyhiss](https://github.com/darius/tinyhiss/blob/master/parser.py) -- Smalltalkish
   * [Squee](https://github.com/darius/squee/blob/master/parse_sans_offsides.py), an experimental language not much like any others
   * [Toot](https://github.com/darius/toot/blob/master/parse.py), a tutorial on writing a bytecode compiler
+
+
+Needs more work:
+================
+
+  * There's a way to make a grammar automatically skip whitespace and
+    comments and such ('FNORD' rules), which probably should be done
+    differently.
+
+  * It should be made easy to use with a separate lexer, and I haven't
+    tried this enough to say it's ready (it's probably not).
+
+  * Also to be easy to write a 'real' compiler, where source-location
+    info gets added to all the AST nodes or whatever representation
+    you're building. This is doable but should be more automated.
+
+After these design issues, this ought to be ported to a
+different-enough language to bring out issues of working nicely with
+multiple languages.
+
+After *that*, I think it'd be time to tackle quality of implementation.
