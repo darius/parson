@@ -75,7 +75,7 @@ Needs more work:
   * It should be made easy to use with a separate lexer, and I haven't
     tried this enough to say it's ready (it's probably not).
 
-  * Also to be easy to write a 'real' compiler, where source-location
+  * It should also be easy to write a 'real' compiler, where source-location
     info gets added to all the AST nodes or whatever representation
     you're building. This is doable but should be more automated.
 
