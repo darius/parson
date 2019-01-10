@@ -25,8 +25,11 @@ class Scope(object):
         self.complainer = complainer
         self.names = {}
 
-    def def_var(self, name, type_):
-        self.names[name] = type_   # or something
+    def def_var(self, name, type_, t):
+        if name in self.names:
+            self.err("Multiple definition", t)
+        else:
+            self.names[name] = (type_, t)   # or something
 
     def err(self, plaint, t):   # t = ast node
         self.complainer.semantic_error(plaint, where(t))
@@ -44,15 +47,15 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
         if t.opt_exp is not None and len(t.names) != 1:
             sc.err("Initializer doesn't match the number of variables", t)
         for name in t.names:
-            sc.def_var(name, t.type)
+            sc.def_var(name, t.type, t)
         tc_opt_exp(t.opt_exp, sc, t.type)
 
     def Enum(self, t, sc):
         type_ = None    # Int()  # TODO or a new 'Enum_type' type?
         if t.opt_name is not None:
-            sc.def_var(t.opt_name, type_)
+            sc.def_var(t.opt_name, type_, t)
             for name, opt_exp in t.pairs:
-                sc.def_var(name, type_)
+                sc.def_var(name, type_, t)
             for name, opt_exp in t.pairs:
                 tc_opt_exp(opt_exp, sc, type_)
 
