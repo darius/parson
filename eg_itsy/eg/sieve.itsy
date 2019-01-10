@@ -2,7 +2,7 @@
 
 enum { SIZE = 8190 }
 
-let flags: [SIZE] bool;
+let flags: [SIZE+1] bool;
 
 to main(): int {
     printf("10 iterations\n");
