@@ -1,0 +1,138 @@
+// Ported from my superbench repo
+
+enum { max_wires = 20 }
+enum { max_inputs = 5 }
+
+typedef Word = unsigned;
+
+let argv0: ^char = "";
+
+to error(plaint: ^char) {
+    fprintf(stderr, "%s: %s\n", argv0, plaint);
+    exit(1);
+}
+
+let target_output: Word;
+
+let ninputs: int;
+let mask: Word;
+
+let found: bool = false;
+let nwires: int;
+let wires: [max_wires]Word;
+let linputs, rinputs: [max_wires]int;
+
+to vname(w: int): char {
+    return w + ('A' if w < ninputs else 'a');
+}
+
+to print_circuit() {
+    let w: int;
+    for w = ninputs; w < nwires; ++w {
+        printf("%s%c = ~(%c %c)",
+               "" if w == ninputs else "; ",
+               vname(w), vname(linputs[w]), vname(rinputs[w]));
+    }
+    printf("\n");
+}
+
+to compute(left_input, right_input: Word): Word {
+    return ~(left_input & right_input);    // A ~& operator would be nice.
+}
+
+to sweeping(w: int) {
+    let ll: int;
+    for ll = 0; ll < w; ++ll {
+        let llwire: Word = wires[ll];
+        linputs[w] = ll;
+        if w+1 == nwires {
+            let rr: int;
+            for rr = 0; rr <= ll; ++rr {
+                if mask & compute(llwire, wires[rr]) == target_output {  // N.B. & precedence
+                    found = true;
+                    rinputs[w] = rr;
+                    print_circuit();
+                }
+            }
+        }
+        else {
+            let rr: int;
+            for rr = 0; rr <= ll; ++rr {
+                wires[w] = compute(llwire, wires[rr]);
+                rinputs[w] = rr;
+                sweeping(w + 1);
+            }
+        }
+    }
+}
+
+to tabulate_inputs() {
+    let i: int;
+    for i = 1; i <= ninputs; ++i {
+        let shift: Word = 1 << (i-1);
+        wires[ninputs-i] = (1 << shift) - 1;   // XXX 1u      // N.B. could leave out parens
+        let j: int;
+        for j = ninputs-i+1; j < ninputs; ++j {
+            wires[j] |= wires[j] << shift;
+        }
+    }
+}
+
+to find_circuits(max_gates: int) {
+    mask = (1 << (1 << ninputs)) - 1;
+    tabulate_inputs();
+    printf("Trying 0 gates...\n");
+    if target_output == 0 || target_output == mask {
+        printf("%c = %d\n", vname(ninputs), target_output & 1);
+        return;
+    }
+    let w: int;
+    for w = 0; w < ninputs; ++w {
+        if target_output == wires[w] {
+            printf("%c = %c\n", vname(ninputs), vname(w));
+            return;
+        }
+    }
+    let ngates: int;
+    for ngates = 1; ngates <= max_gates; ++ngates {
+        printf("Trying %d gates...\n", ngates);
+        nwires = ninputs + ngates;
+        assert(nwires <= 26); // vnames must be letters
+        sweeping(ninputs);
+        if found { return; }
+    }
+}
+
+to parse_uint(s: ^char, base: unsigned): unsigned {
+    let end: ^char;
+    let u: uint64 = strtoul(s, &end, base);
+    if u == 0 && errno == EINVAL {
+        error(strerror(errno));
+    }
+    if end^ != '\0' {
+        error("Literal has crud in it, or extra spaces, or something");
+    }
+    return u:unsigned;
+}
+
+to superopt(tt_output: ^char, max_gates: int) {
+    ninputs = log2(strlen(tt_output)): int;
+    if 1 << ninputs != strlen(tt_output) {
+        error("truth_table_output must have a power-of-2 size");
+    }
+    if max_inputs < ninputs {
+        error("Truth table too big. I can't represent so many inputs.");
+    }
+    target_output = parse_uint(tt_output, 2);
+    find_circuits(max_gates);
+}
+
+to main(argc: int, argv: ^^char): int {
+    argv0 = argv[0];
+    assert((1 << (1 << max_inputs)) - 1 <= UINT_MAX);
+    if argc != 3 {
+        error("Usage: circuitoptimizer truth_table_output max_gates");
+    }
+    superopt(argv[1], parse_uint(argv[2], 10): int);
+    return 0;
+}
