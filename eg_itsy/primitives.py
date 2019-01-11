@@ -27,5 +27,6 @@ prims['int']     = prims['int64']
 prims['uint']    = prims['uint64']
 prims['size_t']  = prims['uint64']
 
+#prims['true']    = XXX
 
 # TODO: defs from c_prelude.h

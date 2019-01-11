@@ -62,13 +62,13 @@ to store(a: Array, i: u32, p: Platter) {
     a._[i] = p;
 }
 
-let first_free: unsigned;
-let next_free:  [max_arrays]unsigned; // 0 value means active
+let first_free: uint;
+let next_free:  [max_arrays]uint; // 0 value means active
 let arrays:     [max_arrays]Array;
 
 to set_up_free_list() {
     first_free = ~0;
-    let i: unsigned;
+    let i: uint;
     for i = max_arrays; 1 < i; --i {
         next_free[i - 1] = first_free;
         first_free = i - 1;
@@ -85,8 +85,8 @@ to get_array(id: u32): Array {
 }
 
 to allocate(size: u32): u32 {
-    let i: unsigned = first_free;
-    if ~0:unsigned == i { panic("Out of arrays"); }
+    let i: uint = first_free;
+    if ~0:uint == i { panic("Out of arrays"); }
     first_free = next_free[i];
     next_free[i] = 0;
     arrays[i] = make_array(size);
@@ -137,9 +137,9 @@ to spin_cycle() {
 
         // These unfortunately for speed are not quite always used.
         // In the C version they were macros:
-        let a: unsigned = 7 & (insn >> 6);
-        let b: unsigned = 7 & (insn >> 3);
-        let c: unsigned = 7 & (insn >> 0);
+        let a: uint = 7 & (insn >> 6);
+        let b: uint = 7 & (insn >> 3);
+        let c: uint = 7 & (insn >> 0);
 
         match insn >> 28 {
             on cond_move {
@@ -187,7 +187,7 @@ to spin_cycle() {
                 finger = r[c];
             }
             on orthography {
-                let a1: unsigned = 7 & (insn >> (32 - 7));
+                let a1: uint = 7 & (insn >> (32 - 7));
                 r[a1] = insn & 0x01ffffff;
             }
             else {

@@ -3,7 +3,7 @@
 enum { max_wires = 20 }
 enum { max_inputs = 5 }
 
-typedef Word = unsigned;
+typedef Word = uint;
 
 let argv0: ^char = "";
 
@@ -103,7 +103,7 @@ to find_circuits(max_gates: int) {
     }
 }
 
-to parse_uint(s: ^char, base: unsigned): unsigned {
+to parse_uint(s: ^char, base: uint): uint {
     let end: ^char;
     let u: uint64 = strtoul(s, &end, base);
     if u == 0 && errno == EINVAL {
@@ -112,7 +112,7 @@ to parse_uint(s: ^char, base: unsigned): unsigned {
     if end^ != '\0' {
         error("Literal has crud in it, or extra spaces, or something");
     }
-    return u:unsigned;
+    return u:uint;
 }
 
 to superopt(tt_output: ^char, max_gates: int) {
