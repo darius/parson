@@ -3,12 +3,22 @@ Build a type environment and check against it.
 Also, other semantic checks.
 """
 
-from structs import Visitor
+# Glossary:
+#  t: ast node
+#  sc: scope
+#  def: a top-level or block-level definition
+
+from structs import Struct, Visitor
 from ast import Void
 
 
-def check(defs, complainer):
+# TODO rename to 'analyze'
+
+def check(defs, prims, complainer): # TODO use prims
     sc = Scope(complainer=complainer)
+    sc.names.update(prims)
+    for d in defs:
+        enter_def(d, sc)
     for d in defs:
         tc_def(d, sc)
 
@@ -25,13 +35,13 @@ class Scope(object):
         self.complainer = complainer
         self.names = {}
 
-    def def_var(self, name, type_, t):
+    def define(self, name, meaning):
         if name in self.names:
-            self.err("Multiple definition", t)
+            self.err("Multiple definition", meaning.t) # TODO also point to first def
         else:
-            self.names[name] = (type_, t)   # or something
+            self.names[name] = meaning
 
-    def err(self, plaint, t):   # t = ast node
+    def err(self, plaint, t):
         self.complainer.semantic_error(plaint, where(t))
 
 def where(t):
@@ -39,31 +49,94 @@ def where(t):
         return t.pos
     return where(getattr(t, t._meta_fields[0]))
 
+class LetMeaning      (Struct('t type')): pass
+class ToMeaning       (Struct('t')): pass
+class EnumTypeMeaning (Struct('t')): pass
+class EnumConstMeaning(Struct('t')): pass
+class TypedefMeaning  (Struct('t')): pass
+class RecordMeaning   (Struct('t')): pass
+
+# First, shallowly analyze scope
+
+def enter_block(block, sc):
+    for d in block.parts:
+        enter_part(d, sc)
+
+class EnterDef(Visitor):
+
+    def Let(self, t, sc):
+        for name in t.names:
+            sc.define(name, LetMeaning(t, t.type))
+
+    def Enum(self, t, sc):
+        if t.opt_name is not None:
+            sc.define(t.opt_name, EnumTypeMeaning(t))
+            for name, opt_exp in t.pairs:
+                sc.define(name, EnumConstMeaning(t))
+
+    def To(self, t, sc):
+        sc.define(t.name, ToMeaning(t))
+        
+    def Typedef(self, t, sc):
+        sc.define(t.name, TypedefMeaning(t))
+
+    def Record(self, t, sc):
+        if t.opt_name:
+            sc.define(t.opt_name, RecordMeaning(t))
+        # TODO check that the same field isn't multiply-defined
+
+    def default(self, t, sc):
+        # TODO Probably the parser doesn't give us any of these, so this is probably unneeded:
+        sc.err("Not allowed at top level", t)
+
+enter_def = EnterDef()
+
+# A 'part' is a block element.
+class EnterPart(Visitor):
+
+    def Let(self, t, sc):
+        enter_def(t, sc)
+
+    def Enum(self, t, sc):
+        enter_def(t, sc)
+
+    def To(self, t, sc):
+        sc.err("Nested function definition", t)
+        
+    def Typedef(self, t, sc):
+        enter_def(t, sc)
+
+    def Record(self, t, sc):
+        enter_def(t, sc)
+
+    def default(self, t, sc):
+        pass
+
+enter_part = EnterPart()
+
+
+# Now check the types and recur
+# TODO also check that locals are not used before their def
+
 void_type = Void(None)
 
-class TCDef(Visitor):           # N.B. changing the term for top-level things to 'def'
+class TCDef(Visitor):
 
-    def Let(self, t, sc):    # sc = scope
+    def Let(self, t, sc):
         if t.opt_exp is not None and len(t.names) != 1:
             sc.err("Initializer doesn't match the number of variables", t)
-        for name in t.names:
-            sc.def_var(name, t.type, t)
         tc_opt_exp(t.opt_exp, sc, t.type)
 
     def Enum(self, t, sc):
         type_ = None    # Int()  # TODO or a new 'Enum_type' type?
         if t.opt_name is not None:
-            sc.def_var(t.opt_name, type_, t)
-            for name, opt_exp in t.pairs:
-                sc.def_var(name, type_, t)
             for name, opt_exp in t.pairs:
                 tc_opt_exp(opt_exp, sc, type_)
-
-    # ... for the rest of this scaffold I'm not going to deal with sc yet XXX
 
     def To(self, t, sc):
         tc_type(t.signature, sc)
         subscope = Scope(sc)
+        # XXX: enter the param names first
         self(t.body, subscope)
         
     def Typedef(self, t, sc):
@@ -75,6 +148,7 @@ class TCDef(Visitor):           # N.B. changing the term for top-level things to
 
     def Block(self, t, sc):
         subscope = Scope(sc)
+        enter_block(t, subscope)
         for part in t.parts:
             self(part, subscope)
 

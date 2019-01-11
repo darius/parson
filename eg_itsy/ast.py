@@ -41,6 +41,9 @@ class Signature( Struct('pos params return_type')): pass  # params are (type, (n
 
 # TODO rename fields like 'type' to 'base_type' or something
 
+class Int_type(  Struct('size signedness')): pass
+class Float_type(Struct('size')): pass
+
 def Void(pos): return Type_name(pos, 'void')  # for now, anyway
 
 def spread_params(names, type_):

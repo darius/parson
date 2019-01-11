@@ -6,6 +6,7 @@ import ast
 from parson import Grammar, Unparsable
 from complainer import Complainer
 from c_emitter import c_emit
+import primitives
 import typecheck
 import sys
 
@@ -40,7 +41,7 @@ def c_from_itsy(complainer):
     except Unparsable as exc:
         complainer.syntax_error(exc)
         return None
-    typecheck.check(defs, complainer)
+    typecheck.check(defs, primitives.prims, complainer)
     if not complainer.ok():
         return None
     c_defs = map(c_emit, defs)
