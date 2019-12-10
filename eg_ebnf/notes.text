@@ -1,5 +1,7 @@
 see also
 https://python-history.blogspot.com/2018/05/the-origins-of-pgen.html
+https://github.com/rvirding/spell1
+https://os.ghalkes.nl/LLnextgen/
 
 def Maybe(e1):     return Either(e1, Empty())
 def Plus(e1):      return Chain(e1, Star(e1))                # inefficient because dup
