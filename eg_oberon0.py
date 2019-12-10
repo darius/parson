@@ -65,10 +65,14 @@ grammar = Grammar(grammar_source)()
 ## for filename in sorted(glob.glob('ob-bad/*.ob')): print exceptionally(lambda: test(filename))
 #. testing ob-bad/badassign.ob
 #. (top, 'MODULE badassign;\n\nBEGIN\n    ', '1 := 2\nEND badassign.\n')
+#. testing ob-bad/badcase.ob
+#. (top, 'MODULE badcase;\n\nVAR\n    avar : INTEGER;\n    bvar : BOOLEAN;\n\nBEGIN\n    CASE ', 'bvar OF\n        18 : avar := 19\n    END;\n\n    CASE 1 < 2 OF\n        avar : avar := 3\n      | avar + 1 .. avar + 10 : avar := 5\n    END;\n\n    CASE avar OF\n        3 DIV 0 : avar := 1\n    END\nEND badcase.\n')
+#. testing ob-bad/badfor.ob
+#. (top, 'MODULE badfor;\n\nCONST\n    aconst = 10;\n    \nTYPE\n    atype = INTEGER;    \n\nVAR\n    avar : INTEGER;\n    bvar : BOOLEAN;\n    cvar : INTEGER;\n\nBEGIN\n    FOR ', 'aconst := 1 TO 10 DO\n        avar := 1\n    END;\n\n    FOR atype := 1 TO 10 DO\n        avar := 1\n    END;\n\n    FOR bvar := FALSE TO TRUE DO\n        avar := 42\n    END;\n\n    FOR avar := 1 TO 2 BY cvar * 2 DO\n        avar := 42\n    END;\n\n    FOR dvar := 1 TO 2 DO\n        dvar := 99\n    END;\n\n    FOR avar := 8 TO 10 BY 3 DIV 0 DO\n        cvar := 100\n    END\nEND badfor.\n')
 #. testing ob-bad/commentnoend.ob
 #. (top, "MODULE commentnoend;\n (* started off well,\n   but didn't finish\nEND commentnoend.\n", '')
 #. testing ob-bad/keywordasname.ob
-#. (top, 'MODULE ', 'END;\nEND END.\n')
+#. (top, 'MODULE ', 'VAR;\nEND VAR.\n')
 #. testing ob-bad/repeatsection.ob
 #. (top, 'MODULE repeatsection;\n\nCONST\n    aconst = 10;\n\n', 'CONST\n    aconst = 20;\n\nEND repeatsection.\n')
 
@@ -103,7 +107,6 @@ grammar = Grammar(grammar_source)()
 #. testing ob-ok/redefinteger.ob
 #. testing ob-ok/redeftrue.ob
 #. testing ob-ok/selfref.ob
-#. testing ob-ok/simpleexps.ob
 #. testing ob-ok/type.ob
 #. testing ob-ok/typenodecl.ob
 #. testing ob-ok/var.ob
@@ -111,13 +114,6 @@ grammar = Grammar(grammar_source)()
 #. testing ob-ok/whilename.ob
 #. testing ob-ok/wrongmodulename.ob
 #. testing ob-ok/wrongprocedurename.ob
-
-## test('oberon/Oberon-0/input.txt')
-#. testing oberon/Oberon-0/input.txt
-## for filename in sorted(glob.glob('oberon/Oberon-0/examples/*.obr')): test(filename)
-#. testing oberon/Oberon-0/examples/fibonacci.obr
-#. testing oberon/Oberon-0/examples/fibonacci_r.obr
-#. testing oberon/Oberon-0/examples/gcd.obr
 
 def test(filename):
     print 'testing', filename

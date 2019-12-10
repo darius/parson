@@ -108,10 +108,14 @@ lex_grammar = Grammar(lex_grammar_source)(Token = lambda s, kind=None: Token(kin
 ## for filename in sorted(glob.glob('ob-bad/*.ob')): print exceptionally(lambda: test(filename))
 #. testing ob-bad/badassign.ob
 #. (top, ('MODULE', 'badassign', ';', 'BEGIN'), ('1', ':=', '2', 'END', 'badassign', '.'))
+#. testing ob-bad/badcase.ob
+#. ((literal('') ((token)* end)), 'MODULE badcase;\n\nVAR\n    avar : INTEGER;\n    bvar : BOOLEAN;\n\nBEGIN\n    CASE bvar OF\n        18 : avar := 19\n    END;\n\n    CASE 1 < 2 OF\n        avar : avar := 3\n      ', '| avar + 1 .. avar + 10 : avar := 5\n    END;\n\n    CASE avar OF\n        3 DIV 0 : avar := 1\n    END\nEND badcase.\n')
+#. testing ob-bad/badfor.ob
+#. (top, ('MODULE', 'badfor', ';', 'CONST', 'aconst', '=', '10', ';', 'TYPE', 'atype', '=', 'INTEGER', ';', 'VAR', 'avar', ':', 'INTEGER', ';', 'bvar', ':', 'BOOLEAN', ';', 'cvar', ':', 'INTEGER', ';', 'BEGIN', 'FOR'), ('aconst', ':=', '1', 'TO', '10', 'DO', 'avar', ':=', '1', 'END', ';', 'FOR', 'atype', ':=', '1', 'TO', '10', 'DO', 'avar', ':=', '1', 'END', ';', 'FOR', 'bvar', ':=', 'FALSE', 'TO', 'TRUE', 'DO', 'avar', ':=', '42', 'END', ';', 'FOR', 'avar', ':=', '1', 'TO', '2', 'BY', 'cvar', '*', '2', 'DO', 'avar', ':=', '42', 'END', ';', 'FOR', 'dvar', ':=', '1', 'TO', '2', 'DO', 'dvar', ':=', '99', 'END', ';', 'FOR', 'avar', ':=', '8', 'TO', '10', 'BY', '3', 'DIV', '0', 'DO', 'cvar', ':=', '100', 'END', 'END', 'badfor', '.'))
 #. testing ob-bad/commentnoend.ob
 #. ((literal('') ((token)* end)), "MODULE commentnoend;\n (* started off well,\n   but didn't finish\nEND commentnoend.\n", '')
 #. testing ob-bad/keywordasname.ob
-#. (top, ('MODULE',), ('END', ';', 'END', 'END', '.'))
+#. (top, ('MODULE',), ('VAR', ';', 'END', 'VAR', '.'))
 #. testing ob-bad/repeatsection.ob
 #. (top, ('MODULE', 'repeatsection', ';', 'CONST', 'aconst', '=', '10', ';'), ('CONST', 'aconst', '=', '20', ';', 'END', 'repeatsection', '.'))
 
@@ -146,7 +150,6 @@ lex_grammar = Grammar(lex_grammar_source)(Token = lambda s, kind=None: Token(kin
 #. testing ob-ok/redefinteger.ob
 #. testing ob-ok/redeftrue.ob
 #. testing ob-ok/selfref.ob
-#. testing ob-ok/simpleexps.ob
 #. testing ob-ok/type.ob
 #. testing ob-ok/typenodecl.ob
 #. testing ob-ok/var.ob
