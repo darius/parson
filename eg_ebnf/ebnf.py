@@ -7,6 +7,7 @@ from collections import Counter
 from structs import Struct, Visitor
 import parson
 import metagrammar
+zet = frozenset
 
 metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
@@ -175,13 +176,13 @@ class First(Visitor):
 
     def Call(self, t):   return self.fst[t.name]
     def Empty(self, t):  return empty_set
-    def Symbol(self, t): return frozenset([t])
+    def Symbol(self, t): return zet([t])
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
     def Star(self, t):   return self(t.e1)
     def Action(self, t): return empty_set
 
-empty_set = frozenset()
+empty_set = zet()
 
 
 # 'Directed' form
@@ -197,8 +198,8 @@ class Loop(Struct('firsts body')): pass
 # avoided if we could know that the cases are exhaustive.)
 class Branch(Struct('cases default')): pass
 
-# possibles is a frozenset of the tokens that would have made the
-# parse not fail at this point.
+# possibles is a zet of the tokens that would have made the parse not
+# fail at this point.
 class Fail(Struct('possibles')): pass
 
 class Directify(Visitor):
@@ -228,7 +229,7 @@ def gen_branch(ts, ana):
     if not defaults:
         if not cases:       return Fail(empty_set)
         if len(cases) == 1: return cases[0][1]
-        possibles = frozenset().union(*map(ana.firsts, ts))
+        possibles = zet().union(*map(ana.firsts, ts))
         defaults = [Fail(possibles)]
     # We always just use the first default, because we only require
     # this to work for an LL(1) grammar.
@@ -247,20 +248,20 @@ def gen_kinds(grammar):
     yield '};'
 
 def grammar_symbols(grammar):
-    return set().union(*map(collect_symbols, grammar.directed.values()))
+    return empty_set.union(*map(collect_symbols, grammar.directed.values()))
 
 class CollectSymbols(Visitor):
-    def Symbol(self, t):  return set([t])
-    def Branch(self, t):  return set().union(*[set(kinds) | self(alt)
-                                               for kinds,alt in t.cases])
+    def Symbol(self, t):  return zet([t])
+    def Branch(self, t):  return empty_set.union(*[zet(kinds) | self(alt)
+                                                   for kinds,alt in t.cases])
     def Chain(self, t):   return self(t.e1) | self(t.e2)
-    def Loop(self, t):    return set(t.firsts) | self(t.body)
-    def default(self, t): return set()
+    def Loop(self, t):    return zet(t.firsts) | self(t.body)
+    def default(self, t): return empty_set
 collect_symbols = CollectSymbols()
 
 def gen_lexer(grammar):
     syms = grammar_symbols(grammar)
-    syms = set(t for t in syms if t.kind == 'literal') # for now
+    syms = zet(t for t in syms if t.kind == 'literal') # for now
     assert all(t.text for t in syms)
     trie = sprout([(t.text, t) for t in syms])
     for line in gen_trie(trie, 0):
