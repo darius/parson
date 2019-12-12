@@ -41,3 +41,7 @@ work in imperative target languages with no goto, and produce
 less-predictable code there, and might not fly well with semantic
 actions.
 
+I think we could simplify the current code by combining analyze and
+directify into one function (saving the analysis and the direct-form
+for each rule). And coalesce the interpreter and VM compiler into a
+nonrecursive interpreter.

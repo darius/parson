@@ -19,8 +19,8 @@ class Grammar(object):
         self.ana = analyze(self)
         self.errors = []
         check(self)
-        self.inter = {name: intermediate(rule, self.ana)
-                      for name, rule in self.rules.items()}
+        self.directed = {name: directify(rule, self.ana)
+                         for name, rule in self.rules.items()}
 
     def show_analysis(self):
         for r in self.nonterminals:
@@ -41,10 +41,10 @@ class Grammar(object):
         print self.gen_parser()
     
     def parse(self, tokens, start='start'):
-        parsing = Parsing(self.inter, self.actions, tokens)
+        parsing = Parsing(self.directed, self.actions, tokens)
         parsing.calls.append(start)
         try:
-            parsing(self.inter[start])
+            parsing(self.directed[start])
         except SyntaxError, e:
             print e, "at %d" % parsing.i
         else:
@@ -55,7 +55,7 @@ class Grammar(object):
         insns = []
         for name in self.nonterminals:
             labels[name] = len(insns)
-            insns.extend(compiling(self.inter[name]))
+            insns.extend(compiling(self.directed[name]))
             insns.append(('return', None))
         # TODO: make sure the client knows about self.errors
         return Code(insns, labels, self.actions)
@@ -184,7 +184,7 @@ class First(Visitor):
 empty_set = frozenset()
 
 
-# Intermediate form    TODO better name
+# 'Directed' form
 # Embed the result of the LL(1) analysis where it'll be needed by
 # an interpreter or compiler of the grammar.
 
@@ -201,13 +201,13 @@ class Branch(Struct('cases default')): pass
 # parse not fail at this point.
 class Fail(Struct('possibles')): pass
 
-class Intermediate(Visitor):
+class Directify(Visitor):
     def Either(self, t, ana):  return gen_branch(flatten(t), ana)
     def Chain(self, t, ana):   return metagrammar.Chain(self(t.e1, ana),
                                                         self(t.e2, ana))
     def Star(self, t, ana):    return Loop(ana.firsts(t.e1), self(t.e1, ana))
     def default(self, t, ana): return t
-intermediate = Intermediate()
+directify = Directify()
 
 class Flatten(Visitor):
     def Either(self, t):  return self(t.e1) + self(t.e2)
@@ -218,12 +218,12 @@ def gen_branch(ts, ana):
     cases = []
     defaults = []
     for t in ts:
-        im = intermediate(t, ana)
+        directed = directify(t, ana)
         if ana.nullable(t):
-            defaults.append(im)
+            defaults.append(directed)
         else:
             firsts = ana.firsts(t)
-            if firsts: cases.append((firsts, im))
+            if firsts: cases.append((firsts, directed))
 
     if not defaults:
         if not cases:       return Fail(empty_set)
@@ -247,7 +247,7 @@ def gen_kinds(grammar):
     yield '};'
 
 def grammar_symbols(grammar):
-    return set().union(*map(collect_symbols, grammar.inter.values()))
+    return set().union(*map(collect_symbols, grammar.directed.values()))
 
 class CollectSymbols(Visitor):
     def Symbol(self, t):  return set([t])
@@ -348,7 +348,7 @@ def codegen(grammar):
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
     for name in grammar.nonterminals:
-        body = gen(grammar.inter[name])
+        body = gen(grammar.directed[name])
         yield ''
         yield 'void parse_%s(void) %s' % (name, embrace(body))
 
@@ -592,7 +592,7 @@ factor: 'x' :X | '(' exp ')'.
 #. term     False  ( x
 #. factor   False  ( x
 
-## for r in egg.nonterminals: print '%-8s %s' % (r, intermediate(egg.rules[r], egg.ana))
+## for r in egg.nonterminals: print '%-8s %s' % (r, directify(egg.rules[r], egg.ana))
 #. A        Branch([(frozenset([Symbol('b', 'literal')]), Chain(Call('B'), Chain(Symbol('x', 'literal'), Call('A')))), (frozenset([Symbol('y', 'literal')]), Symbol('y', 'literal'))], Fail(frozenset([Symbol('b', 'literal'), Symbol('y', 'literal')])))
 #. B        Symbol('b', 'literal')
 #. C        Empty()
