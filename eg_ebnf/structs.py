@@ -83,3 +83,20 @@ class Visitor(object):
             except AttributeError:
                 raise AttributeError("%r has no method for %r argument %r" % (self, tag, subject))
         return method(subject, *args)
+
+
+# Test comparisons and hashing:
+## class Action(Struct('name')): pass
+## Action('x') == Action('x')
+#. True
+## Action('x') == Action('y')
+#. False
+## Action('x') < Action('y')
+#. True
+## Action('x') > Action('y')
+#. False
+## d = {Action('x'): 1}
+## d[Action('x')]
+#. 1
+## set([Action('x'), Action('x')])
+#. set([Action('x')])
