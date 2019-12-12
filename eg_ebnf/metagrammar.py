@@ -40,7 +40,7 @@ primary      :  qstring      :'literal' :Symbol
              |  name         :Call
              |  ':' name     :Action
              |  ':' qstring  :Action
-             |  '[' exp ']'         # dunno if we'll still want this for semantics
+#             |  '[' exp ']'         # dunno if we'll still want this for semantics
              |  '(' exp ')'.
 
 name         :  /([A-Za-z_]\w*)/.
