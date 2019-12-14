@@ -35,12 +35,6 @@ class Grammar(object):
     def gen_parser(self):
         return '\n'.join(codegen(self))
 
-    def print_parser(self):
-        for plaint in self.errors:
-            print '//', plaint
-        if self.errors: print
-        print self.gen_parser()
-    
     def parse(self, tokens, start='start'):
         parsing = Parsing(self.directed, self.actions, tokens)
         parsing.calls.append(start)
@@ -244,6 +238,7 @@ def gen_branch(ts, ana):
 
 # Generate a parser in C
 
+# TODO shouldn't an EOF also be a kind?
 def gen_kinds(grammar):
     tokens = grammar_symbols(grammar)
     kinds = sorted(map(c_encode_token, tokens))
@@ -311,6 +306,7 @@ def c_char_literal(ch):
     return "'%s'" % codecs.encode(ch, 'string_escape')
 
 def c_encode_token(token):
+    # TODO rename to TOKEN_%s or something
     return 'kind_%s' % ''.join(escapes.get(c, c) for c in token.text)
 
 escapes = {
@@ -349,6 +345,9 @@ escapes = {
 }
 
 def codegen(grammar):
+    for plaint in grammar.errors:
+        yield '// ' + plaint
+    if grammar.errors: yield ''
     yield 'void lex_trie(void) %s' % embrace('\n'.join(gen_lexer(grammar)))
     yield ''
     for name in grammar.nonterminals:
@@ -678,7 +677,7 @@ factor: 'x' :X | '(' exp ')'.
 ### egc.parse("x+(x*x+x)", start='exp')
 
 
-## egg.print_parser()
+## print egg.gen_parser()
 #. void lex_trie(void) {
 #.   switch (scan[0]) {
 #.   case '(':
