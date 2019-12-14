@@ -163,9 +163,9 @@ class Nullable(Visitor):
     def __init__(self, nul):
         self.nul = nul
 
-    def Call(self, t):   return self.nul[t.name]
     def Empty(self, t):  return True
     def Symbol(self, t): return False
+    def Call(self, t):   return self.nul[t.name]
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) & self(t.e2)
     def Star(self, t):   return True
@@ -179,9 +179,9 @@ class First(Visitor):
         self.nul = nul
         self.fst = fst
 
-    def Call(self, t):   return self.fst[t.name]
     def Empty(self, t):  return empty_set
     def Symbol(self, t): return zet([t])
+    def Call(self, t):   return self.fst[t.name]
     def Either(self, t): return self(t.e1) | self(t.e2)
     def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
     def Star(self, t):   return self(t.e1)
@@ -362,9 +362,9 @@ def embrace(s): return '{%s\n}' % indent('\n' + s)
 def indent(s): return s.replace('\n', '\n  ')
 
 class Gen(Visitor):
-    def Call(self, t):   return 'parse_%s();' % t.name
     def Empty(self, t):  return ''
     def Symbol(self, t): return 'eat(%s);' % c_encode_token(t)
+    def Call(self, t):   return 'parse_%s();' % t.name
     def Branch(self, t): return gen_switch(t)
     def Fail(self, t):   return 'parser_fail();'
     def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
@@ -403,15 +403,6 @@ class Parsing(Visitor):
         self.calls = []
         self.stack = [[]]
 
-    def Call(self, t):
-        self.calls.append(t.name)
-        self.stack.append([])
-#        print zip(self.calls, self.stack), 'call', t.name
-        self(self.rules[t.name])
-        result = self.stack.pop()
-        self.stack[-1].extend(result)
-        self.calls.pop()
-#        print zip(self.calls, self.stack), 'returned', t.name
     def Empty(self, t):
         pass
     def Fail(self, t):
@@ -422,6 +413,15 @@ class Parsing(Visitor):
             self.i += 1
         else:
             raise SyntaxError("Missing %r" % t.text)
+    def Call(self, t):
+        self.calls.append(t.name)
+        self.stack.append([])
+#        print zip(self.calls, self.stack), 'call', t.name
+        self(self.rules[t.name])
+        result = self.stack.pop()
+        self.stack[-1].extend(result)
+        self.calls.pop()
+#        print zip(self.calls, self.stack), 'returned', t.name
     def Branch(self, t):
         tok = self.tokens[self.i]
         for kinds, alt in t.cases:
@@ -520,9 +520,9 @@ class Code(object):
                 assert False
 
 class Compiling(Visitor):
-    def Call(self, t):   return [('call', t.name)]
     def Empty(self, t):  return []
     def Symbol(self, t): return [('eat', t)]
+    def Call(self, t):   return [('call', t.name)]
     def Branch(self, t): return compile_branch(t)
     def Fail(self, t):   return [('fail', t.possibles)]
     def Chain(self, t):  return self(t.e1) + self(t.e2)

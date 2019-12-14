@@ -4,9 +4,9 @@ Abstract and concrete syntax of grammars.
 
 from structs import Struct as _S
 
-class Call  (_S('name')): pass
 class Empty (_S('')): pass
 class Symbol(_S('text kind')): pass
+class Call  (_S('name')): pass
 class Either(_S('e1 e2')): pass
 class Chain (_S('e1 e2')): pass
 class Star  (_S('e1')): pass
