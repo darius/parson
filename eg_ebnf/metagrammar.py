@@ -40,7 +40,10 @@ primary      :  qstring      :'literal' :Symbol
              |  name         :Call
              |  ':' name     :Action
              |  ':' qstring  :Action
-#             |  '[' exp ']'         # dunno if we'll still want this for semantics
+             |  '[' exp ']' # Dunno if we'll still want this for semantics.
+                            # I'm keeping this production enabled because it's
+                            # used in itsy.grammar, but XXX this should be either
+                            # deleted or given a proper semantic action.
              |  '(' exp ')'.
 
 name         :  /([A-Za-z_]\w*)/.
