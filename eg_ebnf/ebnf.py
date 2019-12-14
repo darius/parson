@@ -63,16 +63,17 @@ class Grammar(object):
 
 
 # Check that the grammar is well-formed and LL(1)
-# TODO: what about left recursion
 
 def check(grammar):
     dups = find_duplicates(grammar.nonterminals)
     if dups:
         grammar.errors.append("Duplicate definitions: %r" % dups)
     def error(plaint):
-        grammar.errors.append('%s: %s' % (name, plaint))
+        message = '%s: %s' % (name, plaint)
+        if message not in grammar.errors:
+            grammar.errors.append(message)
     for name in grammar.nonterminals:
-        Checker(grammar.ana, error)(grammar.rules[name])
+        Checker(grammar.ana, error)(grammar.rules[name], name)
 
 def find_duplicates(xs):
     counts = Counter(xs)
@@ -83,7 +84,7 @@ class Checker(Visitor):
         self.ana = ana
         self.error = error
 
-    def Either(self, t):
+    def Either(self, t, context):
         ts = flatten(t)
         if 1 < len(ts):
             if 1 < sum(map(self.ana.nullable, ts)):
@@ -93,18 +94,22 @@ class Checker(Visitor):
             if overlap:
                 self.error("Branches overlap: %r" % overlap)
         for leaf in ts:
-            self(leaf)
+            self(leaf, context)
 
-    def Chain(self, t):
-        self(t.e1)
-        self(t.e2)
+    def Chain(self, t, context):
+        self(t.e1, context)
+        self(t.e2, context if self.ana.nullable(t.e1) else None)
 
-    def Star(self, t):
+    def Star(self, t, context):
         if self.ana.nullable(t.e1):
             self.error("Unproductive loop")
-        self(t.e1)
+        self(t.e1, context)
 
-    def default(self, t):
+    def Call(self, t, context):
+        if t.name == context:
+            self.error("Left recursion")
+
+    def default(self, t, context):
         pass
 
 
@@ -555,11 +560,12 @@ bad = r"""
 A: A.
 B: 'b'.
 B: A.
+Z: Z | Z 'z'.
 """
 
 ## badg = Grammar(bad, {})
 ## badg.errors
-#. ["Duplicate definitions: ['B']"]
+#. ["Duplicate definitions: ['B']", 'A: Left recursion', "Z: Branches overlap: [Symbol('z', 'literal')]", 'Z: Left recursion']
 
 eg = r"""
 A: B 'x' A | 'y'.
