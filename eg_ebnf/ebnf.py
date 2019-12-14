@@ -217,7 +217,7 @@ directify = Directify()
 
 class Flatten(Visitor):
     def Either(self, t):  return self(t.e1) + self(t.e2)
-    def default(self, t): return [t]
+    def default(self, t): return (t,)
 flatten = Flatten()
 
 def gen_branch(ts, ana):
@@ -257,8 +257,8 @@ def grammar_symbols(grammar):
 
 class CollectSymbols(Visitor):
     def Symbol(self, t):  return zet([t])
-    def Branch(self, t):  return empty_set.union(*[zet(kinds) | self(alt)
-                                                   for kinds,alt in t.cases])
+    def Branch(self, t):  return self(t.default).union(*[zet(kinds) | self(alt)
+                                                         for kinds,alt in t.cases])
     def Chain(self, t):   return self(t.e1) | self(t.e2)
     def Loop(self, t):    return zet(t.firsts) | self(t.body)
     def default(self, t): return empty_set
