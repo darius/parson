@@ -271,7 +271,7 @@ def gen_lexer(grammar):
 
 def sprout(rel):
     """Given a map of {string: value}, represent it as a trie
-    (opt_value_for_empty_string, {char: subtrie})."""
+    (opt_value_for_empty_string, {leading_char: subtrie})."""
     parts = map_from_relation((k[0], (k[1:], v))
                               for k,v in rel.items() if k)
     return (rel.get(''),
