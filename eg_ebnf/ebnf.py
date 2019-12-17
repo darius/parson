@@ -261,18 +261,21 @@ collect_symbols = CollectSymbols()
 
 def gen_lexer(grammar):
     syms = grammar_symbols(grammar)
-    syms = zet(t for t in syms if t.kind == 'literal') # for now
+    syms = zet(t for t in syms if t.kind == 'literal') # for now. XXX also need t.kind=='keyword'
     assert all(t.text for t in syms)
-    trie = sprout([(t.text, t) for t in syms])
+    assert len(syms) == len(zet(t.text for t in syms))
+    trie = sprout({t.text: t for t in syms})
     for line in gen_trie(trie, 0):
         yield line
     yield 'lex_error("XXX");'
 
 def sprout(rel):
+    """Given a map of {string: value}, represent it as a trie
+    (opt_value_for_empty_string, {char: subtrie})."""
     parts = map_from_relation((k[0], (k[1:], v))
-                              for k,v in rel if k)
-    return (dict(rel).get(''),
-            {head: sprout(tails) for head,tails in parts.items()})
+                              for k,v in rel.items() if k)
+    return (rel.get(''),
+            {head: sprout(dict(tails)) for head,tails in parts.items()})
 
 def map_from_relation(pairs):
     result = {}
