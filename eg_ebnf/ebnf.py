@@ -265,7 +265,7 @@ def gen_lexer(grammar):
     assert all(t.text for t in syms)
     assert len(syms) == len(zet(t.text for t in syms))
     trie = sprout({t.text: t for t in syms})
-    for line in gen_trie(trie, 0):
+    for line in gen_lex_dispatch(trie, 0):
         yield line
     yield 'lex_error("XXX");'
 
@@ -283,7 +283,7 @@ def map_from_relation(pairs):
         result.setdefault(k, []).append(v)
     return result
 
-def gen_trie((opt_on_empty, branches), offset):
+def gen_lex_dispatch((opt_on_empty, branches), offset):
     heads = sorted(branches.keys())
     if opt_on_empty:
         default = ('token.kind = %s; scan += %d; return;'
@@ -294,7 +294,7 @@ def gen_trie((opt_on_empty, branches), offset):
         yield 'switch (scan[%d]) {' % offset
         for head in heads:
             yield 'case %s:' % c_char_literal(head)
-            for line in gen_trie(branches[head], offset + 1):
+            for line in gen_lex_dispatch(branches[head], offset + 1):
                 yield '  ' + line
             yield '  break;'
         if default:
