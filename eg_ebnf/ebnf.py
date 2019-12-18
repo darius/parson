@@ -259,15 +259,26 @@ class CollectSymbols(Visitor):
     def default(self, t): return empty_set
 collect_symbols = CollectSymbols()
 
-def gen_lexer(grammar):
+def gen_lexer_fns(grammar):
     syms = grammar_symbols(grammar)
-    syms = zet(t for t in syms if t.kind == 'literal') # for now. XXX also need t.kind=='keyword'
     assert all(t.text for t in syms)
     assert len(syms) == len(zet(t.text for t in syms))
+    lits = zet(t for t in syms if t.kind == 'literal')  # TODO these don't need to be sets
+    kwds = zet(t for t in syms if t.kind == 'keyword')
+    yield gen_lexer_fn('lex_lits', lits)
+    yield ''
+    yield gen_lexer_fn('lex_keywords', kwds)    
+    # TODO skip lex_keywords if no keywords. In principle there might be no lits, too.
+
+def gen_lexer_fn(name, syms):
+    return ('void %s(void) %s'
+            % (name, embrace('\n'.join(gen_trie_lexer(syms)))))
+
+def gen_trie_lexer(syms):
     trie = sprout({t.text: t for t in syms})
     for line in gen_lex_dispatch(trie, 0):
         yield line
-    yield 'lex_error("XXX");'
+#    yield 'lex_error("XXX");'   # XXX return a status instead
 
 def sprout(rel):
     """Given a map of {string: value}, represent it as a trie
@@ -351,7 +362,8 @@ def codegen(grammar):
     for plaint in grammar.errors:
         yield '// ' + plaint
     if grammar.errors: yield ''
-    yield 'void lex_trie(void) %s' % embrace('\n'.join(gen_lexer(grammar)))
+    for block in gen_lexer_fns(grammar):
+        yield block
     yield ''
     for name in grammar.nonterminals:
         yield 'void parse_%s(void);' % name
@@ -681,7 +693,7 @@ factor: 'x' :X | '(' exp ')'.
 
 
 ## print egg.gen_parser()
-#. void lex_trie(void) {
+#. void lex_lits(void) {
 #.   switch (scan[0]) {
 #.   case '(':
 #.     token.kind = kind__LPAREN; scan += 1; return;
@@ -708,7 +720,10 @@ factor: 'x' :X | '(' exp ')'.
 #.     token.kind = kind_y; scan += 1; return;
 #.     break;
 #.   }
-#.   lex_error("XXX");
+#. }
+#. 
+#. void lex_keywords(void) {
+#.   
 #. }
 #. 
 #. void parse_A(void);
