@@ -263,8 +263,8 @@ def gen_lexer_fns(grammar):
     syms = grammar_symbols(grammar)
     assert all(t.text for t in syms)
     assert len(syms) == len(zet(t.text for t in syms))
-    lits = zet(t for t in syms if t.kind == 'literal')  # TODO these don't need to be sets
-    kwds = zet(t for t in syms if t.kind == 'keyword')
+    lits = tuple(t for t in syms if t.kind == 'literal')
+    kwds = tuple(t for t in syms if t.kind == 'keyword')
     yield gen_lexer_fn('lex_lits', lits)
     yield ''
     yield gen_lexer_fn('lex_keywords', kwds)    
@@ -278,7 +278,6 @@ def gen_trie_lexer(syms):
     trie = sprout({t.text: t for t in syms})
     for line in gen_lex_dispatch(trie, 0):
         yield line
-#    yield 'lex_error("XXX");'   # XXX return a status instead
 
 def sprout(rel):
     """Given a map of {string: value}, represent it as a trie
