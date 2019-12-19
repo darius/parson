@@ -8,7 +8,7 @@ import parson
 import metagrammar
 
 zet = frozenset
-empty_set = zet()
+empty_zet = zet()
 
 metaparser = parson.Grammar(metagrammar.metagrammar_text).bind(metagrammar)
 
@@ -161,20 +161,20 @@ class Nullable(Visitor):
     def Action(self, t): return True
 
 def compute_firsts(rules, nul):
-    return fixpoint(rules, empty_set, lambda fst: First(nul, fst)) # TODO better naming
+    return fixpoint(rules, empty_zet, lambda fst: First(nul, fst)) # TODO better naming
 
 class First(Visitor):
     def __init__(self, nul, fst):
         self.nul = nul
         self.fst = fst
 
-    def Empty(self, t):  return empty_set
+    def Empty(self, t):  return empty_zet
     def Symbol(self, t): return zet([t])
     def Call(self, t):   return self.fst[t.name]
     def Either(self, t): return self(t.e1) | self(t.e2)
-    def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_set)
+    def Chain(self, t):  return self(t.e1) | (self(t.e2) if self.nul(t.e1) else empty_zet)
     def Star(self, t):   return self(t.e1)
-    def Action(self, t): return empty_set
+    def Action(self, t): return empty_zet
 
 
 # 'Directed' form
@@ -219,7 +219,7 @@ def gen_branch(ts, ana):
             if firsts: cases.append((firsts, directed))
 
     if not defaults:
-        if not cases:       return Fail(empty_set)
+        if not cases:       return Fail(empty_zet)
         if len(cases) == 1: return cases[0][1]
         possibles = zet().union(*map(ana.firsts, ts))
         defaults = [Fail(possibles)]

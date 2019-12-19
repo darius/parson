@@ -6,7 +6,7 @@ import codecs
 from structs import Visitor
 
 zet = frozenset
-empty_set = zet()
+empty_zet = zet()
 
 def gen_kinds_enum(self):
     return '\n'.join(gen_kinds(self))
@@ -24,7 +24,7 @@ def gen_kinds(grammar):
     yield '};'
 
 def grammar_symbols(grammar):
-    return empty_set.union(*map(collect_symbols, grammar.directed.values()))
+    return empty_zet.union(*map(collect_symbols, grammar.directed.values()))
 
 class CollectSymbols(Visitor):
     def Symbol(self, t):  return zet([t])
@@ -32,7 +32,7 @@ class CollectSymbols(Visitor):
                                                          for kinds,alt in t.cases])
     def Chain(self, t):   return self(t.e1) | self(t.e2)
     def Loop(self, t):    return zet(t.firsts) | self(t.body)
-    def default(self, t): return empty_set
+    def default(self, t): return empty_zet
 collect_symbols = CollectSymbols()
 
 def gen_lexer_fns(grammar):
