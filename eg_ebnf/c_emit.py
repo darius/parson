@@ -158,7 +158,7 @@ class Gen(Visitor):
     def Fail(self, t):   return 'parser_fail();'
     def Chain(self, t):  return '\n'.join(filter(None, [self(t.e1), self(t.e2)]))
     def Loop(self, t):   return gen_while(t.firsts, self(t.body))
-    def Action(self, t): return ''
+    def Action(self, t): return '/* XXX action */'
 gen = Gen()
 
 def gen_while(firsts, body):
@@ -256,10 +256,12 @@ def gen_switch(t):
 #.     case kind__PLUS: {
 #.       eat(kind__PLUS);
 #.       parse_exp();
+#.       /* XXX action */
 #.     } break;
 #.     case kind__DASH: {
 #.       eat(kind__DASH);
 #.       parse_exp();
+#.       /* XXX action */
 #.     } break;
 #.     default: {
 #.       
@@ -272,6 +274,7 @@ def gen_switch(t):
 #.   while (token.kind == kind__STAR) {
 #.     eat(kind__STAR);
 #.     parse_factor();
+#.     /* XXX action */
 #.   }
 #. }
 #. 
@@ -279,6 +282,7 @@ def gen_switch(t):
 #.   switch (token.kind) {
 #.     case kind_x: {
 #.       eat(kind_x);
+#.       /* XXX action */
 #.     } break;
 #.     case kind__LPAREN: {
 #.       eat(kind__LPAREN);
