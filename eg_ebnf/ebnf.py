@@ -30,6 +30,9 @@ class Grammar(object):
             fst = self.ana.firsts(self.rules[r])
             print '%-8s %-6s %s' % (r, nul, ' '.join(sorted(s.text for s in fst)))
 
+    def lexer_symbols(self):
+        return empty_zet.union(*map(collect_symbols, self.directed.values()))
+
     def parse(self, tokens, start='start'):
         parsing = Parsing(self.directed, self.actions, tokens)
         parsing.calls.append(start)
@@ -49,6 +52,15 @@ class Grammar(object):
             insns.append(('return', None))
         # TODO: make sure the client knows about self.errors
         return Code(insns, labels, self.actions)
+
+class CollectSymbols(Visitor):
+    def Symbol(self, t):  return zet([t])
+    def Branch(self, t):  return self(t.default).union(*[zet(kinds) | self(alt)
+                                                         for kinds,alt in t.cases])
+    def Chain(self, t):   return self(t.e1) | self(t.e2)
+    def Loop(self, t):    return zet(t.firsts) | self(t.body)
+    def default(self, t): return empty_zet
+collect_symbols = CollectSymbols()
 
 
 # Check that the grammar is well-formed and LL(1)

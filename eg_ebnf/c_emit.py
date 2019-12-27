@@ -5,9 +5,6 @@ Generate a parser in C.
 import codecs
 from structs import Visitor
 
-zet = frozenset
-empty_zet = zet()
-
 def gen_kinds_enum(self):
     return '\n'.join(gen_kinds(self))
 
@@ -16,29 +13,17 @@ def gen_parser(self):
 
 # TODO shouldn't an EOF also be a kind?
 def gen_kinds(grammar):
-    tokens = grammar_symbols(grammar)
+    tokens = grammar.lexer_symbols()
     kinds = sorted(map(c_encode_token, tokens))
     yield 'enum {'
     for kind in kinds:
         yield kind + ','
     yield '};'
 
-def grammar_symbols(grammar):
-    return empty_zet.union(*map(collect_symbols, grammar.directed.values()))
-
-class CollectSymbols(Visitor):
-    def Symbol(self, t):  return zet([t])
-    def Branch(self, t):  return self(t.default).union(*[zet(kinds) | self(alt)
-                                                         for kinds,alt in t.cases])
-    def Chain(self, t):   return self(t.e1) | self(t.e2)
-    def Loop(self, t):    return zet(t.firsts) | self(t.body)
-    def default(self, t): return empty_zet
-collect_symbols = CollectSymbols()
-
 def gen_lexer_fns(grammar):
-    syms = grammar_symbols(grammar)
+    syms = grammar.lexer_symbols()
     assert all(t.text for t in syms)
-    assert len(syms) == len(zet(t.text for t in syms))
+    assert len(syms) == len(set(t.text for t in syms))
     lits = tuple(t for t in syms if t.kind == 'literal')
     kwds = tuple(t for t in syms if t.kind == 'keyword')
     yield gen_lexer_fn('lex_lits', lits)
