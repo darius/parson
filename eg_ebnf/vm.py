@@ -1,5 +1,5 @@
 """
-Parse by interpreting a compiled VM
+Parse by interpreting a compiled VM.
 """
 
 from structs import Visitor
