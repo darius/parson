@@ -37,6 +37,7 @@ class Grammar(object):
         parsing = Parsing(self.directed, self.actions, tokens)
         parsing.calls.append(start)
         try:
+            #print 'start', self.directed[start]
             parsing(self.directed[start])
         except SyntaxError, e:
             print e, "at %d" % parsing.i
@@ -219,6 +220,9 @@ class Flatten(Visitor):
     def default(self, t): return (t,)
 flatten = Flatten()
 
+# XXX I think my logic is faulty: it should be able to handle an optional
+# without committing to blindly matching epsilon even if a first-set token
+# matches (which seems to be what's happening now).
 def gen_branch(ts, ana):
     cases = []
     defaults = []
@@ -265,7 +269,7 @@ class Parsing(Visitor):
         if self.tokens[self.i] == t.text:
             self.i += 1
         else:
-            raise SyntaxError("Missing %r" % t.text)
+            raise SyntaxError("Missing %r" % t)
     def Call(self, t):
         self.calls.append(t.name)
         self.stack.append([])
@@ -285,7 +289,8 @@ class Parsing(Visitor):
         self(t.e1)
         self(t.e2)
     def Loop(self, t):
-        while self.tokens[self.i] in t.firsts:
+        foo = zet(token.text for token in t.firsts) # XXX same awkwardness
+        while self.tokens[self.i] in foo:
             self(t.body)
     def Action(self, t):
         if self.actions:
