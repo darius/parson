@@ -1,5 +1,9 @@
 """
-Parse a grammar, check that it's LL(1), and emit C code to parse according to it.
+Parse a grammar,
+check that it's LL(1),
+transform to make its LL(1) nature explicit,
+and recognize inputs according to the grammar.
+TODO semantic actions
 """
 
 from collections import Counter
