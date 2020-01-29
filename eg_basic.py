@@ -100,9 +100,8 @@ def new():
     reset()
 
 def load(filename):
-    f = open(filename)
-    new()
-    with f:
+    with open(filename) as f:
+        new()
         for line in f:
             basic.command(line)
 
@@ -115,7 +114,7 @@ def listing():
     for n, line in lines:
         print n, line
 
-def find(n):
+def find(n): # The slice of lines[] including line n, or where to insert it.
     i = bisect.bisect(lines, (n, ''))
     return slice(i, i+1 if i < len(lines) and lines[i][0] == n else i)
 
@@ -143,7 +142,7 @@ def return_():
 
 # Parson's default meaning for a function appearing in a grammar is a
 # semantic action returning one value. In this Basic we do some actions
-# only for effect; this wraps those actions to produce no values.
+# only for effect: this wraps those actions to produce no values.
 def for_effect(fn):
     def fn_for_effect(*args):
         fn(*args)
