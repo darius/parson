@@ -45,8 +45,8 @@ writes    :  ';'        printing
 
 display  ~:  exp :write
           |  '"' [qchar :write]* '"' FNORD.
-qchar    ~:  /"(")/
-          |  /([^"])/.
+qchar    ~:  /"(")/     # Two consecutive double-quotes mean '"'.
+          |  /([^"])/.  # Any other character just means itself.
 
 relexp    :  exp  (  '<>' exp :ne
                    | '<=' exp :le
@@ -141,18 +141,20 @@ def gosub(n):
 def return_():
     return next_line(goto(return_stack.pop()))
 
-
-def nullify(fn):
-    def nullified(*args):
+# Parson's default meaning for a function appearing in a grammar is a
+# semantic action returning one value. In this Basic we do some actions
+# only for effect; this wraps those actions to produce no values.
+def for_effect(fn):
+    def fn_for_effect(*args):
         fn(*args)
         return ()
-    return alter(nullified)
+    return alter(fn_for_effect)
 
 basic = grammar(
     fetch    = env.__getitem__,
-    store    = nullify(env.__setitem__),
-    input    = nullify(lambda var: env.__setitem__(var, int(raw_input()))),
-    set_line = nullify(set_line),
+    store    = for_effect(env.__setitem__),
+    input    = for_effect(lambda var: env.__setitem__(var, int(raw_input()))),
+    set_line = for_effect(set_line),
     goto     = goto,
     if_goto  = if_goto,
     gosub    = gosub,
@@ -170,15 +172,15 @@ basic = grammar(
     pow      = operator.pow,
     neg      = operator.neg,
     end      = lambda: None,
-    list     = nullify(listing),
-    run      = nullify(run),
+    list     = for_effect(listing),
+    run      = for_effect(run),
     next     = lambda: next_line(pc),
-    new      = nullify(new),
-    load     = nullify(load),
-    save     = nullify(save),
-    write    = nullify(lambda x: sys.stdout.write(str(x))),
-    space    = nullify(lambda: sys.stdout.write(' ')),
-    newline  = nullify(lambda: sys.stdout.write('\n')),
+    new      = for_effect(new),
+    load     = for_effect(load),
+    save     = for_effect(save),
+    write    = for_effect(lambda x: sys.stdout.write(str(x))),
+    space    = for_effect(lambda: sys.stdout.write(' ')),
+    newline  = for_effect(lambda: sys.stdout.write('\n')),
 )
 
 
