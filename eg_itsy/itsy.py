@@ -24,7 +24,7 @@ def main(argv):
 
 def to_c_main(filename, out_filename=None):
     if out_filename is None:
-        out_filename = filename[:-5] + filename[-5:].replace('.itsy', '.c')
+        out_filename = filename[:-5] + filename[-5:].replace('.itsy', '') + '.c'
     with open(filename) as f:
         text = f.read()
     opt_c = c_from_itsy(Complainer(text, filename))
