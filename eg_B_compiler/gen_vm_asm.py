@@ -45,7 +45,7 @@ class GenStmt(Visitor):
 
     def Auto(self, t):
         for (name, XXX) in t.decls:
-            asm('local', [repr(XXX)], label=name)
+            asm('local', [repr(XXX)], label=name) # TODO
 
     def Extern(self, t):
         for name in t.names:
@@ -215,14 +215,14 @@ class GenExp(Visitor):
         asm('op1', ['deref'])
     
     def And(self, t):
-        if_not = Label('_and')
+        if_not = Label('and')
         gen_exp(t.e1)
         asm('if_pop_else_skip', [if_not])
         gen_exp(t.e2)
         asm(label=if_not)
     
     def Or(self, t):
-        if_so = Label('_or')
+        if_so = Label('or')
         gen_exp(t.e1)
         asm('if_skip_else_pop', [if_so])
         gen_exp(t.e2)
