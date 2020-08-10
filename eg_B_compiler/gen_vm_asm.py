@@ -16,10 +16,12 @@ def asm(instruction='', arguments=(), label='', comment=None):
     if comment: fields += ['# ' + comment]
     print '\t'.join(fields).rstrip()
 
-label_counter = count()
-
+# Generated labels need to be distinct from B identifiers. We make
+# sure of this with '.'.
 def Label(stem):
-    return '_%s_%d' % (stem, next(label_counter))
+    return '%s.%d' % (stem, next(label_counter))
+
+label_counter = count()
 
 
 class GenGlobalDecl(Visitor):

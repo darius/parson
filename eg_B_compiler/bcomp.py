@@ -64,13 +64,13 @@ decls1 = parser.program(eg1)
 #. 	value	b
 #. 	op2	/
 #. 	assign	=
-#. 	if_not	_endif_0
+#. 	if_not	endif.0
 #. 	value	printn
 #. 	value	a
 #. 	value	b
 #. 	call	2
 #. 	pop
-#. _endif_0
+#. endif.0
 #. 	value	putchar
 #. 	value	n
 #. 	value	b
@@ -137,8 +137,8 @@ decls2 = parser.program(eg2)
 #. 	assign	=
 #. 	assign	=
 #. 	pop
-#. 	jump	_while_1
-#. _loop_2
+#. 	jump	while.1
+#. loop.2
 #. 	value	v
 #. 	addr	i
 #. 	postinc	++
@@ -146,13 +146,13 @@ decls2 = parser.program(eg2)
 #. 	push	1
 #. 	assign	=
 #. 	pop
-#. _while_1
+#. while.1
 #. 	value	i
 #. 	value	n
 #. 	op2	<
-#. 	if	_loop_2
-#. 	jump	_while_3
-#. _loop_4
+#. 	if	loop.2
+#. 	jump	while.3
+#. loop.4
 #. 	addr	a
 #. 	value	n
 #. 	push	1
@@ -165,8 +165,8 @@ decls2 = parser.program(eg2)
 #. 	assign	=
 #. 	assign	=
 #. 	pop
-#. 	jump	_while_5
-#. _loop_6
+#. 	jump	while.5
+#. loop.6
 #. 	addr	c
 #. 	value	v
 #. 	value	i
@@ -190,11 +190,11 @@ decls2 = parser.program(eg2)
 #. 	postinc	--
 #. 	assign	/=
 #. 	pop
-#. _while_5
+#. while.5
 #. 	value	i
 #. 	value	n
 #. 	op2	<
-#. 	if	_loop_6
+#. 	if	loop.6
 #. 	value	putchar
 #. 	value	c
 #. 	push	'0'
@@ -206,27 +206,27 @@ decls2 = parser.program(eg2)
 #. 	push	5
 #. 	op2	%
 #. 	op1	!
-#. 	if_not	_endif_7
+#. 	if_not	endif.7
 #. 	value	putchar
 #. 	value	col
 #. 	push	50
 #. 	op2	%
-#. 	if_not	_else_8
+#. 	if_not	else.8
 #. 	push	' '
-#. 	jump	_endif_9
-#. _else_8
+#. 	jump	endif.9
+#. else.8
 #. 	push	'\n'
-#. _endif_9
+#. endif.9
 #. 	call	1
 #. 	pop
-#. _endif_7
-#. _while_3
+#. endif.7
+#. while.3
 #. 	value	col
 #. 	push	2
 #. 	value	n
 #. 	op2	*
 #. 	op2	<
-#. 	if	_loop_4
+#. 	if	loop.4
 #. 	value	putchar
 #. 	push	'\n\n'
 #. 	call	1
@@ -303,19 +303,19 @@ decls3 = parser.program(eg3)
 #. 	assign	=
 #. 	pop
 #. loop
-#. 	jump	_while_10
-#. _loop_11
+#. 	jump	while.10
+#. loop.11
 #. 	value	c
 #. 	push	'\e'
 #. 	op2	==
-#. 	if_not	_endif_12
+#. 	if_not	endif.12
 #. 	return_void
-#. _endif_12
+#. endif.12
 #. 	value	putchar
 #. 	value	c
 #. 	call	1
 #. 	pop
-#. _while_10
+#. while.10
 #. 	addr	c
 #. 	value	char
 #. 	value	fmt
@@ -325,7 +325,7 @@ decls3 = parser.program(eg3)
 #. 	assign	=
 #. 	push	'%'
 #. 	op2	!=
-#. 	if	_loop_11
+#. 	if	loop.11
 #. 	addr	x
 #. 	addr	adx
 #. 	postinc	++
@@ -340,17 +340,17 @@ decls3 = parser.program(eg3)
 #. 	call	2
 #. 	assign	=
 #. 	switch
-#. 	case	'd', _case_13
-#. 	case	'o', _case_14
-#. 	case	'c', _case_15
-#. 	case	's', _case_16
+#. 	case	'd', case.13
+#. 	case	'o', case.14
+#. 	case	'c', case.15
+#. 	case	's', case.16
 #. 	endcases
-#. _case_13			# 'd'
-#. _case_14			# 'o'
+#. case.13			# 'd'
+#. case.14			# 'o'
 #. 	value	x
 #. 	push	0
 #. 	op2	<
-#. 	if_not	_endif_17
+#. 	if_not	endif.17
 #. 	addr	x
 #. 	value	x
 #. 	op1	-
@@ -360,37 +360,37 @@ decls3 = parser.program(eg3)
 #. 	push	'-'
 #. 	call	1
 #. 	pop
-#. _endif_17
+#. endif.17
 #. 	value	printn
 #. 	value	x
 #. 	value	c
 #. 	push	'o'
 #. 	op2	==
-#. 	if_not	_else_18
+#. 	if_not	else.18
 #. 	push	8
-#. 	jump	_endif_19
-#. _else_18
+#. 	jump	endif.19
+#. else.18
 #. 	push	10
-#. _endif_19
+#. endif.19
 #. 	call	2
 #. 	pop
 #. 	value	loop
 #. 	goto
-#. _case_15			# 'c'
+#. case.15			# 'c'
 #. 	value	putchar
 #. 	value	x
 #. 	call	1
 #. 	pop
 #. 	value	loop
 #. 	goto
-#. _case_16			# 's'
-#. 	jump	_while_20
-#. _loop_21
+#. case.16			# 's'
+#. 	jump	while.20
+#. loop.21
 #. 	value	putchar
 #. 	value	c
 #. 	call	1
 #. 	pop
-#. _while_20
+#. while.20
 #. 	addr	c
 #. 	value	char
 #. 	value	x
@@ -400,7 +400,7 @@ decls3 = parser.program(eg3)
 #. 	assign	=
 #. 	push	'\e'
 #. 	op2	!=
-#. 	if	_loop_21
+#. 	if	loop.21
 #. 	value	loop
 #. 	goto
 #. 	value	putchar
