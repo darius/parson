@@ -40,13 +40,12 @@ class Variable(    Struct('name')): pass
 class Unary_exp(   Struct('unop e1')): pass
 
 class Address_of(  Struct('e1')): pass    # TODO these are currently under Unary_exp instead
-class Deref(       Struct('e1')): pass
 
 class And(         Struct('e1 e2')): pass   # TODO maybe use instead of Binary_exp
 class Or(          Struct('e1 e2')): pass
 
 def Index(e1, e2):
-    return Deref(Binary_exp(e1, '+', e2))
+    return Unary_exp('*', Binary_exp(e1, '+', e2))
 
 
 # Lexical syntax helper

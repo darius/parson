@@ -204,10 +204,6 @@ class GenExp(Visitor):
     def Address_of(self, t):
         gen_lvalue(t.e1)
     
-    def Deref(self, t):
-        gen_exp(t.e1)
-        asm('op1', ['deref'])
-    
     def And(self, t):
         if_not = Label('and')
         gen_exp(t.e1)
@@ -230,7 +226,12 @@ class GenLvalue(Visitor):
     def Variable(self, t):
         asm('addr', [t.name])
     
-    def Deref(self, t):
+    def Unary_exp(self, t):
+        if t.unop != '*':
+            raise Exception("Not an lvalue", t)
         gen_exp(t.e1)
+
+    def default(self, t):
+        raise Exception("Not an lvalue", t)
 
 gen_lvalue = GenLvalue()
