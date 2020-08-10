@@ -46,23 +46,3 @@ class Or(          Struct('e1 e2')): pass
 
 def Index(e1, e2):
     return Unary_exp('*', Binary_exp(e1, '+', e2))
-
-
-# Lexical syntax helper
-
-def escape(s):
-    if s not in escape.table:
-        raise Error("Bad escape sequence in character or string", s)
-    return escape.table[s]
-
-escape.table = {
-    '0': '\0',
-    'e': '\xFF', # XXX 'end-of-file' -- we probably want this to be '\0' instead, right?
-    'n': '\n',
-    't': '\t',
-    '\\': '\\',
-    "'": "'",
-    '"': '"',
-    '(': '{',    # TODO drop these?
-    ')': '}',
-}
