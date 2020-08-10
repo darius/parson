@@ -215,10 +215,18 @@ class GenExp(Visitor):
         asm('op1', ['deref'])
     
     def And(self, t):
-        raise Exception('XXX todo')
+        if_not = Label('_and')
+        gen_exp(t.e1)
+        asm('if_pop_else_skip', [if_not])
+        gen_exp(t.e2)
+        asm(label=if_not)
     
     def Or(self, t):
-        raise Exception('XXX todo')
+        if_so = Label('_or')
+        gen_exp(t.e1)
+        asm('if_skip_else_pop', [if_so])
+        gen_exp(t.e2)
+        asm(label=if_so)
 
 gen_exp = GenExp()
 
