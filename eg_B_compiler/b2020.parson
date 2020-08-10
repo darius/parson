@@ -111,19 +111,13 @@ sqchar ~: escape | /([^'])/.
 dqchar ~: escape | /([^"])/.
 escape ~: /\\(.)/ :escape.
 
-name ~:
-	  {alpha (alpha|digit)*} _.  # TODO make sure it's not a keyword
+name ~:	  !keyword {alpha (alpha|digit)*} _.
 
-alpha ~:
-	  /[A-Za-z_]/.           # "and backspace"?! I'm just ignoring that.
+keyword = /(auto|extern|static|if|while|switch|goto|return|case)\b/.
 
-digit ~:
-	  /[0-9]/.
+alpha ~:  /[A-Za-z_]/.           # "and backspace"?! I'm just ignoring that.
+digit ~:  /[0-9]/.
 
-FNORD ~: _.
-
-_ ~:
-	  (/\s+/ | comment)*.
-
-comment ~:
-	  '/*' (!'*/' :anyone)* '*/'.
+FNORD ~:  _.
+_ ~:	  (/\s+/ | comment)*.
+comment ~: '/*' (!'*/' :anyone)* '*/'.
