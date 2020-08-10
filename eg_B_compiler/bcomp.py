@@ -5,7 +5,7 @@ Tie the modules together into a compiler.
 import sys
 
 import ast
-from gen_vm_asm import gen_program, gen_global_decl
+from gen_vm_asm import gen_program
 from parson import Grammar, Unparsable
 
 with open('b2020.parson') as f:
