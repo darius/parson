@@ -32,7 +32,6 @@ class Exp(       Struct('opt_exp')): pass
 class Assign(      Struct('e1 binop e2')): pass
 class If_exp(      Struct('e1 e2 e3')): pass
 class Binary_exp(  Struct('e1 binop e2')): pass
-class Index(       Struct('e1 e2')): pass
 class Call(        Struct('e1 args')): pass
 class Pre_incr(    Struct('op e1')): pass
 class Post_incr(   Struct('e1 op')): pass
@@ -45,6 +44,9 @@ class Deref(       Struct('e1')): pass
 
 class And(         Struct('e1 e2')): pass   # TODO maybe use instead of Binary_exp
 class Or(          Struct('e1 e2')): pass
+
+def Index(e1, e2):
+    return Deref(Binary_exp(e1, '+', e2))
 
 
 # Lexical syntax helper

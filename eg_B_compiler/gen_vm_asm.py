@@ -155,8 +155,6 @@ class LabelCases(Visitor):
         pass
 
 
-# TODO desugaring pass?
-
 class GenExp(Visitor):
 
     def Assign(self, t):
@@ -178,11 +176,6 @@ class GenExp(Visitor):
         gen_exp(t.e1)
         gen_exp(t.e2)
         asm('op2', [t.binop])
-    
-    def Index(self, t):
-        gen_exp(t.e1)
-        gen_exp(t.e2)
-        asm('op2', ['index'])
     
     def Call(self, t):
         gen_exp(t.e1)
@@ -233,11 +226,6 @@ gen_exp = GenExp()
 
 
 class GenLvalue(Visitor):
-    
-    def Index(self, t):
-        gen_exp(t.e1)
-        gen_exp(t.e2)
-        asm('op2', ['+'])
     
     def Variable(self, t):
         asm('addr', [t.name])

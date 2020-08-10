@@ -119,7 +119,7 @@ n = 2000;
 """
 decls2 = parser.program(eg2)
 ## decls2
-#. (Proc('main', (), Block((Extern(('putchar', 'n', 'v')), Auto((('i', None), ('c', None), ('col', None), ('a', None))), Exp(Assign(Variable('i'), '=', Assign(Variable('col'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Exp(Assign(Index(Variable('v'), Post_incr(Variable('i'), '++')), '=', Literal('1', 'decimal')))), While(Binary_exp(Variable('col'), '<', Binary_exp(Literal('2', 'decimal'), '*', Variable('n'))), Block((Exp(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '+', Literal('1', 'decimal')))), Exp(Assign(Variable('c'), '=', Assign(Variable('i'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Block((Exp(Assign(Variable('c'), '+=', Binary_exp(Index(Variable('v'), Variable('i')), '*', Literal('10', 'decimal')))), Exp(Assign(Index(Variable('v'), Post_incr(Variable('i'), '++')), '=', Binary_exp(Variable('c'), '%', Variable('a')))), Exp(Assign(Variable('c'), '/=', Post_incr(Variable('a'), '--')))))), Exp(Call(Variable('putchar'), (Binary_exp(Variable('c'), '+', Literal('0', 'char')),))), If_stmt(Unary_exp('!', Binary_exp(Pre_incr('++', Variable('col')), '%', Literal('5', 'decimal'))), Exp(Call(Variable('putchar'), (If_exp(Binary_exp(Variable('col'), '%', Literal('50', 'decimal')), Literal(' ', 'char'), Literal('\n', 'char')),))), None)))), Exp(Call(Variable('putchar'), (Literal('\n\n', 'char'),)))))), Global('v', Literal('2000', 'decimal'), None), Global('n', None, (Literal('2000', 'decimal'),)))
+#. (Proc('main', (), Block((Extern(('putchar', 'n', 'v')), Auto((('i', None), ('c', None), ('col', None), ('a', None))), Exp(Assign(Variable('i'), '=', Assign(Variable('col'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Exp(Assign(Deref(Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Literal('1', 'decimal')))), While(Binary_exp(Variable('col'), '<', Binary_exp(Literal('2', 'decimal'), '*', Variable('n'))), Block((Exp(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '+', Literal('1', 'decimal')))), Exp(Assign(Variable('c'), '=', Assign(Variable('i'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Block((Exp(Assign(Variable('c'), '+=', Binary_exp(Deref(Binary_exp(Variable('v'), '+', Variable('i'))), '*', Literal('10', 'decimal')))), Exp(Assign(Deref(Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Binary_exp(Variable('c'), '%', Variable('a')))), Exp(Assign(Variable('c'), '/=', Post_incr(Variable('a'), '--')))))), Exp(Call(Variable('putchar'), (Binary_exp(Variable('c'), '+', Literal('0', 'char')),))), If_stmt(Unary_exp('!', Binary_exp(Pre_incr('++', Variable('col')), '%', Literal('5', 'decimal'))), Exp(Call(Variable('putchar'), (If_exp(Binary_exp(Variable('col'), '%', Literal('50', 'decimal')), Literal(' ', 'char'), Literal('\n', 'char')),))), None)))), Exp(Call(Variable('putchar'), (Literal('\n\n', 'char'),)))))), Global('v', Literal('2000', 'decimal'), None), Global('n', None, (Literal('2000', 'decimal'),)))
 
 ## gen_program(decls2)
 #. main	proc
@@ -170,7 +170,8 @@ decls2 = parser.program(eg2)
 #. 	addr	c
 #. 	value	v
 #. 	value	i
-#. 	op2	index
+#. 	op2	+
+#. 	op1	deref
 #. 	push	decimal('10')
 #. 	op2	*
 #. 	assign	+=
