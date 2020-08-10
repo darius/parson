@@ -124,7 +124,7 @@ gen_stmt = GenStmt()
 
 
 def gen_literal(literal):
-    return '%s(%r)' % (literal.kind, literal.text)
+    return literal.text
 
 
 class LabelCases(Visitor):

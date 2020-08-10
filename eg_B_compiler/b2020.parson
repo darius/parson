@@ -102,14 +102,14 @@ opassign ~:
 
 
 constant ~:
-	  {'0' digit+}           _       :'octal'   :Literal
-        | {    digit+}           _       :'decimal' :Literal
-	| /'/ sqchar sqchar? /'/ _ :join :'char'    :Literal
-	| /"/ dqchar*        /"/ _ :join :'string'  :Literal.
+	  {'0' digit+}             _ :'octal'   :Literal
+	| {    digit+}             _ :'decimal' :Literal
+	| {/'/ sqchar sqchar? /'/} _ :'char'    :Literal
+	| {/"/ dqchar*        /"/} _ :'string'  :Literal.
 
-sqchar ~: escape | /([^'])/.
-dqchar ~: escape | /([^"])/.
-escape ~: /\\(.)/ :escape.
+sqchar ~: escape | /[^']/.
+dqchar ~: escape | /[^"]/.
+escape ~: /\\./.
 
 name ~:	  !keyword {alpha (alpha|digit)*} _.
 

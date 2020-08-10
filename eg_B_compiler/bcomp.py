@@ -17,9 +17,9 @@ parser = Grammar(grammar_source).bind(ast)
 ## parser.constant(r"""042 """)
 #. (Literal('042', 'octal'),)
 ## parser.constant(r"""'he' """)
-#. (Literal('he', 'char'),)
+#. (Literal("'he'", 'char'),)
 ## parser.constant(r"""'\n\n' """)
-#. (Literal('\n\n', 'char'),)
+#. (Literal("'\\n\\n'", 'char'),)
 
 ## parser.exp(r"x=5")
 #. (Assign(Variable('x'), '=', Literal('5', 'decimal')),)
@@ -52,7 +52,7 @@ eg1 = r"""
 """
 decls1 = parser.program(eg1)
 ## decls1
-#. (Proc('printn', ('n', 'b'), Block((Extern(('putchar',)), Auto((('a', None),)), If_stmt(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '/', Variable('b'))), Exp(Call(Variable('printn'), (Variable('a'), Variable('b')))), None), Exp(Call(Variable('putchar'), (Binary_exp(Binary_exp(Variable('n'), '%', Variable('b')), '+', Literal('0', 'char')),)))))),)
+#. (Proc('printn', ('n', 'b'), Block((Extern(('putchar',)), Auto((('a', None),)), If_stmt(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '/', Variable('b'))), Exp(Call(Variable('printn'), (Variable('a'), Variable('b')))), None), Exp(Call(Variable('putchar'), (Binary_exp(Binary_exp(Variable('n'), '%', Variable('b')), '+', Literal("'0'", 'char')),)))))),)
 
 ## gen_program(decls1)
 #. printn	proc
@@ -75,7 +75,7 @@ decls1 = parser.program(eg1)
 #. 	value	n
 #. 	value	b
 #. 	op2	%
-#. 	push	char('0')
+#. 	push	'0'
 #. 	op2	+
 #. 	call	1
 #. 	pop
@@ -119,7 +119,7 @@ n = 2000;
 """
 decls2 = parser.program(eg2)
 ## decls2
-#. (Proc('main', (), Block((Extern(('putchar', 'n', 'v')), Auto((('i', None), ('c', None), ('col', None), ('a', None))), Exp(Assign(Variable('i'), '=', Assign(Variable('col'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Exp(Assign(Unary_exp('*', Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Literal('1', 'decimal')))), While(Binary_exp(Variable('col'), '<', Binary_exp(Literal('2', 'decimal'), '*', Variable('n'))), Block((Exp(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '+', Literal('1', 'decimal')))), Exp(Assign(Variable('c'), '=', Assign(Variable('i'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Block((Exp(Assign(Variable('c'), '+=', Binary_exp(Unary_exp('*', Binary_exp(Variable('v'), '+', Variable('i'))), '*', Literal('10', 'decimal')))), Exp(Assign(Unary_exp('*', Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Binary_exp(Variable('c'), '%', Variable('a')))), Exp(Assign(Variable('c'), '/=', Post_incr(Variable('a'), '--')))))), Exp(Call(Variable('putchar'), (Binary_exp(Variable('c'), '+', Literal('0', 'char')),))), If_stmt(Unary_exp('!', Binary_exp(Pre_incr('++', Variable('col')), '%', Literal('5', 'decimal'))), Exp(Call(Variable('putchar'), (If_exp(Binary_exp(Variable('col'), '%', Literal('50', 'decimal')), Literal(' ', 'char'), Literal('\n', 'char')),))), None)))), Exp(Call(Variable('putchar'), (Literal('\n\n', 'char'),)))))), Global('v', Literal('2000', 'decimal'), None), Global('n', None, (Literal('2000', 'decimal'),)))
+#. (Proc('main', (), Block((Extern(('putchar', 'n', 'v')), Auto((('i', None), ('c', None), ('col', None), ('a', None))), Exp(Assign(Variable('i'), '=', Assign(Variable('col'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Exp(Assign(Unary_exp('*', Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Literal('1', 'decimal')))), While(Binary_exp(Variable('col'), '<', Binary_exp(Literal('2', 'decimal'), '*', Variable('n'))), Block((Exp(Assign(Variable('a'), '=', Binary_exp(Variable('n'), '+', Literal('1', 'decimal')))), Exp(Assign(Variable('c'), '=', Assign(Variable('i'), '=', Literal('0', 'decimal')))), While(Binary_exp(Variable('i'), '<', Variable('n')), Block((Exp(Assign(Variable('c'), '+=', Binary_exp(Unary_exp('*', Binary_exp(Variable('v'), '+', Variable('i'))), '*', Literal('10', 'decimal')))), Exp(Assign(Unary_exp('*', Binary_exp(Variable('v'), '+', Post_incr(Variable('i'), '++'))), '=', Binary_exp(Variable('c'), '%', Variable('a')))), Exp(Assign(Variable('c'), '/=', Post_incr(Variable('a'), '--')))))), Exp(Call(Variable('putchar'), (Binary_exp(Variable('c'), '+', Literal("'0'", 'char')),))), If_stmt(Unary_exp('!', Binary_exp(Pre_incr('++', Variable('col')), '%', Literal('5', 'decimal'))), Exp(Call(Variable('putchar'), (If_exp(Binary_exp(Variable('col'), '%', Literal('50', 'decimal')), Literal("' '", 'char'), Literal("'\\n'", 'char')),))), None)))), Exp(Call(Variable('putchar'), (Literal("'\\n\\n'", 'char'),)))))), Global('v', Literal('2000', 'decimal'), None), Global('n', None, (Literal('2000', 'decimal'),)))
 
 ## gen_program(decls2)
 #. main	proc
@@ -133,7 +133,7 @@ decls2 = parser.program(eg2)
 #. a	local
 #. 	addr	i
 #. 	addr	col
-#. 	push	decimal('0')
+#. 	push	0
 #. 	assign	=
 #. 	assign	=
 #. 	pop
@@ -143,7 +143,7 @@ decls2 = parser.program(eg2)
 #. 	addr	i
 #. 	postinc	++
 #. 	op2	+
-#. 	push	decimal('1')
+#. 	push	1
 #. 	assign	=
 #. 	pop
 #. _while_1
@@ -155,13 +155,13 @@ decls2 = parser.program(eg2)
 #. _loop_4
 #. 	addr	a
 #. 	value	n
-#. 	push	decimal('1')
+#. 	push	1
 #. 	op2	+
 #. 	assign	=
 #. 	pop
 #. 	addr	c
 #. 	addr	i
-#. 	push	decimal('0')
+#. 	push	0
 #. 	assign	=
 #. 	assign	=
 #. 	pop
@@ -172,7 +172,7 @@ decls2 = parser.program(eg2)
 #. 	value	i
 #. 	op2	+
 #. 	op1	*
-#. 	push	decimal('10')
+#. 	push	10
 #. 	op2	*
 #. 	assign	+=
 #. 	pop
@@ -197,46 +197,46 @@ decls2 = parser.program(eg2)
 #. 	if	_loop_6
 #. 	value	putchar
 #. 	value	c
-#. 	push	char('0')
+#. 	push	'0'
 #. 	op2	+
 #. 	call	1
 #. 	pop
 #. 	addr	col
 #. 	preinc	++
-#. 	push	decimal('5')
+#. 	push	5
 #. 	op2	%
 #. 	op1	!
 #. 	if_not	_endif_7
 #. 	value	putchar
 #. 	value	col
-#. 	push	decimal('50')
+#. 	push	50
 #. 	op2	%
 #. 	if_not	_else_8
-#. 	push	char(' ')
+#. 	push	' '
 #. 	jump	_endif_9
 #. _else_8
-#. 	push	char('\n')
+#. 	push	'\n'
 #. _endif_9
 #. 	call	1
 #. 	pop
 #. _endif_7
 #. _while_3
 #. 	value	col
-#. 	push	decimal('2')
+#. 	push	2
 #. 	value	n
 #. 	op2	*
 #. 	op2	<
 #. 	if	_loop_4
 #. 	value	putchar
-#. 	push	char('\n\n')
+#. 	push	'\n\n'
 #. 	call	1
 #. 	pop
 #. 	return_void
 #. 	endproc
 #. 
-#. v	global	size(decimal('2000'))
+#. v	global	size(2000)
 #. 
-#. n	global	init(decimal('2000'))
+#. n	global	init(2000)
 #. 
 
 eg3 = r"""
@@ -281,7 +281,7 @@ loop :
 """
 decls3 = parser.program(eg3)
 ## decls3
-#. (Proc('printf', ('fmt', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9'), Block((Extern(('printn', 'char', 'putchar')), Auto((('adx', None), ('x', None), ('c', None), ('i', None), ('j', None))), Exp(Assign(Variable('i'), '=', Literal('0', 'decimal'))), Exp(Assign(Variable('adx'), '=', Address_of(Variable('x1')))), Label('loop', While(Binary_exp(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('fmt'), Post_incr(Variable('i'), '++')))), '!=', Literal('%', 'char')), Block((If_stmt(Binary_exp(Variable('c'), '==', Literal('\xff', 'char')), Return(None), None), Exp(Call(Variable('putchar'), (Variable('c'),))))))), Exp(Assign(Variable('x'), '=', Unary_exp('*', Post_incr(Variable('adx'), '++')))), Switch(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('fmt'), Post_incr(Variable('i'), '++')))), Block((Case(Literal('d', 'char'), Case(Literal('o', 'char'), If_stmt(Binary_exp(Variable('x'), '<', Literal('0', 'decimal')), Block((Exp(Assign(Variable('x'), '=', Unary_exp('-', Variable('x')))), Exp(Call(Variable('putchar'), (Literal('-', 'char'),))))), None))), Exp(Call(Variable('printn'), (Variable('x'), If_exp(Binary_exp(Variable('c'), '==', Literal('o', 'char')), Literal('8', 'decimal'), Literal('10', 'decimal'))))), Goto(Variable('loop')), Case(Literal('c', 'char'), Exp(Call(Variable('putchar'), (Variable('x'),)))), Goto(Variable('loop')), Case(Literal('s', 'char'), While(Binary_exp(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('x'), Post_incr(Variable('j'), '++')))), '!=', Literal('\xff', 'char')), Exp(Call(Variable('putchar'), (Variable('c'),))))), Goto(Variable('loop'))))), Exp(Call(Variable('putchar'), (Literal('%', 'char'),))), Exp(Post_incr(Variable('i'), '--')), Exp(Post_incr(Variable('adx'), '--')), Goto(Variable('loop'))))),)
+#. (Proc('printf', ('fmt', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9'), Block((Extern(('printn', 'char', 'putchar')), Auto((('adx', None), ('x', None), ('c', None), ('i', None), ('j', None))), Exp(Assign(Variable('i'), '=', Literal('0', 'decimal'))), Exp(Assign(Variable('adx'), '=', Address_of(Variable('x1')))), Label('loop', While(Binary_exp(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('fmt'), Post_incr(Variable('i'), '++')))), '!=', Literal("'%'", 'char')), Block((If_stmt(Binary_exp(Variable('c'), '==', Literal("'\\e'", 'char')), Return(None), None), Exp(Call(Variable('putchar'), (Variable('c'),))))))), Exp(Assign(Variable('x'), '=', Unary_exp('*', Post_incr(Variable('adx'), '++')))), Switch(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('fmt'), Post_incr(Variable('i'), '++')))), Block((Case(Literal("'d'", 'char'), Case(Literal("'o'", 'char'), If_stmt(Binary_exp(Variable('x'), '<', Literal('0', 'decimal')), Block((Exp(Assign(Variable('x'), '=', Unary_exp('-', Variable('x')))), Exp(Call(Variable('putchar'), (Literal("'-'", 'char'),))))), None))), Exp(Call(Variable('printn'), (Variable('x'), If_exp(Binary_exp(Variable('c'), '==', Literal("'o'", 'char')), Literal('8', 'decimal'), Literal('10', 'decimal'))))), Goto(Variable('loop')), Case(Literal("'c'", 'char'), Exp(Call(Variable('putchar'), (Variable('x'),)))), Goto(Variable('loop')), Case(Literal("'s'", 'char'), While(Binary_exp(Assign(Variable('c'), '=', Call(Variable('char'), (Variable('x'), Post_incr(Variable('j'), '++')))), '!=', Literal("'\\e'", 'char')), Exp(Call(Variable('putchar'), (Variable('c'),))))), Goto(Variable('loop'))))), Exp(Call(Variable('putchar'), (Literal("'%'", 'char'),))), Exp(Post_incr(Variable('i'), '--')), Exp(Post_incr(Variable('adx'), '--')), Goto(Variable('loop'))))),)
 
 ## gen_program(decls3)
 #. printf	proc
@@ -295,7 +295,7 @@ decls3 = parser.program(eg3)
 #. i	local
 #. j	local
 #. 	addr	i
-#. 	push	decimal('0')
+#. 	push	0
 #. 	assign	=
 #. 	pop
 #. 	addr	adx
@@ -306,7 +306,7 @@ decls3 = parser.program(eg3)
 #. 	jump	_while_10
 #. _loop_11
 #. 	value	c
-#. 	push	char('\xff')
+#. 	push	'\e'
 #. 	op2	==
 #. 	if_not	_endif_12
 #. 	return_void
@@ -323,7 +323,7 @@ decls3 = parser.program(eg3)
 #. 	postinc	++
 #. 	call	2
 #. 	assign	=
-#. 	push	char('%')
+#. 	push	'%'
 #. 	op2	!=
 #. 	if	_loop_11
 #. 	addr	x
@@ -340,15 +340,15 @@ decls3 = parser.program(eg3)
 #. 	call	2
 #. 	assign	=
 #. 	switch
-#. 	case	char('d'), _case_13
-#. 	case	char('o'), _case_14
-#. 	case	char('c'), _case_15
-#. 	case	char('s'), _case_16
+#. 	case	'd', _case_13
+#. 	case	'o', _case_14
+#. 	case	'c', _case_15
+#. 	case	's', _case_16
 #. 	endcases
-#. _case_13			# char('d')
-#. _case_14			# char('o')
+#. _case_13			# 'd'
+#. _case_14			# 'o'
 #. 	value	x
-#. 	push	decimal('0')
+#. 	push	0
 #. 	op2	<
 #. 	if_not	_endif_17
 #. 	addr	x
@@ -357,33 +357,33 @@ decls3 = parser.program(eg3)
 #. 	assign	=
 #. 	pop
 #. 	value	putchar
-#. 	push	char('-')
+#. 	push	'-'
 #. 	call	1
 #. 	pop
 #. _endif_17
 #. 	value	printn
 #. 	value	x
 #. 	value	c
-#. 	push	char('o')
+#. 	push	'o'
 #. 	op2	==
 #. 	if_not	_else_18
-#. 	push	decimal('8')
+#. 	push	8
 #. 	jump	_endif_19
 #. _else_18
-#. 	push	decimal('10')
+#. 	push	10
 #. _endif_19
 #. 	call	2
 #. 	pop
 #. 	value	loop
 #. 	goto
-#. _case_15			# char('c')
+#. _case_15			# 'c'
 #. 	value	putchar
 #. 	value	x
 #. 	call	1
 #. 	pop
 #. 	value	loop
 #. 	goto
-#. _case_16			# char('s')
+#. _case_16			# 's'
 #. 	jump	_while_20
 #. _loop_21
 #. 	value	putchar
@@ -398,13 +398,13 @@ decls3 = parser.program(eg3)
 #. 	postinc	++
 #. 	call	2
 #. 	assign	=
-#. 	push	char('\xff')
+#. 	push	'\e'
 #. 	op2	!=
 #. 	if	_loop_21
 #. 	value	loop
 #. 	goto
 #. 	value	putchar
-#. 	push	char('%')
+#. 	push	'%'
 #. 	call	1
 #. 	pop
 #. 	addr	i
