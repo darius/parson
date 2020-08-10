@@ -1,5 +1,5 @@
 """
-Abstract syntax of itsy.
+Abstract syntax of B2020.
 """
 
 from structs import Struct
