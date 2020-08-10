@@ -10,10 +10,10 @@ def gen_program(global_decls):
         gen_global_decl(gd)
         print
 
-def asm(instruction, arguments=(), label='', comment=None):
+def asm(instruction='', arguments=(), label='', comment=None):
     fields = [label, instruction, ', '.join(arguments)]
     if comment: fields += ['# ' + comment]
-    print '\t'.join(fields)
+    print '\t'.join(fields).rstrip()
 
 label_counter = count()
 
@@ -65,27 +65,27 @@ class GenStmt(Visitor):
         asm('if_not', [if_not])
         gen_stmt(t.then_)
         if t.opt_else is None:
-            print if_not
+            asm(label=if_not)
         else:
             endif = Label('endif')
             asm('jump', [endif])
-            print if_not
+            asm(label=if_not)
             gen_stmt(t.opt_else)
-            print endif
+            asm(label=endif)
 
     def While(self, t):
         enter = Label('while')
         loop = Label('loop')
         asm('jump', [enter])
-        print loop
+        asm(label=loop)
         gen_stmt(t.stmt)
-        print enter
+        asm(label=enter)
         gen_exp(t.exp)
         asm('if', [loop])
 
     def Switch(self, t):
         gen_exp(t.exp)
-        asm('switch')  # XXX not the real expansion
+        asm('switch')
         labeler = LabelCases()
         labeler(t.stmt)
         for literal, label in labeler.cases:
@@ -94,9 +94,9 @@ class GenStmt(Visitor):
         gen_stmt(t.stmt)
 
     def Goto(self, t):
-        # TODO optimize for constant t.exp
+        # TODO optimize for constant t.exp, defined by a B label
         gen_exp(t.exp)
-        asm('goto')  # XXX not the real expansion
+        asm('goto')
 
     def Return(self, t):
         if t.opt_exp is None:
@@ -106,11 +106,11 @@ class GenStmt(Visitor):
             asm('return')
 
     def Label(self, t):
-        print t.name    # TODO relate this to Goto's at compile time
+        asm(label=t.name)    # TODO relate this to Goto's at compile time
         gen_stmt(t.stmt)
 
     def Case(self, t):
-        asm('', label=t.case_label, comment=gen_literal(t.literal))
+        asm(label=t.case_label, comment=gen_literal(t.literal))
         gen_stmt(t.stmt)
 
     def Exp(self, t):
@@ -169,9 +169,9 @@ class GenExp(Visitor):
         asm('if_not', [else_])
         gen_exp(t.e2)
         asm('jump', [endif])
-        print else_
+        asm(label=else_)
         gen_exp(t.e3)
-        print endif
+        asm(label=endif)
     
     def Binary_exp(self, t):
         gen_exp(t.e1)

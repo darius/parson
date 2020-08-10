@@ -129,10 +129,10 @@ loop :
 
 decls0 = parser.program(eg0)
 ## gen_program(decls0)
-#. printn	proc	
-#. 	params	
-#. 	return_void	
-#. 	endproc	
+#. printn	proc
+#. 	params
+#. 	return_void
+#. 	endproc
 #. 
 
 decls1 = parser.program(eg1)
@@ -153,9 +153,9 @@ decls1 = parser.program(eg1)
 #.     }
 
 ## gen_program(decls1)
-#. printn	proc	
+#. printn	proc
 #. 	params	n, b
-#. putchar	extern	
+#. putchar	extern
 #. a	local	None
 #. 	addr	a
 #. 	value	n
@@ -167,7 +167,7 @@ decls1 = parser.program(eg1)
 #. 	value	a
 #. 	value	b
 #. 	call	2
-#. 	pop	
+#. 	pop
 #. _endif_0
 #. 	value	putchar
 #. 	value	n
@@ -176,9 +176,9 @@ decls1 = parser.program(eg1)
 #. 	push	char('0')
 #. 	op2	+
 #. 	call	1
-#. 	pop	
-#. 	return_void	
-#. 	endproc	
+#. 	pop
+#. 	return_void
+#. 	endproc
 #. 
 
 decls2 = parser.program(eg2)
@@ -218,11 +218,11 @@ decls2 = parser.program(eg2)
 #. n = 2000;
 
 ## gen_program(decls2)
-#. main	proc	
-#. 	params	
-#. putchar	extern	
-#. n	extern	
-#. v	extern	
+#. main	proc
+#. 	params
+#. putchar	extern
+#. n	extern
+#. v	extern
 #. i	local	None
 #. c	local	None
 #. col	local	None
@@ -232,7 +232,7 @@ decls2 = parser.program(eg2)
 #. 	push	decimal('0')
 #. 	assign	=
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	jump	_while_1
 #. _loop_2
 #. 	value	v
@@ -241,7 +241,7 @@ decls2 = parser.program(eg2)
 #. 	op2	+
 #. 	push	decimal('1')
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. _while_1
 #. 	value	i
 #. 	value	n
@@ -254,13 +254,13 @@ decls2 = parser.program(eg2)
 #. 	push	decimal('1')
 #. 	op2	+
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	addr	c
 #. 	addr	i
 #. 	push	decimal('0')
 #. 	assign	=
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	jump	_while_5
 #. _loop_6
 #. 	addr	c
@@ -270,7 +270,7 @@ decls2 = parser.program(eg2)
 #. 	push	decimal('10')
 #. 	op2	*
 #. 	assign	+=
-#. 	pop	
+#. 	pop
 #. 	value	v
 #. 	addr	i
 #. 	postinc	++
@@ -279,12 +279,12 @@ decls2 = parser.program(eg2)
 #. 	value	a
 #. 	op2	%
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	addr	c
 #. 	addr	a
 #. 	postinc	--
 #. 	assign	/=
-#. 	pop	
+#. 	pop
 #. _while_5
 #. 	value	i
 #. 	value	n
@@ -295,7 +295,7 @@ decls2 = parser.program(eg2)
 #. 	push	char('0')
 #. 	op2	+
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. 	addr	col
 #. 	preinc	++
 #. 	push	decimal('5')
@@ -313,7 +313,7 @@ decls2 = parser.program(eg2)
 #. 	push	char('\n')
 #. _endif_9
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. _endif_7
 #. _while_3
 #. 	value	col
@@ -325,9 +325,9 @@ decls2 = parser.program(eg2)
 #. 	value	putchar
 #. 	push	char('\n\n')
 #. 	call	1
-#. 	pop	
-#. 	return_void	
-#. 	endproc	
+#. 	pop
+#. 	return_void
+#. 	endproc
 #. 
 #. v	global	size(decimal('2000'))
 #. 
@@ -377,11 +377,11 @@ decls3 = parser.program(eg3)
 #. }
 
 ## gen_program(decls3)
-#. printf	proc	
+#. printf	proc
 #. 	params	fmt, x1, x2, x3, x4, x5, x6, x7, x8, x9
-#. printn	extern	
-#. char	extern	
-#. putchar	extern	
+#. printn	extern
+#. char	extern
+#. putchar	extern
 #. adx	local	None
 #. x	local	None
 #. c	local	None
@@ -390,11 +390,11 @@ decls3 = parser.program(eg3)
 #. 	addr	i
 #. 	push	decimal('0')
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	addr	adx
 #. 	addr	x1
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. loop
 #. 	jump	_while_10
 #. _loop_11
@@ -402,12 +402,12 @@ decls3 = parser.program(eg3)
 #. 	push	char('\xff')
 #. 	op2	==
 #. 	if_not	_endif_12
-#. 	return_void	
+#. 	return_void
 #. _endif_12
 #. 	value	putchar
 #. 	value	c
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. _while_10
 #. 	addr	c
 #. 	value	char
@@ -424,7 +424,7 @@ decls3 = parser.program(eg3)
 #. 	postinc	++
 #. 	op1	*
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	addr	c
 #. 	value	char
 #. 	value	fmt
@@ -432,12 +432,12 @@ decls3 = parser.program(eg3)
 #. 	postinc	++
 #. 	call	2
 #. 	assign	=
-#. 	switch	
+#. 	switch
 #. 	case	char('d'), _case_13
 #. 	case	char('o'), _case_14
 #. 	case	char('c'), _case_15
 #. 	case	char('s'), _case_16
-#. 	endcases	
+#. 	endcases
 #. _case_13			# char('d')
 #. _case_14			# char('o')
 #. 	value	x
@@ -448,11 +448,11 @@ decls3 = parser.program(eg3)
 #. 	value	x
 #. 	op1	-
 #. 	assign	=
-#. 	pop	
+#. 	pop
 #. 	value	putchar
 #. 	push	char('-')
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. _endif_17
 #. 	value	printn
 #. 	value	x
@@ -466,23 +466,23 @@ decls3 = parser.program(eg3)
 #. 	push	decimal('10')
 #. _endif_19
 #. 	call	2
-#. 	pop	
+#. 	pop
 #. 	value	loop
-#. 	goto	
+#. 	goto
 #. _case_15			# char('c')
 #. 	value	putchar
 #. 	value	x
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. 	value	loop
-#. 	goto	
+#. 	goto
 #. _case_16			# char('s')
 #. 	jump	_while_20
 #. _loop_21
 #. 	value	putchar
 #. 	value	c
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. _while_20
 #. 	addr	c
 #. 	value	char
@@ -495,19 +495,19 @@ decls3 = parser.program(eg3)
 #. 	op2	!=
 #. 	if	_loop_21
 #. 	value	loop
-#. 	goto	
+#. 	goto
 #. 	value	putchar
 #. 	push	char('%')
 #. 	call	1
-#. 	pop	
+#. 	pop
 #. 	addr	i
 #. 	postinc	--
-#. 	pop	
+#. 	pop
 #. 	addr	adx
 #. 	postinc	--
-#. 	pop	
+#. 	pop
 #. 	value	loop
-#. 	goto	
-#. 	return_void	
-#. 	endproc	
+#. 	goto
+#. 	return_void
+#. 	endproc
 #. 
