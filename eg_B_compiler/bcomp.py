@@ -58,7 +58,7 @@ decls1 = parser.program(eg1)
 #. printn	proc
 #. 	params	n, b
 #. putchar	extern
-#. a	local	None
+#. a	local
 #. 	addr	a
 #. 	value	n
 #. 	value	b
@@ -127,10 +127,10 @@ decls2 = parser.program(eg2)
 #. putchar	extern
 #. n	extern
 #. v	extern
-#. i	local	None
-#. c	local	None
-#. col	local	None
-#. a	local	None
+#. i	local
+#. c	local
+#. col	local
+#. a	local
 #. 	addr	i
 #. 	addr	col
 #. 	push	decimal('0')
@@ -288,11 +288,11 @@ decls3 = parser.program(eg3)
 #. printn	extern
 #. char	extern
 #. putchar	extern
-#. adx	local	None
-#. x	local	None
-#. c	local	None
-#. i	local	None
-#. j	local	None
+#. adx	local
+#. x	local
+#. c	local
+#. i	local
+#. j	local
 #. 	addr	i
 #. 	push	decimal('0')
 #. 	assign	=

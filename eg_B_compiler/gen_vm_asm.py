@@ -35,7 +35,7 @@ class GenGlobalDecl(Visitor):
         asm('proc', label=t.name)
         asm('params', t.params)
         gen_stmt(t.stmt)
-        asm('return_void') # TODO skip if possible
+        asm('return_void') # TODO skip if redundant
         asm('endproc')  # Telling the assembler it can discard local labels
 
 gen_global_decl = GenGlobalDecl()
@@ -45,7 +45,8 @@ class GenStmt(Visitor):
 
     def Auto(self, t):
         for (name, XXX) in t.decls:
-            asm('local', [repr(XXX)], label=name) # TODO
+            args = [] if XXX is None else [repr(XXX)]  # TODO fill in
+            asm('local', args, label=name)
 
     def Extern(self, t):
         for name in t.names:
