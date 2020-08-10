@@ -11,6 +11,7 @@ def gen_program(global_decls):
         print
 
 def asm(instruction='', arguments=(), label='', comment=None):
+    assert instruction or not arguments
     fields = [label, instruction, ', '.join(arguments)]
     if comment: fields += ['# ' + comment]
     print '\t'.join(fields).rstrip()
