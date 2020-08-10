@@ -1,0 +1,129 @@
+# Changes from the old B grammar:
+#    spell extrn as extern
+#    \ instead of * as a character and string escape
+#    the && and || operators avoid the need for special treatment of & and |
+#    octal constants have octal digits only -- leaving this up to semantic actions
+#    the assignment operators are reversed (+= as in C, not =+ as in B)]
+#    declare internal variables with static instead of no keyword
+#    allocate arrays with syntax like `auto x[42]`
+
+# Not yet since it's a new feature, not just a change:
+#    initialize variables in declarations with =
+
+
+program:
+	  _ definition* :end.
+
+definition:
+	  name ('[' (constant) ']' | :None) ['=' ival++',' :hug | :None] ';' :Global
+	| name '(' [name**',' :hug] ')' statement :Proc.
+
+ival:
+	  constant
+	| name :Variable.
+
+statement:
+	  "auto" [name ('[' constant ']' | :None) :hug]++',' ';' :hug :Auto
+	| "extern" name++',' ';'       :hug :Extern
+	| "static" name++',' ';'       :hug :Static
+	| '{' statement* '}'           :hug :Block
+	| "if" '(' exp ')' statement ("else" statement | :None) :If_stmt
+	| "while" '(' exp ')' statement     :While
+	| "switch" exp statement            :Switch
+	| "goto" exp ';'                    :Goto
+	| "return" (exp | :None) ';'        :Return
+	| "case" constant ':' statement     :Case
+	| name            ':' statement     :Label
+	| (exp | :None) ';'                 :Exp.
+
+
+####
+# https://en.cppreference.com/w/c/language/operator_precedence
+# XXX This isn't identical to kbman precedences
+####
+
+exp1:
+	( name                      :Variable
+	| constant
+	| '(' exp ')'
+        ) ( inc_dec                 :Post_incr
+          | '[' exp ']'             :Index
+          | '(' [exp**',' :hug] ')' :Call
+          )*.
+
+exp2:
+	  unaryop exp2              :Unary_exp
+        | '&' !/[&=]/ exp2          :Address_of
+        | inc_dec exp2              :Pre_incr
+        | exp1.
+
+exp3:     exp2 (op3 exp2 :Binary_exp)*.   op3  ~: { '*' !/=/ | '/' !/[*=]/ | '%' !/=/ } _.
+exp4:     exp3 (op4 exp3 :Binary_exp)*.   op4  ~: { '+' !/[+=]/ | '-' !/[-=]/ } _.
+exp5:     exp4 (op5 exp4 :Binary_exp)*.   op5  ~: { '<<' !/=/ | '>>' !/=/ } _.
+exp6:     exp5 (op6 exp5 :Binary_exp)*.   op6  ~: { '<=' | '>=' | '<' | '>' } _.
+exp7:     exp6 (op7 exp6 :Binary_exp)*.   op7  ~: { '==' | '!=' } _.
+exp8:     exp7 (op8 exp7 :Binary_exp)*.   op8  ~: { '&' !/[&=]/ } _.
+exp9:     exp8 (op9 exp8 :Binary_exp)*.   op9  ~: { '^' !/=/} _.
+exp10:    exp9 (op10 exp9 :Binary_exp)*.  op10 ~: { '|' !/[|=]/} _.
+exp11:    exp10 (op11 exp10 :And)*.       op11 ~:   '&&' _.
+exp12:    exp11 (op12 exp11 :Or)*.        op12 ~:   '||' _.
+exp13:    exp12 ('?' exp ':' exp13 :If_exp)?.
+exp14:    exp13 (assign exp14 :Assign)?.
+exp:      exp14.
+
+
+# Lexical grammar
+
+assign ~:
+	  opassign | /(=)(?!=)/ _.
+
+inc_dec ~:
+	{ '++'
+	| '--'
+	} _.
+
+unaryop ~:
+	{ '-' !/[-=]/
+	| '!' !'='
+        | '*' !'='
+        } _.
+
+opassign ~:
+	{ '<<='
+        | '>>='
+        | '|='
+	| '&='
+	| '-='
+	| '+='
+	| '%='
+	| '*='
+	| '/='
+        } _.
+
+
+constant ~:
+	  {'0' digit+}           _       :'octal'   :Literal
+        | {    digit+}           _       :'decimal' :Literal
+	| /'/ sqchar sqchar? /'/ _ :join :'char'    :Literal
+	| /"/ dqchar*        /"/ _ :join :'string'  :Literal.
+
+sqchar ~: escape | /([^'])/.
+dqchar ~: escape | /([^"])/.
+escape ~: /\\(.)/ :escape.
+
+name ~:
+	  {alpha (alpha|digit)*} _.  # TODO make sure it's not a keyword
+
+alpha ~:
+	  /[A-Za-z_]/.           # "and backspace"?! I'm just ignoring that.
+
+digit ~:
+	  /[0-9]/.
+
+FNORD ~: _.
+
+_ ~:
+	  (/\s+/ | comment)*.
+
+comment ~:
+	  '/*' (!'*/' :anyone)* '*/'.
