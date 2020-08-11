@@ -1,0 +1,116 @@
+main	proc
+	params
+putchar	extern
+n	extern
+v	extern
+i	local
+c	local
+col	local
+a	local
+	addr	i
+	addr	col
+	push	0
+	assign	=
+	assign	=
+	pop
+	jump	while.0
+loop.1
+	value	v
+	addr	i
+	postinc	++
+	op2	+
+	push	1
+	assign	=
+	pop
+while.0
+	value	i
+	value	n
+	op2	<
+	if	loop.1
+	jump	while.2
+loop.3
+	addr	a
+	value	n
+	push	1
+	op2	+
+	assign	=
+	pop
+	addr	c
+	addr	i
+	push	0
+	assign	=
+	assign	=
+	pop
+	jump	while.4
+loop.5
+	addr	c
+	value	v
+	value	i
+	op2	+
+	op1	*
+	push	10
+	op2	*
+	assign	+=
+	pop
+	value	v
+	addr	i
+	postinc	++
+	op2	+
+	value	c
+	value	a
+	op2	%
+	assign	=
+	pop
+	addr	c
+	addr	a
+	postinc	--
+	assign	/=
+	pop
+while.4
+	value	i
+	value	n
+	op2	<
+	if	loop.5
+	value	putchar
+	value	c
+	push	'0'
+	op2	+
+	call	1
+	pop
+	addr	col
+	preinc	++
+	push	5
+	op2	%
+	op1	!
+	if_not	endif.6
+	value	putchar
+	value	col
+	push	50
+	op2	%
+	if_not	else.7
+	push	' '
+	jump	endif.8
+else.7
+	push	'\n'
+endif.8
+	call	1
+	pop
+endif.6
+while.2
+	value	col
+	push	2
+	value	n
+	op2	*
+	op2	<
+	if	loop.3
+	value	putchar
+	push	'\n\n'
+	call	1
+	pop
+	return_void
+	endproc
+
+v	global	size(2000)
+
+n	global	init(2000)
+

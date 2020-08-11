@@ -1,0 +1,134 @@
+printf	proc
+	params	fmt, x1, x2, x3, x4, x5, x6, x7, x8, x9
+printn	extern
+char	extern
+putchar	extern
+adx	local
+x	local
+c	local
+i	local
+j	local
+	addr	i
+	push	0
+	assign	=
+	pop
+	addr	adx
+	addr	x1
+	assign	=
+	pop
+loop
+	jump	while.0
+loop.1
+	value	c
+	push	'\e'
+	op2	==
+	if_not	endif.2
+	return_void
+endif.2
+	value	putchar
+	value	c
+	call	1
+	pop
+while.0
+	addr	c
+	value	char
+	value	fmt
+	addr	i
+	postinc	++
+	call	2
+	assign	=
+	push	'%'
+	op2	!=
+	if	loop.1
+	addr	x
+	addr	adx
+	postinc	++
+	op1	*
+	assign	=
+	pop
+	addr	c
+	value	char
+	value	fmt
+	addr	i
+	postinc	++
+	call	2
+	assign	=
+	switch
+	case	'd', case.3
+	case	'o', case.4
+	case	'c', case.5
+	case	's', case.6
+	endcases
+case.3			# 'd'
+case.4			# 'o'
+	value	x
+	push	0
+	op2	<
+	if_not	endif.7
+	addr	x
+	value	x
+	op1	-
+	assign	=
+	pop
+	value	putchar
+	push	'-'
+	call	1
+	pop
+endif.7
+	value	printn
+	value	x
+	value	c
+	push	'o'
+	op2	==
+	if_not	else.8
+	push	8
+	jump	endif.9
+else.8
+	push	10
+endif.9
+	call	2
+	pop
+	value	loop
+	goto
+case.5			# 'c'
+	value	putchar
+	value	x
+	call	1
+	pop
+	value	loop
+	goto
+case.6			# 's'
+	jump	while.10
+loop.11
+	value	putchar
+	value	c
+	call	1
+	pop
+while.10
+	addr	c
+	value	char
+	value	x
+	addr	j
+	postinc	++
+	call	2
+	assign	=
+	push	'\e'
+	op2	!=
+	if	loop.11
+	value	loop
+	goto
+	value	putchar
+	push	'%'
+	call	1
+	pop
+	addr	i
+	postinc	--
+	pop
+	addr	adx
+	postinc	--
+	pop
+	value	loop
+	goto
+	return_void
+	endproc
+

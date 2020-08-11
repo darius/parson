@@ -1,0 +1,5 @@
+printn	proc
+	params
+	return_void
+	endproc
+

@@ -1,0 +1,27 @@
+printn	proc
+	params	n, b
+putchar	extern
+a	local
+	addr	a
+	value	n
+	value	b
+	op2	/
+	assign	=
+	if_not	endif.0
+	value	printn
+	value	a
+	value	b
+	call	2
+	pop
+endif.0
+	value	putchar
+	value	n
+	value	b
+	op2	%
+	push	'0'
+	op2	+
+	call	1
+	pop
+	return_void
+	endproc
+
