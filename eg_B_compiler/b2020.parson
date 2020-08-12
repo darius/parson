@@ -84,6 +84,7 @@ inc_dec ~:
 
 unaryop ~:
 	{ '-' !/[-=]/
+        | '~'
 	| '!' !'='
         | '*' !'='
         } _.
@@ -121,4 +122,9 @@ digit ~:  /[0-9]/.
 
 FNORD ~:  _.
 _ ~:	  (/\s+/ | comment)*.
-comment ~: '/*' (!'*/' :anyone)* '*/'.
+
+comment ~: '/*' commentbody.  # (The following awkward definition is to save Python stack space.)
+commentbody ~: '*/' | /[^*]+/ commentbody | '*' commentbody.
+
+# TODO better definition:
+# comment ~: '/*' (!'*/' :anyone)* '*/'.

@@ -50,7 +50,8 @@ def star(p, separator=None):
     "Return a peg matching 0 or more of what p matches (maybe with separator)."
     if separator is None:
         # p* = (p p*)?
-        return label(recur(lambda p_star: maybe(chain(p, p_star))),
+        # TODO custom implementation that won't chew up so many Python stack frames
+        return label(recur(lambda p_star: maybe(chain(p, p_star))), 
                      '(%r)*', p)
     else:
         # p**sep = (p (sep p)*)?
