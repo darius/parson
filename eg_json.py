@@ -26,7 +26,7 @@ char     ~:  /([^\x00-\x1f"\\])/
           |  /(\\[bfnrt])/            :escape
           |  /(\\u[0-9a-fA-F]{4})/    :escape.
 
-number   ~:  { '-'? int (frac exp? | exp)? } FNORD :float.
+number   ~:  { '-'? int frac? exp? } FNORD :float.
 int      ~:  '0' !/\d/
           |  /[1-9]\d*/.
 frac     ~:  '.' /\d+/.
@@ -45,6 +45,7 @@ FNORD    ~:  /\s*/.
 #. ((1.0, 1.0),)
 ## json_parse('true')
 #. (True,)
+## json_parse.attempt('truetrue')
 ## json_parse(r'"hey \b\n \u01ab o hai"')
 #. (u'hey \x08\n \u01ab o hai',)
 ## json_parse('{"hey": true}')
@@ -57,6 +58,10 @@ FNORD    ~:  /\s*/.
 #. (0.0,)
 ## json_parse('0.125e-2')
 #. (0.00125,)
+## json_parse('5.12')
+#. (5.12,)
+## json_parse('5e3')
+#. (5000.0,)
 
 ## json_parse.attempt( '0377')
 ## json_parse.attempt('{"hi"]')
