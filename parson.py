@@ -155,8 +155,8 @@ def literal(string):
 def match(regex):
     """Return a peg that matches what regex does, adding any captures
     to the values tuple."""
-    # Alas, Python's re has quirks: e.g. a|aa matches just 'a' out of 'aa'.
-    # This makes this construction unsuitable for a portable grammar language. XXX
+    # XXX Alas, Python's re has quirks: e.g. a|aa matches just 'a' out of 'aa'.
+    #     This makes this construction unsuitable for a portable grammar language.
     compiled = re.compile(regex)
     return _Peg(('/%s/', regex),
                 lambda s, far, (i, vals):
