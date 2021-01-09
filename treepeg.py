@@ -14,8 +14,8 @@ def both(p, q):   return cond(p, q, fail)
 def feed(p, f): return alter(p, lambda *vals: (f(*vals),))
 
 def maybe(p):   return either(p, succeed)
-def plus(p):    return chain(p, star(p))
-def star(p):    return recur(lambda p_star: maybe(chain(p, p_star)))
+def plus(p):    return recur(lambda p_plus: chain(p, maybe(p_plus)))
+def star(p):    return maybe(plus(p))
 
 def recur(fn):
     p = delay(lambda: fn(p))
