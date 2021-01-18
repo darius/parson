@@ -216,6 +216,13 @@ def push(c):
     return label(alter(lambda *xs: xs + (c,)),
                  'push(%r)' % (c,),)
                  
+def dynamic(fn):
+    """Pop the values and pass them to fn, which must return a peg to
+    continue the match with. This serves about the same purpose as
+    monadic bind in other parser-combinator libraries."""
+    return _Peg('dynamic',
+                lambda s, far, (i, vals): fn(*vals).run(s, far, (i, ())))
+
 def trace(message):
     "A peg that succeeds, and says so."
     # TODO: better debugging means

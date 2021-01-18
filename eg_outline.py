@@ -5,14 +5,10 @@ After Higher Order Perl, section 8.6.
 
 import parson as P
 
-def swallow(fn):
-    return P._Peg('swallow',
-                  lambda s, far, (i, vals): fn(*vals).run(s, far, (i, ())))
-
 def Node(margin):
     return P.seclude(P.match(r'( {%d,})' % margin)
-                     + swallow(lambda indent:
-                               (line + Node(len(indent)+1).star()) >> P.hug))
+                     + P.dynamic(lambda indent:
+                                 (line + Node(len(indent)+1).star()) >> P.hug))
 
 line = '* ' + P.match(r'(.*)\n?')
 
