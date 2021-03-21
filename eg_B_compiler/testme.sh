@@ -12,7 +12,7 @@ done
 
 for f in eg/*.b; do
     echo
-    echo "To C:" ${f}
+    echo "To assembly:" ${f}
     fs=${f%.*}.s
     if python bcomp.py ${f} >${fs}; then
         echo -n    # Expected success (btw what's a no-op in bash?)
