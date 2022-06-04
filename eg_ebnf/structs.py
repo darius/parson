@@ -1,5 +1,5 @@
 """
-Define a named-tuple-like type, but simpler.
+Define a named-tuple-like type, but for immutable values, and simpler.
 Also Visitor to dispatch on datatypes defined this way.
 """
 
