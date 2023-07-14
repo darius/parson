@@ -3,6 +3,8 @@ A concatenative variant of John Backus's FP language.
 http://en.wikipedia.org/wiki/FP_%28programming_language%29
 """
 
+from __future__ import division
+
 from parson import Grammar
 
 program = {}
@@ -45,12 +47,12 @@ primary : integer                :mk_aref
         | '~' integer            :mk_literal
         | string                 :mk_literal
         | name                   :mk_call
-        | /([<=>*+-])/~ !opchar ''
+        | /([<=>*%+-])/~ !opchar ''
                                  :mk_op
         | '[' exp ** ',' ']'     :mk_list
         | '(' exp ')'.
 
-opchar  : /[\w@\/\\?<=>*+-]/.
+opchar  : /[\w@\/\\?<=>*%+-]/.
 
 decimal : /(\d+)/                :int.
 integer : /(-?\d+)/              :int.
@@ -79,13 +81,15 @@ def insertr(f, xs):
 add = lambda (x, y): x + y
 sub = lambda (x, y): x - y
 mul = lambda (x, y): x * y
-div = lambda (x, y): x // y
+divide = lambda (x, y): x / y
+intdiv = lambda (x, y): x // y
 mod = lambda (x, y): x % y
 eq  = lambda (x, y): x == y
 lt  = lambda (x, y): x < y
 gt  = lambda (x, y): x > y
 
-ops = {'+': add, '-': sub, '*': mul, '=': eq, '<': lt, '>': gt}
+ops = {'+': add, '-': sub, '*': mul, '%': divide, # N.B. '/' is reserved for insertr
+       '=': eq, '<': lt, '>': gt}
 
 primitives = dict(
     apndl     = lambda (x, xs): [x] + xs,
@@ -93,7 +97,7 @@ primitives = dict(
     chain     = lambda lists: sum(lists, []),
     distl     = lambda (x, ys): [[x, y] for y in ys],
     distr     = lambda (xs, y): [[x, y] for x in xs],
-    div       = div,
+    div       = intdiv,
     enumerate = lambda xs: [(x, i) for i,x in enumerate(xs, 1)], # XXX unused
     id        = lambda x: x,
     iota      = lambda n: range(1, n+1),
@@ -112,13 +116,15 @@ primitives['or']  = lambda (x, y): x or y
 
 def function_identity(f):
     if f in (add, sub): return 0
-    if f in (mul, div): return 1
+    if f in (mul, divide, intdiv): return 1
     # XXX could add chain, and, or, lt, gt, ...
     raise Exception("No known identity element", f)
 
 
 examples = r"""
 factorial == iota /*.
+
+e_sum == [~0, iota] apndl @(factorial [~1, id] %) /+.
 
 dot == transpose @* \+.
 matmult == [1, 2 transpose] distr @distl @@dot.
@@ -144,7 +150,7 @@ euler2r == [~1,~2] fibsr ?iseven /+.
 def defs(names): return [program[name] for name in names.split()]
 
 ## FP(examples)
-## factorial, dot, matmult = defs('factorial dot matmult')
+## factorial, e_sum, dot, matmult = defs('factorial e_sum dot matmult')
 ## divisible, euler1 = defs('divisible euler1')
 ## qmax, qsort = defs('max qsort')
 ## qmax([1, 5, 3])
@@ -187,6 +193,9 @@ def defs(names): return [program[name] for name in names.split()]
 #. [[10, 12], [14, 16]]
 ## matmult([ [[0,1],[1,0]], [[5,6],[7,8]] ])
 #. [[7, 8], [5, 6]]
+
+## e_sum(20)
+#. 2.718281828459045
 
 
 # Inspired by James Morris, "Real programming in functional
